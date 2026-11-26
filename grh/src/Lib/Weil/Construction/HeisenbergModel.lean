@@ -1,4 +1,6 @@
-import Lib.General.Analysis.HolomorphicIntegrals
+module
+
+public import Lib.General.Analysis.HolomorphicIntegrals
 
 /-!
 # Heisenberg cocycles, vacua, the reproducing model and Schur's lemma
@@ -29,6 +31,8 @@ by a Heisenberg representation `ρ`. The file proves superposition and Schur's l
 
 Known; see `Lib.Weil.Construction.WeilOperators` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -640,7 +644,7 @@ lemma integrated_eq_smul : he.heisenbergRep.integrated v w = w 0 • v := by
   -- Both sides are bounded linear in `v` and in `w`, so by `hom_ext` it is enough to treat
   -- translates of the vacuum, `v = heisenbergOp y vacElem` and `w = heisenbergOp z vacElem`.
   have h_integrated :
-      he.heisenbergRep.integrated = ContinuousLinearMap.smulRightL ℂ (Model H) (Model H)
+      he.heisenbergRep.integrated = ContinuousLinearMap.smulRightL ℂ ℂ ℂ (Model H) (Model H)
         (valueAt 0) := by
     refine hom_ext fun y ↦ hom_ext fun z ↦ ext fun x ↦ ?_
     -- The value at `x` is `H.β y x` times the integral in the vacuum identity at `z`, `x - y`.

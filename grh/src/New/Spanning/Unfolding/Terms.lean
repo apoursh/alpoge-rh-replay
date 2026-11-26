@@ -1,6 +1,8 @@
-import New.Spanning.RemainingTerms.Box
-import New.Spanning.RemainingTerms.SiegelLemma
-import New.Spanning.Unfolding.BesselLevelStructure
+module
+
+public import New.Spanning.RemainingTerms.Box
+public import New.Spanning.RemainingTerms.SiegelLemma
+public import New.Spanning.Unfolding.BesselLevelStructure
 
 /-!
 # Near terms in the filling theorem: frames, cell ranks, nearness and integrality
@@ -41,6 +43,8 @@ Notions from other files:
   sourceDim² / (besselDegree · mass), with the mass of the genus of the standard lattice, and
   sourceDim times the order of the reduced image of the Bessel subgroup `besselS`.
 -/
+
+@[expose] public section
 
 noncomputable section
 

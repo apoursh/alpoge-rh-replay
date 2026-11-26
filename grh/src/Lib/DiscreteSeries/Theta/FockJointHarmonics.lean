@@ -1,4 +1,6 @@
-import Lib.DiscreteSeries.Theta.FockDualPair
+module
+
+public import Lib.DiscreteSeries.Theta.FockDualPair
 
 /-!
 # Weights of matched pairs and uniqueness of joint harmonics in Fock space
@@ -43,6 +45,8 @@ Notions from other files:
 
 Known; see `Lib.DiscreteSeries.Theta.LocalCorrespondence` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -439,6 +443,8 @@ inductive DiscreteSeries.IsEigenDirection (F : MvPolynomial ι ℂ) (x : ι → 
 theorem DiscreteSeries.bind₁_X_add_C_pderiv {τ : Type*} (x : τ → ℂ) (G : MvPolynomial τ ℂ) (i : τ) :
     bind₁ (fun j : τ ↦ X j + MvPolynomial.C (x j)) (pderiv i G) =
       pderiv i (bind₁ (fun j : τ ↦ X j + MvPolynomial.C (x j)) G) := by
+  change aeval (fun j : τ ↦ X j + MvPolynomial.C (x j)) (pderiv i G) =
+    pderiv i (aeval (fun j : τ ↦ X j + MvPolynomial.C (x j)) G)
   induction G using induction_on with
   | C a => simp
   | add p q hp hq => simp only [map_add, hp, hq]
@@ -448,6 +454,7 @@ theorem DiscreteSeries.bind₁_X_add_C_pderiv {τ : Type*} (x : τ → ℂ) (G :
 /-- The constant coefficient of `G (X + x)` is the value of `G` at `x`. -/
 theorem DiscreteSeries.coeff_zero_bind₁_X_add_C {τ : Type*} (x : τ → ℂ) (G : MvPolynomial τ ℂ) :
     (bind₁ (fun j : τ ↦ X j + MvPolynomial.C (x j)) G).coeff 0 = eval x G := by
+  change (aeval (fun j : τ ↦ X j + MvPolynomial.C (x j)) G).coeff 0 = eval x G
   rw [← constantCoeff_eq]
   induction G using induction_on with
   | C a => simp
@@ -464,11 +471,11 @@ theorem DiscreteSeries.exists_not_isEigenDirection {F : MvPolynomial ι ℂ} {x 
   -- Take a monomial of least degree in the Taylor series `H = F (X + x)`. It is not constant, so
   -- its exponent is `t + single i 1` for some variable `i`. Compare the coefficients of `t`.
   let shift (y : ι → ℂ) : MvPolynomial ι ℂ →ₐ[ℂ] MvPolynomial ι ℂ :=
-    bind₁ fun i ↦ X i + MvPolynomial.C (y i)
+    aeval fun i ↦ X i + MvPolynomial.C (y i)
   have shift_pderiv (G : MvPolynomial ι ℂ) (i : ι) : shift x (pderiv i G) = pderiv i (shift x G) :=
     bind₁_X_add_C_pderiv x G i
   set H : MvPolynomial ι ℂ := shift x F with hH
-  have shift_back : shift (-x) H = F := by simp [hH, shift, bind₁_bind₁]
+  have shift_back : shift (-x) H = F := by simp [hH, shift, comp_aeval_apply, aeval_X_left_apply]
   have H_ne : H ≠ 0 := fun h_zero ↦ hF (by rw [← shift_back, h_zero, map_zero])
   obtain ⟨n, n_mem, n_min⟩ := H.support.exists_min_image Finsupp.degree (support_nonempty.2 H_ne)
   have n_ne : n ≠ 0 := by

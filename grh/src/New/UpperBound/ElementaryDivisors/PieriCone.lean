@@ -1,4 +1,6 @@
-import Lib.Base
+module
+
+public import Lib.Base
 
 /-!
 # The Pieri cone, the step map and the slab: interlacing and volume of the cone
@@ -32,6 +34,8 @@ the application `v j` is true for even `j`.
 
 See `New.UpperBound.ElementaryDivisors.DefectCount` for related work.
 -/
+
+@[expose] public section
 
 namespace New
 
@@ -407,7 +411,7 @@ lemma volume_real_inter_degreeSlab_eq_signed_sum {v : Fin (m + 1) → Bool} (hP 
   have h_eq : (k.factorial : ℝ) ^ (m + 1) * ((|c| * Δ 1)⁻¹ * volume.real (Ω ∩ degreeSlab k D)) =
       k.factorial ^ m * ∑ τ : Perm (Fin k),
         (|c| * Δ τ)⁻¹ * volume.real (degreeSlab k D) * sign τ := by
-    simpa [← sum_comp_prod_ofFn, h_vol, card_perm] using h_int
+    simpa [← sum_comp_prod_ofFn, h_vol, card_perm, Set.univ_inter] using h_int
   have h_sum : ∑ τ : Perm (Fin k), (|c| * Δ τ)⁻¹ * volume.real (degreeSlab k D) * sign τ =
       |c|⁻¹ * (∑ τ : Perm (Fin k), τ.sign / Δ τ) * volume.real (degreeSlab k D) := by
     rw [mul_sum, sum_mul]

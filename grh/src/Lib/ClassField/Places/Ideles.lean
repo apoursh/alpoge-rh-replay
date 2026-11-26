@@ -1,6 +1,8 @@
-import Lib.Adelic.Adeles.StrongApproximation
-import Lib.General.Groups.ProfiniteCharacters
-import Lib.General.Measure.HaarModulus
+module
+
+public import Lib.Adelic.Adeles.StrongApproximation
+public import Lib.General.Groups.ProfiniteCharacters
+public import Lib.General.Measure.HaarModulus
 
 /-!
 # Finite ideles, principal ideles and the class group; finite index of open subgroups
@@ -37,6 +39,8 @@ Notions from other files:
 
 Known; see `Lib.ClassField.Places.LocalFields` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -263,7 +267,7 @@ lemma exists_idele_divisor_hom :
       ∀ w : FinPlace K, count K w I.val = -log (v (a.val w)) := by
     refine ⟨.mk0 _ ?_, fun w ↦ count_finprod K w _ ?_⟩
     · -- a finite product of powers of nonzero primes is nonzero
-      simp [finprod_ne_zero, zpow_ne_zero, ne_bot]
+      exact finprod_ne_zero fun w ↦ zpow_ne_zero _ (by simp [ne_bot])
     · -- the exponent is `0` wherever `a` is a unit, so at all but finitely many places
       exact .mono (finite_setOf_valued_val_ne_one a) fun w' (h_unit : v (a.val w') = 1) ↦ by
         simp [h_unit]

@@ -1,9 +1,11 @@
-import Lib.ClassField.Global.CMSplittingCharacters
-import Lib.ClassField.Global.Chebotarev
-import Lib.ClassField.Global.ExistenceTheorem
-import Lib.GaloisRep.BaseChange.CommutingHeckeFamilies
-import Lib.General.NumberTheory.CMFields
-import Lib.General.NumberTheory.FrobeniusOrbits
+module
+
+public import Lib.ClassField.Global.CMSplittingCharacters
+public import Lib.ClassField.Global.Chebotarev
+public import Lib.ClassField.Global.ExistenceTheorem
+public import Lib.GaloisRep.BaseChange.CommutingHeckeFamilies
+public import Lib.General.NumberTheory.CMFields
+public import Lib.General.NumberTheory.FrobeniusOrbits
 
 /-!
 # Grunwald's theorem in prime degree and CM steps with prescribed local behaviour
@@ -62,6 +64,8 @@ arXiv 1401.0389 (2014).
 
 See also `Lib.Weil.MixedModel.ZeroTerm`.
 -/
+
+@[expose] public section
 
 namespace New
 
@@ -698,7 +702,8 @@ lemma New.nonempty_weilData_of_not_dvd_differentIdeal {E L : Type} [Field E] [CM
   -- `(-log v (s u)) / 2` (integer division)
   let halfOrder (u : FinPlace L) : ℤ := ((if u < star u then 1 else 0) - (v (s.val u)).log) / 2
   have h_half_eq_zero (u : FinPlace L) (h_one : v (s.val u) = 1) : halfOrder u = 0 := by
-    grind [log_one]
+    simp only [halfOrder, h_one, log_one, sub_zero]
+    split_ifs <;> omega
   obtain ⟨β, hβ⟩ : ∃ β : (𝔸f L)ˣ, ∀ u : FinPlace L,
       β.val u = ↑((uniformizer u)⁻¹ ^ halfOrder u) :=
     exists_idele_eq_uniformizer_zpow halfOrder
@@ -725,7 +730,15 @@ lemma New.nonempty_weilData_of_not_dvd_differentIdeal {E L : Type} [Field E] [CM
   -- the two halves add up to `-(v (s u)).log`: exactly one gets the `1` if `u ≠ star u`, and the
   -- order is even if `u = star u`
   have h_halves : halfOrder u + halfOrder (star u) = -(v (s.val u)).log := by
-    grind [star_star]
+    simp only [halfOrder, star_star, hs_star]
+    rcases lt_trichotomy u (star u) with h | h | h
+    · rw [if_pos h, if_neg (lt_asymm h)]
+      omega
+    · have := hs_even u h.symm
+      rw [← h, if_neg (lt_irrefl u)]
+      omega
+    · rw [if_neg (lt_asymm h), if_pos h]
+      omega
   rw [h_log_eq]
   linarith [h_halves, hs_ord u]
 

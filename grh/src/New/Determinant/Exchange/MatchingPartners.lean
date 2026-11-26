@@ -1,4 +1,6 @@
-import Lib.SiegelWeil.Tower.LineGaussSums
+module
+
+public import Lib.SiegelWeil.Tower.LineGaussSums
 
 /-!
 # Matched functions, sections over GL cosets and same-section pairs of matrix functions
@@ -38,6 +40,8 @@ Notions from other files:
 See `New.Determinant.Exchange.ExplicitMatching` and `New.Determinant.Exchange.TheoremForPartners`
 for related work. See `Lib.Adelic.Hecke.ClassSums` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -144,12 +148,10 @@ lemma exists_linearMap_eq_sum (ι : Type*) :
 
 variable (n) in
 /-- Let `O` be the ring of integers of the semilocal field `F` (`SemilocalField.O`), and `intGL b O`
-the subgroup `GL_b(O)` of `GL_b(F)`. The matrices `r q` represent the cosets `q` in
+the subgroup `GL_b(O)` of `GL_b(F)`. The matrices `r q` are indexed by the cosets `q` in
 `GL_b(F)/GL_b(O)`, and each `n × b` matrix `y` with a left inverse has `y * r q` primitive (entries
 in `O`, with a left inverse over `O`) for exactly one `q`, and likewise `y * (r q)⁻¹`. -/
 structure IsCommonCosetRep (r : GL b F ⧸ intGL b (O : Subring F) → GL b F) : Prop where
-  /-- `r q` lies in the coset `q`. -/
-  coe_eq (q : GL b F ⧸ intGL b O) : (r q : GL b F ⧸ intGL b O) = q
   /-- If `y` has a left inverse, exactly one representative makes `y * r q` primitive. -/
   existsUnique_mul (y : Matrix n b F) (hy : HasLeftInv y) :
     ∃! q : GL b F ⧸ intGL b O, IsPrimitiveMatrix O (y * (r q).val)
@@ -180,7 +182,7 @@ lemma exists_isCommonCosetRep : ∃ r : GL b F ⧸ intGL b O → GL b F, IsCommo
     obtain ⟨u, -, hu⟩ := isValuationPair.exists_isPrimitiveMatrix_mul hy
     refine ⟨u, fun g ↦ ?_⟩
     simpa [y.mul_assoc] using hu.mul_iff.trans (isPrimitiveMatrix_iff_mem_intGL (u⁻¹ * g))
-  refine ⟨r, r_mk, fun y hy ↦ ?_, fun y hy ↦ ?_⟩
+  refine ⟨r, fun y hy ↦ ?_, fun y hy ↦ ?_⟩
   · obtain ⟨u, prim_iff⟩ := exists_coset y hy
     have mul_iff (q : GL b F ⧸ intGL b O) : IsPrimitiveMatrix O (y * (r q).val) ↔ q = ↑u := by
       rw [prim_iff, ← QuotientGroup.eq, r_mk, eq_comm]
@@ -228,9 +230,9 @@ lemma commonCosetSum_eq_sum (f : GL b F → ℂ) (t : Finset (GL b F ⧸ intGL b
     commonCosetSum F b n f = ∑ q ∈ t, f (commonCosetRep F b n q) :=
   (exists_linearMap_eq_sum_and_isCommonCosetRep (n := n)).choose_spec.choose_spec.left t f ht
 
-/-- The chosen matrices `commonCosetRep` represent the cosets of `GL_b(O)` in `GL_b(F)`. For each
-`n × b` matrix `y` with a left inverse, exactly one of them, `r`, makes `y * r` primitive, and
-exactly one makes `y * r⁻¹` primitive (`IsCommonCosetRep`). -/
+/-- For each `n × b` matrix `y` with a left inverse, exactly one of the chosen matrices
+`commonCosetRep`, `r`, makes `y * r` primitive, and exactly one makes `y * r⁻¹` primitive
+(`IsCommonCosetRep`). -/
 lemma isCommonCosetRep_commonCosetRep : IsCommonCosetRep n (commonCosetRep F b n) :=
   exists_linearMap_eq_sum_and_isCommonCosetRep.choose_spec.choose_spec.right
 
@@ -272,8 +274,8 @@ with a left inverse, such that for every `k` the section of `y ↦ Φ yᵀ` at `
 `χ (det k)` times the section of `Ψ` at `firstCols e k` (`mem_sameSectionPairs_iff`). -/
 def sameSectionPairs (χ : MulChar F ℂ) (e : b ⊕ a ≃ n) :
     Submodule ℂ ((Matrix a n F → ℂ) × (Matrix n b F → ℂ)) :=
-  Submodule.prod (schwartzBruhat fun x : Matrix a n F ↦ HasLeftInv xᵀ)
-      (schwartzBruhat HasLeftInv) ⊓
+  Submodule.prod (schwartzBruhat {x : Matrix a n F | HasLeftInv xᵀ})
+      (schwartzBruhat {y | HasLeftInv y}) ⊓
     (LinearMap.pi fun k : GL n F ↦
       (localSection χ (invLastRows e k)ᵀ ∘ₗ LinearMap.funLeft ℂ ℂ transpose).coprod
         (-(χ k.val.det • localSection χ (firstCols e k)))).ker
@@ -285,8 +287,8 @@ and for each `k` the coset sum `localSection` of `y ↦ Φ yᵀ` at the transpos
 lemma mem_sameSectionPairs_iff {χ : MulChar F ℂ} {e : b ⊕ a ≃ n} {Φ : Matrix a n F → ℂ}
     {Ψ : Matrix n b F → ℂ} :
     (Φ, Ψ) ∈ sameSectionPairs χ e ↔
-      Φ ∈ schwartzBruhat (fun x : Matrix a n F ↦ HasLeftInv xᵀ) ∧
-      Ψ ∈ schwartzBruhat HasLeftInv ∧
+      Φ ∈ schwartzBruhat {x : Matrix a n F | HasLeftInv xᵀ} ∧
+      Ψ ∈ schwartzBruhat {y | HasLeftInv y} ∧
       ∀ k : GL n F, localSection χ (invLastRows e k)ᵀ (fun y : Matrix n a F ↦ Φ yᵀ) =
         χ k.val.det * localSection χ (firstCols e k) Ψ := by
   simp [sameSectionPairs, LinearMap.ker_pi, add_neg_eq_zero, LinearMap.funLeft, Function.comp_def,
@@ -407,7 +409,7 @@ There is a finite set `t` of cosets `q` in `GL_a(F)/GL_a(O)` such that each `x` 
 `xᵀ * r⁻¹` primitive for the chosen representative `r = commonCosetRep F a n q` of some `q` in
 `t`. -/
 lemma exists_finset_isPrimitiveMatrix_mul_inv_commonCosetRep {Φ : Matrix a n F → ℂ}
-    (hΦ : Φ ∈ schwartzBruhat fun x : Matrix a n F ↦ HasLeftInv xᵀ) :
+    (hΦ : Φ ∈ schwartzBruhat {x : Matrix a n F | HasLeftInv xᵀ}) :
     ∃ t : Finset (GL a F ⧸ intGL a O), ∀ x : Matrix a n F, Φ x ≠ 0 →
       ∃ q ∈ t, IsPrimitiveMatrix O (xᵀ * (commonCosetRep F a n q).val⁻¹) := by
   obtain ⟨hΦ_const, hΦ_compact, hΦ_supp⟩ := hΦ
@@ -427,7 +429,7 @@ compact support in the `x` such that `xᵀ` has a left inverse. Then on same-sec
 the value `Λ Φ` is a linear function `T` of `Ψ`. -/
 lemma sameSectionPairs.exists_linear_factor (χ : MulChar F ℂ) (e : b ⊕ a ≃ n) {X : Type*}
     (Λ : (Matrix a n F → ℂ) →ₗ[ℂ] X → ℂ)
-    (hΛ : ∀ g : GL a F, ∀ Φ ∈ schwartzBruhat fun x : Matrix a n F ↦ HasLeftInv xᵀ,
+    (hΛ : ∀ g : GL a F, ∀ Φ ∈ schwartzBruhat {x : Matrix a n F | HasLeftInv xᵀ},
       χ g.val.det • Λ (fun x : Matrix a n F ↦ Φ (g.val * x)) = Λ Φ) :
     ∃ T : (Matrix n b F → ℂ) →ₗ[ℂ] X → ℂ, ∀ (Φ : Matrix a n F → ℂ) (Ψ : Matrix n b F → ℂ),
       (Φ, Ψ) ∈ sameSectionPairs χ e → T Ψ = Λ Φ := by
@@ -449,7 +451,7 @@ lemma sameSectionPairs.exists_linear_factor (χ : MulChar F ℂ) (e : b ⊕ a �
   let piece (q : GL a F ⧸ intGL a O) (x : Matrix a n F) : ℂ :=
     if IsPrimitiveMatrix O (xᵀ * (r q).val⁻¹) then Φ x else 0
   have piece_mem (q : GL a F ⧸ intGL a O) :
-      piece q ∈ schwartzBruhat fun x : Matrix a n F ↦ HasLeftInv xᵀ := by
+      piece q ∈ schwartzBruhat {x : Matrix a n F | HasLeftInv xᵀ} := by
     have h_const : IsLocallyConstant (piece q) :=
       (LocallyConstant.indicator ⟨Φ, hΦ_const⟩ <| isClopen_setOf_isPrimitiveMatrix.preimage
         (f := fun x : Matrix a n F ↦ xᵀ * (r q).val⁻¹) (by fun_prop)).isLocallyConstant

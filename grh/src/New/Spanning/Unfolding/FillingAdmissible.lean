@@ -1,9 +1,11 @@
-import Lib.General.Groups.IndexOfProduct
-import New.Spanning.Unfolding.FrameMass
-import New.Spanning.Unfolding.PoincareSeries
-import New.Spanning.Unfolding.ReducedGroups
-import New.UpperBound.Seesaw.EdgePairEvaluation
-import New.UpperBound.Size.ShortColumns
+module
+
+public import Lib.General.Groups.IndexOfProduct
+public import New.Spanning.Unfolding.FrameMass
+public import New.Spanning.Unfolding.PoincareSeries
+public import New.Spanning.Unfolding.ReducedGroups
+public import New.UpperBound.Seesaw.EdgePairEvaluation
+public import New.UpperBound.Size.ShortColumns
 
 /-!
 # Filling data for admissible data: fit to Y₀, Bessel bounds, standing hypotheses
@@ -42,6 +44,8 @@ Notions from other files:
 * `New.Data.logLevelTarget`: a number `λ`, built from the mean of the `log (D.weight v)`, from
   `log (M rootDisc / 2π)` and from `log b`, with `λ ≤ log N ≤ λ + √(log b)`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -100,25 +104,6 @@ lemma filling_fits :
       isIdempotentKernel := D.isCuspKernel_typeKernel_paramW.1
       exists_point_eq := ⟨γ, fun i w ↦ hγ_red ⟨i, w⟩, toUnits (D.latticeScale 0), ext hγ⟩
       central a := (Seesaw.commute_scalarFin a).inv_left }
-
-/-- A finite adelic point of U(X₀) preserves the lattice of Y₀ if and only if it is integral and
-its last row is that of 1 modulo π. In the coordinates of the filling data this is
-`New.Filling.inclHFin_mem_latticeStabilizer_iff`. -/
-lemma inclXFin_zero_mem_stdLevel_iff {a : Gf D.E (D.X 0)} :
-    (D.gradingY 0).inclXFin a ∈ stdLevel D.E (D.Y 0) ↔
-      a.val ∈ congruenceGL (Ô D.E ∙ D.piNIdele.val) Sum.inr :=
-  -- Both sides say that `D.filling.inclHFin a` lies in `D.filling.latticeStabilizer`.
-  (D.filling_fits.inclXFin_mem_stdLevel_iff a).trans D.filling.inclHFin_mem_latticeStabilizer_iff
-
-/-- The finite adelic points of U(X₀) that lie in the principal level of Y₀ at the chosen places
-form the level `New.Data.levelX` of X₀. In the coordinates of the filling data this is
-`New.Data.levelX_zero_eq_comap`. -/
-lemma comap_inclXFin_zero_chosenLevel :
-    (D.chosenLevel (n := D.Y 0)).comap (D.gradingY 0).inclXFin = D.levelX 0 := by
-  ext a
-  rw [levelX_zero_eq_comap]
-  -- `D.chosenLevel` is the standard principal level of the filling data.
-  exact D.filling_fits.inclXFin_mem_stdPrincipalLevel_iff a
 
 /-- The isomorphism that applies the central translation by `D.latticeScale 0` to a source form on
 X₀ and takes its values at the class representatives, in the coordinates of the Bessel systems. -/
@@ -679,8 +664,9 @@ lemma abs_log_mainSecondMoment_div_identitySecondMoment_sub_le :
   -- `sum_range_id` evaluates the sums of the indices. What is left is linear in the logarithms, in
   -- the sums of `log i!` and in `log b`.
   simp (disch := intros; first | positivity | omega) only [log_div, log_mul, log_pow, log_sqrt,
-    sum_add_distrib, sum_const, card_range, nsmul_eq_mul, sum_range_id, ← Nat.choose_two_right,
-    card_univ, logLevelTarget, abs_le, ↓sum_Ico_eq_sub, Set.mem_Icc, sum_sub_distrib, ← mul_sum,
+    sum_add_distrib, sum_const, Finset.card_range, nsmul_eq_mul, sum_range_id,
+    ← Nat.choose_two_right, card_univ, logLevelTarget, abs_le, ↓sum_Ico_eq_sub, Set.mem_Icc,
+    sum_sub_distrib, ← mul_sum,
     sum_singleton, ← sum_mul, ← Nat.cast_sum _ (·), ↓sum_range_sub (log <| mass D.E ·)] at *
   push_cast (disch := apply D.nat_le_of_hasLogBound) [Nat.cast_choose_two, ← add_assoc,
     m_eq_two_mul_varrho_add_two] at *

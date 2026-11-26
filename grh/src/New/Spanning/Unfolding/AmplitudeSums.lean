@@ -1,5 +1,7 @@
-import New.Spanning.Bessel.Orthonormality
-import New.Spanning.Unfolding.CutoffIntegral
+module
+
+public import New.Spanning.Bessel.Orthonormality
+public import New.Spanning.Unfolding.CutoffIntegral
 
 /-!
 # Sums of amplitudes over blocks
@@ -52,6 +54,8 @@ The results on block sums belong to two steps: the bound for the second moment o
 series (`New.Spanning.Unfolding.Moments`, which lists related work) and the bound for degenerate
 terms and pairs with different links (`New.Spanning.RemainingTerms.Sum`).
 -/
+
+@[expose] public section
 
 section AmplitudeSums
 
@@ -642,8 +646,8 @@ omit [HasPrimitiveRoot5040 E] [S.IsAdmissible] in
 lemma mem_termsOver_iff_mul_mul_inv_mem {c c₁ c' c₁' : S.Classes} {t t' s : S.ResidueGL}
     {σ σ' γ : S.G E} (hσ_over : σ ∈ S.termsOver c t c₁) (hσ'_over : σ' ∈ S.termsOver c' t' c₁') :
     γ ∈ S.termsOver c₁ s c₁' ↔ σ * γ * σ'⁻¹ ∈ S.termsOver c (t * s * t'⁻¹) c' :=
-  ⟨fun hγ ↦ termsOver.mul (.mul hσ_over hγ) (.inv hσ'_over),
-    fun hγ ↦ by simpa using termsOver.mul (.inv hσ_over) (.mul hγ hσ'_over)⟩
+  ⟨fun hγ ↦ termsOver.mul (termsOver.mul hσ_over hγ) (termsOver.inv hσ'_over),
+    fun hγ ↦ by simpa using termsOver.mul (termsOver.inv hσ_over) (termsOver.mul hγ hσ'_over)⟩
 
 /-- Let `E` contain a primitive 5040th root of unity and let `S` be admissible. Let `σ` be a
 rational isometry of the form with middle Gram matrix `S.ratMiddle E`. Assume that `σ` lies in the
@@ -688,7 +692,7 @@ lemma mul_mul_inv_mem_inter_termsOver (hT : S.IsStable T) {c : S.Classes} {s : S
   obtain ⟨hu, hu_over⟩ := u.2
   obtain ⟨hu', hu'_over⟩ := (u'⁻¹).2
   exact ⟨by simpa using (hT u.1⁻¹ (inv_mem hu) u'.1⁻¹ hu' γ).2 hγ_mem.1,
-    by simpa [mul_assoc] using termsOver.mul (.mul hu_over hγ_mem.2) hu'_over⟩
+    by simpa [mul_assoc] using termsOver.mul (termsOver.mul hu_over hγ_mem.2) hu'_over⟩
 
 /-- Let the group `H`, with an s-finite inversion invariant measure `η`, act measurably on `Z` and
 preserve the s-finite measure `μ`. A cutoff (`IsCutoff η β`) is a measurable `β : Z → [0, ∞]` with

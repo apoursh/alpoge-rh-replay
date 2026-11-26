@@ -1,4 +1,6 @@
-import Lib.Adelic.Unitary.GramMatrix
+module
+
+public import Lib.Adelic.Unitary.GramMatrix
 
 /-!
 # Closed matrix embedding of adelic unitary groups, discrete rational points, weak approximation
@@ -41,6 +43,8 @@ Groups and Number Theory, 1994, ch. 7. Here a hermitian space comes with an adel
 diagonal form, and this form is the identity at all finite places, so every space of one signature
 shares one adelic group.
 -/
+
+@[expose] public section
 
 /-! ## Closed embedding into matrices and discreteness of rational points -/
 
@@ -183,12 +187,10 @@ lemma _root_.New.cayleyTransform_map {K L : Type*} [Field K] [Field L] (φ : K �
 /-- The Cayley transform is continuous where `1 + A` is invertible. -/
 lemma _root_.New.continuousAt_cayleyTransform {K : Type*} [NormedField K] {A : Matrix n n K}
     (hA : (1 + A).det ≠ 0) : ContinuousAt cayleyTransform A := by
-  have h_eq : (cayleyTransform : Matrix n n K → Matrix n n K) =
-      fun X ↦ (1 - X) * ((1 + X).det⁻¹ • (1 + X).adjugate) := by
-    ext1 X
-    simp [cayleyTransform, inv_def]
-  rw [h_eq]
-  fun_prop (disch := exact hA)
+  have h_inv : ContinuousAt Ring.inverse (1 + A).det := by
+    simpa only [Ring.inverse_eq_inv'] using continuousAt_inv₀ hA
+  exact (continuousAt_const.sub continuousAt_id).mul
+    ((continuousAt_matrix_inv _ h_inv).comp (continuousAt_const.add continuousAt_id))
 
 /-- The part of a rational matrix `C` that is skew for the form `J = V.J`, namely
 `(C - J⁻¹ Cᴴ J) / 2`. -/

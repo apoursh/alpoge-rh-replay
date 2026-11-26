@@ -1,4 +1,6 @@
-import New.Determinant.Exchange.LargeTriple
+module
+
+public import New.Determinant.Exchange.LargeTriple
 
 /-!
 # Change of point and sign, and descent of the exchange identity by removing hyperbolic planes
@@ -42,6 +44,8 @@ Notions from other files:
 
 See `Lib.Weil.DualPair.ThetaLiftConvergence` for sources.
 -/
+
+@[expose] public section
 
 namespace New.Exchange
 

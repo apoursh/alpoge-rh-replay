@@ -1,5 +1,7 @@
-import Lib.Analytic.DirichletTheta
-import Lib.Analytic.EntireLFunction
+module
+
+public import Lib.Analytic.DirichletTheta
+public import Lib.Analytic.EntireLFunction
 
 /-!
 # A prime `d` in a class whose quadratic twists have no zero in a box
@@ -44,6 +46,8 @@ Heath-Brown, A mean value estimate for real character sums, Acta Arith. 72 (1995
 density bound for the twists of the characters of a fixed modulus, by a smoothed mean square of
 Jacobi symbol sums.
 -/
+
+@[expose] public section
 
 open ArithmeticFunction DirichletCharacter Complex Moebius Finset Real ZMod vonMangoldt LSeries
   Filter jacobiSym legendreSym MeasureTheory Nat NumberTheorySymbols
@@ -735,18 +739,12 @@ lemma zero_density_quadTwist {N : ℕ} [NeZero N] {δ : ℝ} (hδ : 0 < δ) (H :
       fun X : ℕ ↦ (X : ℝ) ^ (1 - δ / 2) := by
   -- Take `T² = N X`, pass from each `ξ` to the primitive character that induces it, and sum.
   have hN : (0 : ℝ) < N := Nat.cast_pos.2 (NeZero.pos N)
-  have h_exists (ξ : DirichletCharacter ℂ N) :
-      ∃ (M : ℕ) (hMN : M ∣ N) (ψ : DirichletCharacter ℂ M),
-        NeZero M ∧ ψ.IsPrimitive ∧ changeLevel hMN ψ = ξ :=
-    exists_isPrimitive_changeLevel_eq ξ
-  choose M hMN ψ hM hψ h_induced using h_exists
+  choose M hMN ψ hM hψ h_induced using
+    fun ξ : DirichletCharacter ℂ N ↦ exists_isPrimitive_changeLevel_eq ξ
   let S (ξ : DirichletCharacter ℂ N) (T : ℝ) : Finset ℕ :=
     {d ∈ Ioc 0 ⌊T ^ 2⌋₊ | d % 8 = 7 ∧ (M ξ).Coprime d ∧ M ξ * d ≤ T ^ 2 ∧
       IsPrimeWithTwistZero (ψ ξ) (1 / 2 + 9 * δ) H d}
-  have h_card (ξ : DirichletCharacter ℂ N) :
-      ∃ C : ℝ, ∀ᶠ T : ℝ in atTop, #(S ξ T) ≤ C * T ^ (2 - δ) :=
-    exists_card_zero_quadTwist_le hδ H (hψ ξ)
-  choose C hC using h_card
+  choose C hC using fun ξ ↦ exists_card_zero_quadTwist_le hδ H (hψ ξ)
   have h_tendsto : Tendsto (fun X : ℕ ↦ √(N * X)) atTop atTop :=
     tendsto_sqrt_atTop.comp (tendsto_natCast_atTop_atTop.const_mul_atTop hN)
   refine .of_bound ((∑ ξ, C ξ) * N ^ (1 - δ / 2)) ?_

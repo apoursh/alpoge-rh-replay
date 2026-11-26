@@ -1,5 +1,7 @@
-import Lib.ClassField.HeckeCharacter.SplitTameCharacters
-import Lib.General.LinearAlgebra.TensorChains
+module
+
+public import Lib.ClassField.HeckeCharacter.SplitTameCharacters
+public import Lib.General.LinearAlgebra.TensorChains
 
 /-!
 # Direct and mirror data modulo `N`, and the operator `Up`
@@ -32,6 +34,8 @@ Notions from other files:
 * `liftIntegralFn r f` is `S ↦ f (r S)` on integral matrices `S` and zero elsewhere.
 * `compUpTo f j` is the composite `f (j - 1) ∘ ⋯ ∘ f 0` of a chain of linear maps.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -163,7 +167,7 @@ lemma exists_GL_last_col_and_row {R : Type*} [CommRing R] :
   refine ⟨fun y ↦ if h : IsUnit (y (.inr ())) then mk'' _ (det_unit y h) else 1, fun y h ↦ ?_⟩
   -- The second factor has the last basis vector as its last column, and the last row of the first
   -- factor is `u` times that vector.
-  constructor <;> ext a <;> simp [h, mul_apply, ← mul_assoc]
+  constructor <;> ext a <;> simp [h, Matrix.mul_apply, ← mul_assoc]
 
 /-- For `y` with unit last entry, an integral invertible matrix whose last column and last row are
 both `y` modulo `N`. -/
@@ -284,7 +288,7 @@ lemma gluedDatum_eq_sum (T : Matrix n' (n ⊕ Unit) (LocProd P))
     (R : Matrix (n'' ⊕ Unit) n' (LocProd P)) :
     Λ.gluedDatum T R = ∑ y : n' → P → ZMod N, Λ.lastColDatum y T * Λ.charDatum y R := by
   simp only [gluedDatum, lastColDatum, liftFn_apply]
-  split_ifs <;> simp
+  split_ifs <;> simp [-transpose_of]
 
 open scoped Classical in
 /-- The vectors modulo `N` that are non-zero at every place of `P`. -/
@@ -474,35 +478,6 @@ lemma directDatum_mul_mul_of_mem_mirabolic {g : GL (n ⊕ Unit) (LocProd P)}
           if ((reductionGL b).val * T' * (reductionGL a).val)ᵀ (.inr ()) = lastBasisVector
           then 1 else 0) T := (congrFun (liftFn_comp_mul _ a b) T).symm
     _ = Λ.directDatum T := by simp only [h_col, directDatum, lastColDatum]
-
-/-- Let `g` and `h` lie in `mirabolic`, that is, they are integral invertible matrices at `P` whose
-last column is the last basis vector modulo `N`, and let `D = diagNInv = diag (1, …, 1, N⁻¹)`. Then
-`T ↦ mirrorDatum (D⁻¹ T)` is invariant under `T ↦ h⁻¹ T g`. -/
-lemma mirrorDatum_mul_mul_of_mem_mirabolic {g : GL (n ⊕ Unit) (LocProd P)}
-    {h : GL (n' ⊕ Unit) (LocProd P)}
-    (hg : g ∈ Λ.mirabolic) (hh : h ∈ Λ.mirabolic)
-    (T : Matrix (n' ⊕ Unit) (n ⊕ Unit) (LocProd P)) :
-    Λ.mirrorDatum ((Λ.diagNInv (n := n'))⁻¹.val * (h⁻¹.val * T * g.val)) =
-      Λ.mirrorDatum ((Λ.diagNInv (n := n'))⁻¹.val * T) := by
-  obtain ⟨a, ha_fix, rfl⟩ := mem_mirabolic.1 hg
-  -- In a basis of the enlarged target lattice, that is, after conjugation by `diagNInv`, the matrix
-  -- `h⁻¹` is integral and fixes the last-coordinate form modulo `N`.
-  obtain ⟨b, hb_row, hb⟩ : ∃ b : GL (n' ⊕ Unit) (O (F := LocProd P)),
-      (Λ.reductionGL b).val (.inr ()) = lastBasisVector ∧
-        inclGL b = Λ.diagNInv⁻¹ * h⁻¹ * Λ.diagNInv :=
-    exists_inclGL_eq_conj_diagNInv (inv_mem hh)
-  have h_corner (T' : Matrix (n' ⊕ Unit) (n ⊕ Unit) (P → ZMod N)) :
-      ((Λ.reductionGL b).val * T' * (Λ.reductionGL a).val) (.inr ()) ⬝ᵥ lastBasisVector =
-        T' (.inr ()) ⬝ᵥ lastBasisVector := by
-    rw [Units.smul_def, smul_eq_mulVec] at ha_fix
-    rw [mul_apply_eq_vecMul, mul_apply_eq_vecMul, ← dotProduct_mulVec, ha_fix, hb_row,
-      single_one_vecMul, row_def]
-  have h_move : (Λ.diagNInv (n := n'))⁻¹.val * (h⁻¹.val * T * (inclGL a).val) =
-      (inclGL b).val * ((Λ.diagNInv (n := n'))⁻¹.val * T) * (inclGL a).val := by
-    simp [hb, Matrix.mul_assoc]
-  rw [h_move]
-  refine (congrFun (liftFn_comp_mul _ a b) _).symm.trans ?_
-  simp only [h_corner, mirrorDatum, charDatum]
 
 /-! ## The operator `Up` -/
 

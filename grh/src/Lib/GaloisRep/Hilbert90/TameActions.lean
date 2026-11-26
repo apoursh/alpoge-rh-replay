@@ -1,4 +1,6 @@
-import Lib.General.LinearAlgebra.MatrixPolynomials
+module
+
+public import Lib.General.LinearAlgebra.MatrixPolynomials
 
 /-!
 # Hilbert 90 for GL_n and units under tame actions on Artinian, finite or profinite rings
@@ -33,6 +35,8 @@ J.-P. Serre, Corps locaux, 1962, Ch. X §1 Prop. 3 and Ch. V §2; S. Chase, D. H
 Galois theory and Galois cohomology of commutative rings, Mem. AMS 52, 1965; for the norm on O[γ],
 P. Scholze, The Langlands-Kottwitz approach for some simple Shimura varieties, 2013, Lemma 2.2.
 -/
+
+@[expose] public section
 
 section TameDescent
 
@@ -575,7 +579,7 @@ lemma IsTameAtLevel.hilbert90_gl (h_tame : IsTameAtLevel σ p m)
   let π (N : ℕ) : R →+* R ⧸ span {(N ! : R)} := mk (span {(N ! : R)})
   have hY_map (N : ℕ) : (GeneralLinearGroup.map (π N) c).val = 1 + π N m • Y.map (π N) := by
     ext
-    simp_all [one_apply]
+    simp_all [Matrix.one_apply]
   -- reduction modulo `N !` turns `σ` into `q N !`, so it keeps the twisted norm `1`
   have h_comm (N : ℕ) (δ : GL n R) : GeneralLinearGroup.map (π N) (GeneralLinearGroup.map σ δ) =
       GeneralLinearGroup.map (q N !) (GeneralLinearGroup.map (π N) δ) :=
@@ -703,7 +707,8 @@ lemma IsTameAtLevel.exists_prod_range_pow_apply_eq (h_tame : IsTameAtLevel σ p 
       ∀ N : ℕ, Finite (R ⧸ span {(N ! : R)}) ∧ IsTameAtLevel (q N !) p m :=
     h_tame.exists_algHom_semiconj_quotientNatMap hR
   choose h_finite h_tame_quotient using h_quotient
-  have hx_fixed (N : ℕ) : q N ! (mk _ x) = mk _ x := by rw [quotientNatMap_mk, hσx]
+  have hx_fixed (N : ℕ) : q N ! (Ideal.Quotient.mk _ x) = Ideal.Quotient.mk _ x := by
+    rw [quotientNatMap_mk, hσx]
   choose z hz hz_inv hz_norm using fun N ↦
     (h_tame_quotient N).exists_norm_of_finite (hx.map _) (hx_fixed N) (map_dvd _ hx_one)
   -- `Λ` keeps congruences modulo `m`

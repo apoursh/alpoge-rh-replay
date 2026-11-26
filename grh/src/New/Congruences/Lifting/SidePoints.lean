@@ -1,4 +1,6 @@
-import New.Congruences.Lifting.CupProductBound
+module
+
+public import New.Congruences.Lifting.CupProductBound
 
 /-!
 # Jump windows, the gap condition and points of the sides of a Kummer chart
@@ -33,6 +35,8 @@ Notions from other files:
 See `New.Congruences.Lifting.SafeMoves` for related work.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 /-! ## Low and far windows of jumps, the gap condition, valuation sums -/
@@ -58,8 +62,6 @@ level `0`. -/
 /-- The integers within distance `n` of `0` or of `c`. -/
 noncomputable abbrev twoWindows (n : ℕ) (c : ℤ) : Finset ℤ := Icc (-n : ℤ) n ∪ Icc (c - n) (c + n)
 
-lemma mem_twoWindows {n : ℕ} {c y : ℤ} : y ∈ twoWindows n c ↔ |y| ≤ n ∨ |y - c| ≤ n := by
-  grind
 
 /-- The gap condition: `p` divides no nonzero integer within distance `n` of `0`, of `b` or
 of `-b`. -/

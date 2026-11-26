@@ -1,6 +1,8 @@
-import Lib.GaloisRep.BaseChange.CongruenceLevelMatching
-import Lib.GaloisRep.BaseChange.StepMatchingPairs
-import Lib.GaloisRep.BaseChange.TwistedTraceIdentity
+module
+
+public import Lib.GaloisRep.BaseChange.CongruenceLevelMatching
+public import Lib.GaloisRep.BaseChange.StepMatchingPairs
+public import Lib.GaloisRep.BaseChange.TwistedTraceIdentity
 
 /-!
 # Base change in prime degree for definite U(n): a weak base change eigenform
@@ -41,6 +43,8 @@ matching after P. Scholze, The Langlands-Kottwitz approach for some simple Shimu
 Prop. 2.1 (norms inverted inside O[γ]) and J.-P. Labesse, Fonctions élémentaires et lemme
 fondamental pour le changement de base stable, Duke Math. J. 61, 1990.
 -/
+
+@[expose] public section
 
 namespace New
 
@@ -908,7 +912,7 @@ lemma exists_isWeakBaseChange_of_matching {μ : (𝔸f E)ˣ →* ℂˣ} [hμ : I
     ⟨_, (hasHeckePolyAt_iff hu).mpr ⟨levelSpace_anti hu_max g_fixed, t, rfl, ht⟩⟩
   obtain ⟨H, g_eigenform⟩ :=
     exists_isEigenform_of_hasHeckePolyAt (by simpa using g_ne) h_level.isOpen
-      (tendsto_place_comap_cofinite _ hZ.conjClosure.compl_mem_cofinite) g_poly
+      ((tendsto_place_comap_cofinite _).eventually hZ.conjClosure.eventually_cofinite_notMem) g_poly
   refine ⟨g, H, g_eigenform, isWeakBaseChange_of_forall_heckeSplit_eq_smul hZ ?_ ?_, g_local,
     g_image⟩
   · intro w hw hw_unram hf u hu_below

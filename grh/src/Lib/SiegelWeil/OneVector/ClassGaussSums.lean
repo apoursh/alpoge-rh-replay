@@ -1,4 +1,6 @@
-import Lib.SiegelWeil.OneVector.ResidueClasses
+module
+
+public import Lib.SiegelWeil.OneVector.ResidueClasses
 
 /-!
 # Gauss sums of classes modulo a lattice at a finite place
@@ -33,6 +35,8 @@ Main definition and results:
 Known result: bounds for local densities of hermitian forms by Gauss sums, part of Siegel's formula
 for representing a number by a hermitian form. See `Lib.SiegelWeil.OneVector.SiegelClassSum`.
 -/
+
+@[expose] public section
 
 namespace New.Floors.IntegralPlace
 

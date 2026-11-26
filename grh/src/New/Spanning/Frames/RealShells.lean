@@ -1,6 +1,8 @@
-import New.Spanning.Bessel.Orthonormality
-import New.Spanning.Frames.RealPlaceGauge
-import New.Spanning.Frames.Shells
+module
+
+public import New.Spanning.Bessel.Orthonormality
+public import New.Spanning.Frames.RealPlaceGauge
+public import New.Spanning.Frames.Shells
 
 /-!
 # Cut Bessel functions at ℂ: integration of the local estimates over shells
@@ -49,6 +51,8 @@ Notions from other files:
   a < j. A normalised integral is an integral over G₁ times this density and
   `New.Floors.IsCutBessel.formConst`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -143,17 +147,6 @@ lemma mem_ofSize_gauge (hF : IsCutBessel F rep ρ s b F₀ f) (hL : ρ ≤ L) {i
 lemma isHead_gauge_iff (hF : IsCutBessel F rep ρ s b F₀ f) (hL : ρ ≤ L) :
     (hF.gauge hL).IsHead j p ↔ ∀ l ≤ j, ‖(∏ a ∈ range l, p a).val‖⁻¹ ≤ L := by
   simp only [IsHead, hF.mem_ofSize_gauge, Units.val_inv_eq_inv_val, norm_inv, pow_one]
-
-/-- If the orbital integral J(γ) = ∫ F(y) ⊗ F(γ⁻¹y)^* dy of a cut Bessel function `F` of box size
-`ρ` is not zero, then all leading minors of the matrix `realFrameGram γ` of the products
-`h(f_a, γ f_b)` have modulus at most `ρ ^ (9 * 𝔰.n)`, where f is the frame (e₀, …, e_{ϱ-1}, z).
--/
-theorem norm_leadingMinor_le_of_besselOrbitalIntegral_ne_zero (hF : IsCutBessel F rep ρ s b F₀ f)
-    {γ : 𝔰.G₁} (hγ : besselOrbitalIntegral volume F γ ≠ 0) (j : Fin (𝔰.n + 1)) :
-    ‖leadingMinor (realFrameGram γ) j‖ ≤ ρ ^ (9 * 𝔰.n) :=
-  hF.mem_ofSize_gauge le_rfl |>.1 <|
-    (hF.gauge le_rfl).leadingMinor_mem_ofSize_of_besselOrbitalIntegral_ne_zero
-      hF.isCut_complexData hγ j
 
 /-- The exponent `s` is at least `10 ^ 10 * 𝔰.n ^ 4`, since the hypotheses carried by `hF` give
 `s + 3 𝔰.n + 6 ≥ 𝔰.n ^ 7` and `𝔰.n > 10 ^ 8`. -/

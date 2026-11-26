@@ -1,4 +1,7 @@
-import Lib.General.NumberTheory.ImaginaryQuadraticField
+module
+
+public import Lib.General.NumberTheory.ImaginaryQuadraticField
+public import TauCeti.Analysis.Contour.Argument.Principle
 
 /-!
 # Quadratic twists, polar functions and logarithmic derivatives of Dirichlet L-functions
@@ -30,6 +33,8 @@ Notions from other files:
 
 Known; see `Lib.Analytic.Landau` for sources.
 -/
+
+@[expose] public section
 
 open ArithmeticFunction DirichletCharacter Complex Set Filter MeasureTheory Metric ProbabilityTheory
   Nat Topology ComplexOrder AnalyticOnNhd Real
@@ -180,30 +185,20 @@ principal `χ`, has at most a simple pole at `s`. Its residue is the order of va
 lemma tendsto_sub_mul_logDeriv_entireL_analyticOrderNatAt (s : ℂ) :
     Tendsto (fun z : ℂ ↦ (z - s) * logDeriv (entireL χ) z) (𝓝[≠] s)
       (𝓝 (analyticOrderNatAt (entireL χ) s : ℂ)) := by
-  -- Near `s` the function `entireL χ` is `(z - s) ^ n • g z` with `g s ≠ 0`.
+  -- Near `s`, `logDeriv (entireL χ)` is `n / (z - s) + g' / g` with `g` analytic and `g s ≠ 0`.
   set n : ℕ := analyticOrderNatAt (entireL χ) s
-  obtain ⟨g, hg, hg_ne, h_eq⟩ :
-      ∃ g : ℂ → ℂ, AnalyticAt ℂ g s ∧ g s ≠ 0 ∧ entireL χ =ᶠ[𝓝 s] fun z ↦ (z - s) ^ n • g z :=
-    (analyticAt_entireL χ s).analyticOrderAt_ne_top.1 (analyticOrderAt_entireL_ne_top χ s)
-  -- The logarithmic derivative is `n / (z - s) + g' / g`, and `g' / g` is continuous at `s`.
+  have h_ord : meromorphicOrderAt (entireL χ) s = ((n : ℤ) : WithTop ℤ) := by
+    rw [(analyticAt_entireL χ s).meromorphicOrderAt_eq,
+      ← Nat.cast_analyticOrderNatAt (analyticOrderAt_entireL_ne_top χ s)]
+    rfl
+  obtain ⟨g, hg, hg_ne, h_eq⟩ := TauCeti.Contour.logDeriv_eventuallyEq_principalPart
+    (analyticAt_entireL χ s).meromorphicAt h_ord
+  have h_cont : ContinuousAt (logDeriv g) s := (hg.deriv.div hg hg_ne).continuousAt
   have h_lim : Tendsto (fun z : ℂ ↦ n + (z - s) * logDeriv g z) (𝓝[≠] s) (𝓝 (n : ℂ)) := by
-    have h_cont : ContinuousAt (logDeriv g) s := (hg.deriv.div hg hg_ne).continuousAt
     simpa using (tendsto_sub_mul_of_continuousAt h_cont).const_add (n : ℂ)
   refine h_lim.congr' ?_
-  filter_upwards [nhdsWithin_le_nhds h_eq.deriv, nhdsWithin_le_nhds h_eq,
-    nhdsWithin_le_nhds (hg.continuousAt.eventually_ne hg_ne),
-    nhdsWithin_le_nhds hg.eventually_analyticAt, self_mem_nhdsWithin]
-    with z hz_deriv hz hgz hg_an (hzs : z ≠ s)
-  symm
-  calc
-    (z - s) * logDeriv (entireL χ) z = (z - s) * logDeriv (fun w : ℂ ↦ (w - s) ^ n * g w) z := by
-      simp only [logDeriv_apply, hz, hz_deriv, smul_eq_mul]
-    _ = (z - s) * (n / (z - s) + logDeriv g z) := by
-      have h_mul : logDeriv (fun w : ℂ ↦ (w - s) ^ n * g w) z =
-          logDeriv (fun w : ℂ ↦ (w - s) ^ n) z + logDeriv g z :=
-        logDeriv_mul z (pow_ne_zero n (sub_ne_zero.2 hzs)) hgz (by fun_prop) hg_an.differentiableAt
-      rw [h_mul, logDeriv_fun_pow (by fun_prop)]
-      simp [logDeriv_apply, div_eq_mul_inv]
-    _ = n + (z - s) * logDeriv g z := by field_simp [sub_ne_zero.2 hzs]
+  filter_upwards [h_eq, self_mem_nhdsWithin] with z hz (hzs : z ≠ s)
+  rw [hz, mul_add, mul_left_comm, mul_inv_cancel₀ (sub_ne_zero.2 hzs)]
+  simp
 
 end New

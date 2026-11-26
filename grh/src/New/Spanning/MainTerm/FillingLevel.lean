@@ -1,5 +1,7 @@
-import New.Spanning.Frames.StandardLevel
-import New.Spanning.MainTerm.GlobalSieve
+module
+
+public import New.Spanning.Frames.StandardLevel
+public import New.Spanning.MainTerm.GlobalSieve
 
 /-!
 # The place and level of a set of primes, orbit sums and the set of entries
@@ -30,6 +32,8 @@ Notions from other files:
 
 See `New.Spanning.MainTerm.EnergyEstimate` for related work.
 -/
+
+@[expose] public section
 
 namespace New.Filling
 
@@ -195,11 +199,12 @@ theorem exists_isIntegralOff_toPlaces_eq (y : U (S.latticeMiddle (LocProd T)).sp
     have h_left (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex (LocProd T)) :
         φ (J.map (evalPlaces T) * M) = J * φ M := by
       ext i j : 1
-      simp only [hφ, mul_apply, _root_.map_sum, Matrix.map_apply, adeleOfLocal_evalPlaces_mul]
+      simp only [hφ, Matrix.mul_apply, _root_.map_sum, Matrix.map_apply,
+        adeleOfLocal_evalPlaces_mul]
     have h_right (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex (LocProd T)) :
         φ (M * J.map (evalPlaces T)) = φ M * J := by
       ext i j : 1
-      simp only [hφ, mul_apply, _root_.map_sum, Matrix.map_apply, mul_comm (M _ _),
+      simp only [hφ, Matrix.mul_apply, _root_.map_sum, Matrix.map_apply, mul_comm (M _ _),
         mul_comm (adeleOfLocal T _), adeleOfLocal_evalPlaces_mul]
     have h_star (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex (LocProd T)) : φ Mᴴ = (φ M)ᴴ := by
       ext i j : 1
@@ -288,7 +293,7 @@ lemma exists_isAddHaarMeasure_skewAdjoint {i τ : LocProd T} (hi : i ∈ O) (hτ
   let B : Set (skewAdjoint (LocProd T)) := {b : skewAdjoint (LocProd T) | b.val ∈ O}
   let ν : Measure (skewAdjoint (LocProd T)) :=
     addHaarMeasure ⟨⟨B, isCompact_O.preimage_val isClosed_skewAdjoint⟩, 0,
-      isOpen_O.preimage_val.interior_eq.ge O.zero_mem⟩
+      isOpen_O.preimage_val.interior_eq.ge (by simp [O.zero_mem])⟩
   have hν : ν B = 1 := addHaarMeasure_self
   let π : skewAdjoint (LocProd T) × skewAdjoint (LocProd T) →+ LocProd T :=
     .mk' (fun p ↦ τ * i * p.1.val + p.2.val) fun p q ↦ by simp [mul_add, add_add_add_comm]
@@ -310,7 +315,7 @@ lemma exists_isAddHaarMeasure_skewAdjoint {i τ : LocProd T} (hi : i ∈ O) (hτ
       mem_of_eq_of_mem h_trace (mul_mem (neg_mem hi) (add_mem hx (IsStarStable.star_mem hx)))
     exact ⟨ha, (add_mem_cancel_left (mul_mem (mul_mem hτ hi) ha)).1 hx⟩
   have h_map : (ν.prod ν).map π = volume := by
-    simpa [h_pre, SemilocalField.volume_O, hν] using measure_smul_map_restrict_eq_smul_neg
+    simpa [h_pre, SemilocalField.volume_O, hν, Set.inter_univ] using measure_smul_map_restrict_eq_smul_neg
       (ν.prod ν) volume (by measurability) .univ h_lift isCompact_O.measurableSet
   exact ⟨ν, inferInstance, hν, by fun_prop, h_map⟩
 
@@ -343,7 +348,7 @@ lemma exists_plancherel_kernel {ψ : AddChar (LocProd T) ℂ}
   · calc
       _ = ∫⁻ z : LocProd T, (O : Subring (LocProd T)).carrier.indicator 1 z := by
         simp_rw [h_transform]
-        simp [G, indicator_apply, apply_ite enorm, apply_ite Complex.ofReal]
+        simp [G, indicator_apply, apply_ite eNorm, apply_ite Complex.ofReal]
       _ ≤ 1 := (lintegral_indicator_one_le _).trans_eq volume_O
 
 section
@@ -482,7 +487,8 @@ theorem isMulLeftInvariant_haar_inv [P : IntegralPlace (LocProd T)] :
   have h_int : π ⁻¹' unitaryLevel O 1 (S.latticeMiddle (LocProd T)).splitGram ∩ X =
       stdLevel E 𝔰.BesselIndex := by
     ext g
-    exact (and_comm.trans mem_latticeStabilizer_iff.symm).trans (Subgroup.le_normalizer hk _).symm
+    exact (and_comm.trans (mem_latticeStabilizer_iff (x := c g)).symm).trans
+      (Subgroup.le_normalizer hk g).symm
   -- The measure `volume (stdLevel E _) • haar.inv` is left invariant, and `stdLevel E _` has volume
   -- one.
   have h_inv :

@@ -1,4 +1,6 @@
-import New.UpperBound.Divisibility.JetExponent
+module
+
+public import New.UpperBound.Divisibility.JetExponent
 
 /-!
 # Marked primes above `p`, full marks and the scaled Hecke operator
@@ -34,6 +36,8 @@ Notions from other files:
 * `New.Data.lowColumns`: the number of columns at `τ` of height below `n_{j+1}` and different
   from `1`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -169,14 +173,6 @@ lemma IsExceptional.m_dvd_orderOf (h : D.IsExceptional p) : D.m ∣ orderOf (D.p
   · rw [show ((-p : ℤ) + 1).natAbs = p - 1 by lia] at h_dvd
     exact two_pow_dvd_right_of_dvd_mul (by lia) h_dvd h_sub
 
-/-- For an exceptional prime `p`, every prime `w` of `E` above `p` has norm `p ^ o`, where `o` is
-the order of the place named by `-p`. -/
-lemma IsExceptional.q_eq_pow_orderOf (h : D.IsExceptional p) {w : FinPlace D.E}
-    (hw : ↑p ∈ w.asIdeal) :
-    w.q = p ^ orderOf (D.placeOfInt (-p)) := by
-  rw [q_eq_pow_lcm_of_inert hw h.chiK_eq_neg_one,
-    Nat.lcm_eq_left (D.m_even.two_dvd.trans h.m_dvd_orderOf)]
-
 /-- For an exceptional prime `p`, no prime `w` of `E` above `p` is equal to its complex
 conjugate. -/
 lemma IsExceptional.star_ne (h : D.IsExceptional p) {w : FinPlace D.E} (hw : ↑p ∈ w.asIdeal) :
@@ -264,48 +260,25 @@ lemma inducedPlace_eq_or_star_iff (h_inert : chiK P.d p = -1) (σ τ : D.Φ) :
   grind [Nat.even_or_odd, div_eq_iff_eq_mul]
 
 /-- The properties of the orbits of the place named by `-p` that hold at an exceptional prime `p`.
-Write `o₀ = D.o₀ p` for the order of `-p` modulo `q₀`, `o` for the order of the place named by `-p`,
-`r = D.ceilLogLifts p` for the least number with `m ≤ p ^ r`, `l₀` for the least power of `3` above
-`27 s`, where `2 ^ s = m ^ 22`, and `w_τ` for the prime above `p` induced by the infinite place
-`τ`. -/
+Write `o₀ = D.o₀ p` for the order of `-p` modulo `q₀`, `o` for the order of the place named by `-p`
+and `r = D.ceilLogLifts p` for the least number with `m ≤ p ^ r`. -/
 structure HasExceptionalOrbits (D : Data P) (p : ℕ) [Fact p.Prime] [PadicPlace p] : Prop where
   /-- `o₀` is odd. -/
   odd_o₀ : Odd (D.o₀ p)
   /-- `o₀ ≤ r`. -/
   o₀_le_ceilLogLifts : D.o₀ p ≤ D.ceilLogLifts p
-  /-- `r ≤ l₀`. -/
-  ceilLogLifts_le_l₀ : D.ceilLogLifts p ≤ l₀ D.towerExp
   /-- `m` divides `o`. -/
   m_dvd_orderOf : D.m ∣ orderOf (D.placeOfInt (-p))
-  /-- Each `w_τ` has norm `p ^ o`. -/
-  q_inducedPlace : ∀ τ : D.Φ, (D.inducedPlace τ).q = p ^ orderOf (D.placeOfInt (-p))
-  /-- For odd `e`, the place `(-p ^ e) τ` induces the conjugate of `w_τ`. -/
-  inducedPlace_neg_pow_mul : ∀ τ : D.Φ, ∀ e : ℕ, Odd e →
-    D.inducedPlace (D.placeOfInt (-p ^ e) * τ) = star (D.inducedPlace τ)
-  /-- The conjugate of `w_τ` differs from `w_τ`. -/
-  star_ne : ∀ τ : D.Φ, star (D.inducedPlace τ) ≠ D.inducedPlace τ
-  /-- The places that induce `w_τ` or its conjugate are the `(-p) ^ i τ`. -/
-  eq_or_star_iff : ∀ σ τ : D.Φ,
-    D.inducedPlace σ = D.inducedPlace τ ∨ D.inducedPlace σ = star (D.inducedPlace τ) ↔
-      ∃ i : ℕ, σ = D.placeOfInt (-p) ^ i * τ
 
 /-- Let `p` be an exceptional prime: `(p/d) = -1`, `p ≢ ±1` modulo `m`, and the order `o₀` of `-p`
 modulo `q₀` is odd and at most `r = ceilLogLifts p`, the least number with `m ≤ p ^ r`. Then the
-properties of `New.Data.HasExceptionalOrbits` hold: `o₀ ≤ r ≤ l₀`, the least power of `3` above
-`27 s` with `2 ^ s = m ^ 22`. The order `o` of the place named by `-p` is a multiple of `m`. The
-prime `w_τ = inducedPlace τ` of `E` above `p` induced by an infinite place `τ` has absolute norm
-`p ^ o` and differs from its conjugate, which is induced by `(-p ^ e) τ` for odd `e`. The places
-that induce `w_τ` or its conjugate are the `(-p) ^ i τ`. -/
+properties of `New.Data.HasExceptionalOrbits` hold: `o₀` is odd, `o₀ ≤ r`, and the order `o` of
+the place named by `-p` is a multiple of `m`. -/
 theorem IsExceptional.hasExceptionalOrbits (h : D.IsExceptional p) :
     D.HasExceptionalOrbits p where
   odd_o₀ := h.odd_o₀
   o₀_le_ceilLogLifts := by grind [IsExceptional]
-  ceilLogLifts_le_l₀ := ceilLogLifts_le_l₀
   m_dvd_orderOf := h.m_dvd_orderOf
-  q_inducedPlace τ := h.q_eq_pow_orderOf (D.p_mem_inducedPlace τ)
-  inducedPlace_neg_pow_mul τ _ he := D.inducedPlace_neg_pow_mul_of_odd h.chiK_eq_neg_one he τ
-  star_ne τ := h.star_ne (D.p_mem_inducedPlace τ)
-  eq_or_star_iff := inducedPlace_eq_or_star_iff h.chiK_eq_neg_one
 
 /-! ### Properties of marked sets -/
 

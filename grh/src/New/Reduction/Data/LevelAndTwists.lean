@@ -1,5 +1,7 @@
-import Lib.ClassField.HeckeCharacter.SplitTameCharacters
-import New.Derivatives.Field.ChosenPlaces
+module
+
+public import Lib.ClassField.HeckeCharacter.SplitTameCharacters
+public import New.Derivatives.Field.ChosenPlaces
 
 /-!
 # Weight bounds, the level N, and twists and m-fold twists for chains of lifts
@@ -39,6 +41,8 @@ Notions from other files:
   part `ψ`, that is, almost all residue characters `ψ_w` are trivial and
   `μ(u) = ∏_v u_v ^ e(v) * ∏_w ψ_w(u mod w)` whenever `u` has integral finite part.
 -/
+
+@[expose] public section
 
 noncomputable section
 

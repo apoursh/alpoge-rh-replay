@@ -1,4 +1,6 @@
-import Lib.PadicHodge.Kisin.FrameTheorem
+module
+
+public import Lib.PadicHodge.Kisin.FrameTheorem
 
 /-!
 # Lattices with prescribed orders, depth steps and the depth lemma
@@ -52,6 +54,8 @@ Notions from other files:
 See `New.Congruences.Lifting.SafeMoves` for related work. See
 `Lib.PadicHodge.Kisin.PeriodMatrixFrame` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -212,7 +216,7 @@ lemma exists_isDepthStep (a : ℕ) {n : ℤ} (hn : n ≠ 0) :
         grw [h_assoc.dvd', h_lte, theta_sub_one_dvd_pow_mul_theta_zTau a hz hω,
           theta_zTau_dvd_pow_mul_thetaPhiInv a]
       _ = thetaPhiInv a k.zTau * p ^ cost a n := by
-        rw [cost, padicValInt]
+        rw [cost, padicValInt, Nat.padicValNat_def]
         ring
   obtain ⟨υ, hυ⟩ : ∃ υ : Ainf, (p : OC) ^ cost a n = thetaPhiInv a X * theta υ :=
     theta_surjective.exists.1 hX_dvd

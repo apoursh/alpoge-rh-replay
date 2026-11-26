@@ -1,4 +1,6 @@
-import New.Congruences.Lifting.DeepPoints
+module
+
+public import New.Congruences.Lifting.DeepPoints
 
 /-!
 # Few low jumps: length lost to depth and a submodule cupping to zero
@@ -49,6 +51,8 @@ Notions from other files:
 See `New.Congruences.Lifting.CutExponentBounds` and `New.Congruences.Lifting.CupOrthogonalityBounds`
 for related work.
 -/
+
+@[expose] public section
 
 section FewLowJumps
 
@@ -581,11 +585,12 @@ lemma sum_cost_zero_eq_padicValNat_factorial {k : KummerChart Γ} (hk : k.IsUnra
   have h_cost (m : ℤ) : k.cost 0 m = padicValInt p m := by simp [cost, hk.2]
   simp only [h_cost]
   induction N with
-  | zero => simp [show Ico (0 : ℤ) 1 = {0} from rfl]
+  | zero => simp [show Ico (0 : ℤ) 1 = {0} from rfl, Nat.padicValNat_def]
   | succ N ih =>
     rw [Nat.cast_succ, ← insert_Ico_right_eq_Ico_add_one (by positivity), sum_insert (by simp), ih,
-      ← Nat.cast_succ, padicValInt.of_nat, Nat.factorial_succ,
-      padicValNat.mul N.succ_ne_zero N.factorial_ne_zero]
+      ← Nat.cast_succ, padicValInt.of_nat, Nat.factorial_succ]
+    simp only [Nat.padicValNat_def]
+    rw [Nat.multiplicity_mul N.succ_ne_zero N.factorial_ne_zero]
 
 /-- In the unramified chart the steps `0, …, N` at the level `0` together cost at most `m` if
 `N ≤ (p - 1) m`, by Legendre's formula. -/
@@ -593,7 +598,7 @@ lemma sum_cost_zero_le {k : KummerChart Γ} (hk : k.IsUnramified) {N m : ℕ} (h
     ∑ y ∈ Ico (0 : ℤ) (N + 1), k.cost 0 y ≤ m := by
   rw [sum_cost_zero_eq_padicValNat_factorial hk]
   refine le_of_mul_le_mul_left ?_ (tsub_pos_of_lt (Fact.out : p.Prime).one_lt)
-  grw [sub_one_mul_padicValNat_factorial, Nat.sub_le, hN]
+  grw [Nat.padicValNat_def, Nat.Prime.sub_one_mul_multiplicity_factorial Fact.out, Nat.sub_le, hN]
 
 /-- Let the Kummer chart `k` of the prime `p ≥ 5` be unramified, so that the cost `k.cost 0 y` of
 the step `y` at the level `0` is `v_p(y)`, with `v_p(0) = 0`. Let `β + W + η ≤ (p - 3) a`, let `p`

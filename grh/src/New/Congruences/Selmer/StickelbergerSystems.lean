@@ -1,6 +1,8 @@
-import Lib.GaloisRep.Main.AttachedRepresentations
-import Lib.General.NumberTheory.GaussValuation
-import New.Congruences.Selmer.AuxiliaryPrimes
+module
+
+public import Lib.GaloisRep.Main.AttachedRepresentations
+public import Lib.General.NumberTheory.GaussValuation
+public import New.Congruences.Selmer.AuxiliaryPrimes
 
 /-!
 # Stickelberger systems
@@ -34,6 +36,8 @@ Notions from other files:
 
 See `New.Congruences.Selmer.TwistingTheorem` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -215,7 +219,7 @@ variable (ℓ : ℕ) [ThePrime ℓ] {E : Type} [Field E] [EmbeddedNumberField E]
 
 open scoped Classical in
 /-- A Stickelberger system for a finite set `S₀` of places of the CM field `E` and an element `g₀`
-of `Gal(Ω/E)` consists of a character `ϑ = twistChar` unramified outside `S₀` with `ϑ g₀ ≠ 1`, a
+of `Gal(Ω/E)` consists of a continuous character `ϑ = twistChar` with `ϑ g₀ ≠ 1`, a
 list of integers `exponents`, and an element `Θ_Q = element Q` of the group ring of `Cl_Q` over
 `ℤ̄_ℓ` for every finite set `Q` of places, whose values under characters for `Q` change by Euler
 factors when a place is added to `Q` such that the enlarged set is auxiliary for `S₀`. -/
@@ -224,8 +228,6 @@ structure StickelbergerSystem (S₀ : Finset (FinPlace E)) (g₀ : Gal(Ω/E)) wh
   twistChar : Gal(Ω/E) →* (PadicAlgCl ℓ)ˣ
   /-- `ϑ` is continuous; so its values are `ℓ`-adic units. -/
   continuous_twistChar : Continuous twistChar
-  /-- `ϑ` is unramified outside `S₀`. -/
-  unramified : ∀ g ∈ inertiaAbove (S₀ : Set (FinPlace E))ᶜ, twistChar g = 1
   /-- `ϑ` is not trivial at `g₀`. -/
   twistChar_apply_ne_one : twistChar g₀ ≠ 1
   /-- The list of exponents `e` of `(N P)⁻¹` in the Euler factors. -/
@@ -286,7 +288,7 @@ lemma β_ne_top : Y.β ≠ ⊤ := by
 open scoped Classical in
 /-- The norm relation for several primes. Let `E` be a CM field with absolute Galois group
 `Gal(Ω/E)`, and `Y` a Stickelberger system for a finite set `S₀` of places and `g₀ ∈ Gal(Ω/E)`: a
-character `ϑ = Y.twistChar` unramified outside `S₀` with `ϑ g₀ ≠ 1`, a list `Y.exponents` of
+character `ϑ = Y.twistChar` with `ϑ g₀ ≠ 1`, a list `Y.exponents` of
 integers, and group-ring elements `Θ_Q = Y.element Q` with a norm relation. Let `Q` and `I` be
 disjoint with `Q ∪ I` auxiliary for `S₀`, let the Galois character `ψ` come from an idele class
 character of modulus `Q` trivial above `ℓ` (`IsFromU1`), and for `v` in `I`, of norm `v.q`, let

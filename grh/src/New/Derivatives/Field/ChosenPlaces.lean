@@ -1,4 +1,6 @@
-import New.Reduction.Data.Magnitudes
+module
+
+public import New.Reduction.Data.Magnitudes
 
 /-!
 # Chosen places, characters of given weight, finiteness of pairs and sizes of the different
@@ -46,6 +48,8 @@ Notions from other files:
 * `New.Data.liftWeight`: The number w_j(σ) = κ(σ) + (j + 1/2) Δ, with κ = `New.Data.weight`, the gap
   Δ = `New.Data.gap` and Δ/2 = `New.Data.halfGap`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -183,7 +187,7 @@ lemma chiMLocal_apply_eq_one_of_pow_q₁_eq_one {x : ResField w} (hx : x ^ D.q�
           rw [D.chiMLocal_of_isChosen hw, pow_apply' _ (NeZero.ne _), map_pow]
       _ = 1 := by rw [hx_pow, map_one]
   · have hx_unit : IsUnit x := .of_pow_eq_one hx (NeZero.ne _)
-    rw [D.chiMLocal_eq_one_of_not_isChosen hw, one_apply hx_unit]
+    rw [D.chiMLocal_eq_one_of_not_isChosen hw, MulChar.one_apply hx_unit]
 
 /-- Let `ψ` give, for each finite place w of E, a complex multiplicative character of the residue
 field at w. If `ψ w = 1`, then for every integer n the w-component of ωⁿψ, where ω = `D.chiMLocal`,
@@ -379,32 +383,6 @@ lemma exists_abs_log_le_and_apply_deltaE_eq (v : P.Φ s) :
   refine ⟨A, hA_pos, h_term.trans ?_, by rw [infinitePlace_apply_deltaE, h_relDiff]⟩
   rw [constantBound, ← add_assoc]
   exact le_add_of_nonneg_left (by positivity)
-
-/-- At every infinite place `v` of `E = P.E s`, the absolute value of the generator `P.deltaE s` of
-the different has the order of magnitude of the root discriminant `rootDiscr (P.E s)` (this is
-`D.rootDisc` for data `D` of exponent `s`): their logarithms differ by at most
-`2 * P.constantBound`. -/
-theorem abs_log_deltaE_sub_log_rootDiscr_le (v : P.Φ s) :
-    |log (v (P.deltaE s).val) - log (rootDiscr (P.E s))| ≤ 2 * P.constantBound := by
-  -- All `log |δ|_w`, `δ = P.deltaE s`, are within `P.constantBound` of one number `Q`, and so is
-  -- their mean.
-  let Q : ℝ := log (towerDeg s * √P.d)
-  let f : ℕ := Core.numInfPlaces (P.E s)
-  have hQ_ne : (towerDeg s * √P.d : ℝ) ≠ 0 := by simp [NeZero.ne]
-  have h_place (w : P.Φ s) : w (P.deltaE s).val ≠ 0 ∧ |log (w (P.deltaE s).val) - Q| ≤
-    P.constantBound := by
-    obtain ⟨A, hA, h_log, h_eq⟩ := exists_abs_log_le_and_apply_deltaE_eq w
-    rw [h_eq, mul_assoc, log_mul hA.ne' hQ_ne, add_sub_cancel_right]
-    exact ⟨mul_ne_zero hA.ne' hQ_ne, h_log⟩
-  have h_sum : f * (log (rootDiscr (P.E s)) - Q) = ∑ w : P.Φ s, (log (w (P.deltaE s).val) - Q) := by
-    simp [f, ← log_prod fun w _ ↦ (h_place w).left, prod_deltaE_eq_rootDiscr_pow, mul_sub]
-  have h_mean : |log (rootDiscr (P.E s)) - Q| ≤ P.constantBound := by
-    refine le_of_mul_le_mul_left ?_ (mod_cast NeZero.pos f : (0 : ℝ) < f)
-    calc _ = |∑ w : P.Φ s, (log (w (P.deltaE s).val) - Q)| := by rw [← h_sum, abs_mul, Nat.abs_cast]
-      _ ≤ ∑ _w : P.Φ s, P.constantBound := by grw [abs_sum_le_sum_abs, (h_place _).right]
-      _ = f * P.constantBound := by simp [f, Core.numInfPlaces]
-  calc _ ≤ |log (v (P.deltaE s).val) - Q| + |Q - log (rootDiscr (P.E s))| := abs_sub_le _ Q _
-    _ ≤ 2 * P.constantBound := by grw [(h_place v).right, abs_sub_comm, h_mean, two_mul]
 
 end New.Parameters
 

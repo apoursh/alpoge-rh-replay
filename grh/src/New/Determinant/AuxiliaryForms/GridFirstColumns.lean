@@ -1,7 +1,9 @@
-import New.Determinant.AuxiliaryForms.PathData
-import New.Determinant.Chain.Moduli
-import New.OneLift.ComparisonOperator.GluedLattices
-import New.UpperBound.Seesaw.LevelIdeles
+module
+
+public import New.Determinant.AuxiliaryForms.PathData
+public import New.Determinant.Chain.Moduli
+public import New.OneLift.ComparisonOperator.GluedLattices
+public import New.UpperBound.Seesaw.LevelIdeles
 
 /-!
 # Periods on the diagonal and path data on the first path
@@ -39,6 +41,8 @@ Notions from other files:
   characters of the edges at the determinants of such a family.
 * `New.GridPath.formMap`: the composite of the maps by the matrices of a tuple along a path.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -111,7 +115,7 @@ lemma exists_triangleGLCard_eq_mul_levelIndex (D : Data P) (j : ℕ) :
   have h_ratio : (card (D.triangleModulus false 1).ResidueRing / card
     (D.gridModulus 1).ResidueRing : ℂ) =
       card R₀ / card R := by simp [R₀, R, card_residueRing_twistModulus, mul_div_mul_right,
-        prod_eq_zero_iff]
+        prod_eq_zero_iff, IsDedekindDomain.HeightOneSpectrum.ne_bot]
   rw [h_index, h_ratio, div_pow, div_mul_comm, ← h_share, div_mul_cancel₀ _ (by simp)]
 
 /-- The period of a conjugate form `y` on `Y^j_j` (grid `false`) and a form `φ` on `Ỹ^j_j` (grid

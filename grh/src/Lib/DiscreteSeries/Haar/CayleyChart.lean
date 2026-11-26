@@ -1,5 +1,7 @@
-import Lib.General.LinearAlgebra.HermitianMatrices
-import Lib.General.Measure.HaarNormalisation
+module
+
+public import Lib.General.LinearAlgebra.HermitianMatrices
+public import Lib.General.Measure.HaarNormalisation
 
 /-!
 # Cayley chart and an explicit Haar measure on the unitary group U(J)
@@ -35,6 +37,8 @@ Notions from other files:
 Part of a known result: the Haar measure of U(J) in Cayley coordinates.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 namespace New
@@ -64,7 +68,7 @@ theorem det_mulLeft_mulRight_real {m : Type _} [Fintype m] [DecidableEq m] (P : 
   set T : Matrix m n ℂ →ₗ[ℂ] Matrix m n ℂ :=
     mulRightLinearMap m ℂ Q ∘ₗ mulLeftLinearMap n ℂ P
   have h_matrix : toMatrix (stdBasis ℂ m n) (stdBasis ℂ m n) T = kronecker P Qᵀ := by
-    simp [T, ← ext_iff, toMatrix_apply, stdBasis, mul_apply, Pi.single_apply, ite_apply]
+    simp [T, ← ext_iff, toMatrix_apply, stdBasis, Matrix.mul_apply, Pi.single_apply, ite_apply]
   have h_det : T.det = P.det ^ card n * Q.det ^ card m := by
     rw [← det_toMatrix (stdBasis ℂ m n), h_matrix, kronecker, det_kronecker, det_transpose]
   exact T.det_restrictScalars.trans (by simp [h_det, norm_complex_eq, pow_mul, Complex.sq_norm])
@@ -611,6 +615,7 @@ theorem differentiableAt_cayleyChartInv_mul {Φ : V → U J} {p : V} (hΦ : Diff
   -- `Ring.inverse` is differentiable at the unit `c * Φ p + 1`
   fun_prop (disch := assumption)
 
+open scoped Pointwise in
 /-- For any complex matrix x, the matrix e^{it} x + 1 is invertible for almost every real t; here
 the scalar e^{it} is taken as the element `New.circleScalar` t of U(J). -/
 theorem ae_isUnit_circleScalar_mul_add_one (x : Matrix n n ℂ) :
@@ -648,8 +653,8 @@ theorem Haar.lintegral_chart_rotate_le [FiniteDimensional ℝ V] [MeasureSpace V
   -- Fubini for null sets, against the image of the measure on `A` in the space of matrices
   have h_meas : MeasurableSet {z : Matrix n n ℂ × ℝ |
       IsUnit (((circleScalar z.2 : U J) : Matrix n n ℂ) * z.1 + 1)} := by
-    simp only [isUnit_iff_isUnit_det, isUnit_iff_ne_zero]
-    measurability
+    simp only [isUnit_iff_isUnit_det, isUnit_iff_ne_zero, circleScalar, U.val_of_coe]
+    exact (by fun_prop : Continuous _).isOpen_support.measurableSet
   have h_swap : ∀ᵐ t, ∀ᵐ x ∂(volume.restrict A).map fun p ↦ (Φ p : Matrix n n ℂ),
       IsUnit (((circleScalar t : U J) : Matrix n n ℂ) * x + 1) :=
     (ae_ae_comm h_meas).1 (.of_forall ae_isUnit_circleScalar_mul_add_one)

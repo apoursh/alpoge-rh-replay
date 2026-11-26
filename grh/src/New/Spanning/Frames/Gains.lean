@@ -1,4 +1,6 @@
-import New.Spanning.Frames.OneFrame
+module
+
+public import New.Spanning.Frames.OneFrame
 
 /-!
 # Two frames: separation and the gains at one position
@@ -38,6 +40,8 @@ Notions from other files:
 
 See `New.Spanning.MainTerm.EnergyEstimate` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -602,7 +606,7 @@ lemma Gauge.sub_one_mulVec_eStar_mem_vecsOfSize {a : Fin 𝔰.ϱ} {s : ℕ} {t�
   intro c
   have h_col : ((t₀ * n₀ * (t₀ * n)⁻¹).val.val - 1) c (eStar a) ∈
       Γ.ofSize (s + (s + 4) + 1 + 1) := by
-    simpa [mul_apply, Matrix.one_apply, h_fix t ht, h_fix t₀ ht₀, mul_assoc] using
+    simpa [Matrix.mul_apply, Matrix.one_apply, h_fix t ht, h_fix t₀ ht₀, mul_assoc] using
       h_prod c (eStar a)
   exact Γ.mem_ofSize_mono (by simpa using h_col)
 

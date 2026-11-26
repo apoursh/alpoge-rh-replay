@@ -1,7 +1,9 @@
-import Lib.General.Analysis.GaussianIntegral
-import Lib.General.Groups.CongruenceSubgroups
-import Lib.General.Measure.HaarNormalisation
-import Lib.General.Topology
+module
+
+public import Lib.General.Analysis.GaussianIntegral
+public import Lib.General.Groups.CongruenceSubgroups
+public import Lib.General.Measure.HaarNormalisation
+public import Lib.General.Topology
 
 /-!
 # Strong operator integrals, analyticity of parameter integrals, and Hua's integral bound
@@ -36,6 +38,8 @@ Known result: an upper bound for Hua's determinant integral. The integral is bou
 above, with an affine change of the rows, instead of being computed exactly. Source: Hua, Harmonic
 Analysis of Functions of Several Complex Variables in the Classical Domains, AMS 1963.
 -/
+
+@[expose] public section
 
 /-! ## The strong integral of a family of bounded operators -/
 
@@ -231,15 +235,21 @@ lemma isAnalyticFamily_of_continuousAt_of_differentiableAt [R1Space K] {f : E �
     let param (θ : ℝ) : sphere (e p).1 r :=
       ⟨circleMap (e p).1 r θ, circleMap_mem_sphere (e p).1 hr.le θ⟩
     let ν : Measure (sphere (e p).1 r) := (volume.restrict (.Icc 0 (2 * π))).map param
+    let L : C(sphere (e p).1 r, ℂ) →L[ℂ] ℂ := strongIntegral ν (evalCLM ℂ)
     let avg : C(K × sphere (e p).1 r, ℂ) →L[ℂ] C(K, ℂ) :=
-      contractSndCLM (strongIntegral ν (evalCLM ℂ))
+      ⟨contractSnd (toCLMEquiv.symm L),
+        continuous_of_continuous_uncurry (contractSnd (toCLMEquiv.symm L)) <| by
+          simp_rw [Function.uncurry_def, contractSnd_apply, coe_symm_toCLMEquiv]
+          refine L.continuous.comp (continuous_of_continuous_uncurry _ ?_)
+          simp_rw [Function.uncurry_def, coe_mk]
+          fun_prop⟩
     refine ⟨fun y : E ↦ avg (Ring.inverse (u (e y).1) * H (e y).2),
       (avg.analyticAt _).comp h_integrand, ?_⟩
     filter_upwards [e.continuousAt
       (prod_mem_nhds (ball_mem_nhds (e p).1 hr) (hH_eq.and (closedBall_mem_nhds (e p).2 hr)))] with
       y ⟨hw, hH, hx⟩
     ext k
-    change strongIntegral ν (evalCLM ℂ) ((Ring.inverse (u (e y).1) * H (e y).2).curry k) = f y k
+    simp only [avg, ContinuousLinearMap.coe_mk', contractSnd_apply, coe_symm_toCLMEquiv, L]
     rw [strongIntegral_eval, integral_map (by fun_prop) (by fun_prop)]
     -- What remains is Cauchy's integral formula for `z ↦ f (e.symm (z, (e y).2)) k` at `(e y).1`.
     have h_diff : DifferentiableOn ℂ (fun z : ℂ ↦ f (e.symm (z, (e y).2)) k)
@@ -359,7 +369,7 @@ lemma New.aestronglyMeasurable_clm_of_apply [FiniteDimensional ℂ E] {A : X →
   -- `y ↦ (i-th coordinate of y) • A x (b i)`.
   let b : Basis (Fin (finrank ℂ E)) ℂ E := finBasis ℂ E
   let rankOne (i : Fin (finrank ℂ E)) : F →L[ℂ] E →L[ℂ] F :=
-    ContinuousLinearMap.smulRightL ℂ E F (b.coord i).toContinuousLinearMap
+    ContinuousLinearMap.smulRightL ℂ ℂ ℂ E F (b.coord i).toContinuousLinearMap
   have h_sum (x : X) : ∑ i, rankOne i (A x (b i)) = A x :=
     ContinuousLinearMap.coe_injective (b.ext fun i ↦ by simp [rankOne, Finsupp.single_apply])
   exact (Finset.aestronglyMeasurable_fun_sum _ fun i _ ↦
@@ -638,7 +648,7 @@ lemma New.lintegral_comp_mul_add {ι κ : Type} [Fintype ι] [DecidableEq ι] [F
     e.toLinearMap ∘ₗ (kroneckerMap (· * ·) S (1 : Matrix κ κ ℂ)).toLin' ∘ₗ e.symm.toLinearMap
   have hf (A : ι → κ → ℂ) : f A = S * of A := by
     ext a b
-    simp [f, e, mulVec, dotProduct, mul_apply, sum_prod_type, one_apply]
+    simp [f, e, mulVec, dotProduct, Matrix.mul_apply, sum_prod_type, Matrix.one_apply]
   have h_det : LinearMap.det (f.restrictScalars ℝ) = ‖S.det‖ ^ (2 * card κ) := by
     rw [LinearMap.det_restrictScalars, LinearMap.det_conj]
     simp [det_kronecker, Algebra.norm_complex_apply, Complex.normSq_eq_norm_sq, ← pow_mul, mul_comm]
@@ -676,7 +686,7 @@ lemma New.lintegral_norm_det_add_inv_pow_le {ι κ : Type} [Fintype ι] [Decidab
   have hg : Measurable g := by fun_prop
   have h_rows (v : ι → κ → ℂ) : (of v)ᴴ * of v = ∑ i, vecMulVec (star (v i)) (v i) := by
     ext a b
-    simp [mul_apply, Matrix.sum_apply, vecMulVec_apply]
+    simp [Matrix.mul_apply, Matrix.sum_apply, vecMulVec_apply]
   -- `hua_integral_le`, applied with the identity matrix and no shift, over all the rows
   have h_hua : ∫⁻ v, g v ≤ .ofReal (C * ‖G.det‖⁻¹ ^ card κ) := calc
     _ = (∫⋯∫⁻_Finset.univ, g) 0 := lintegral_eq_lmarginal_univ 0

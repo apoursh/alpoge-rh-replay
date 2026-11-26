@@ -1,4 +1,6 @@
-import New.Spanning.RemainingTerms.BorderedDeterminant
+module
+
+public import New.Spanning.RemainingTerms.BorderedDeterminant
 
 /-!
 # Eichler-type unipotent elements, colouring bounds and reduced points
@@ -35,6 +37,8 @@ Notions from other files:
 
 Here and below `M = S.M` is the level of the filling data `S`.
 -/
+
+@[expose] public section
 
 namespace New.Filling
 
@@ -593,7 +597,7 @@ theorem IsResidueDomain.exists_mul_mem_reducedPoints_iff_rightCoset [HasPrimitiv
     have h_sum : of (S.ratTriangle y) =
         of (S.ratTriangle (S.ratToInf u * y)) * (frameMatrix u.val).map φ := by
       ext a b v
-      simpa [φ, mul_apply] using ratTriangle_eq_sum u.property.left y a b v
+      simpa [φ, Matrix.mul_apply] using ratTriangle_eq_sum u.property.left y a b v
     rw [map_inv, mul_inv_eq_iff_eq_mul]
     exact Subtype.ext (Units.ext h_sum)
   have hφ (x : 𝓞 E) : φ (S.M * (x : E)) = fun v : InfinitePlace E ↦ Φ v (S.M * (x : E)) := rfl

@@ -1,6 +1,8 @@
-import New.Derivatives.Sharpness.Couplings
-import New.Derivatives.Sharpness.NearPairs
-import New.Derivatives.Vacuum.Scale
+module
+
+public import New.Derivatives.Sharpness.Couplings
+public import New.Derivatives.Sharpness.NearPairs
+public import New.Derivatives.Vacuum.Scale
 
 /-!
 # The valuation bound `v(l!) + val₁₂(l) ≤ S_p + 2 ∑ v(B_τ)` for every prime
@@ -37,6 +39,8 @@ Notions from other files:
   after `(l_τ - n♯)₊`.
 * `P.cmCurve`: the curve `ℂ / Ω₀ 𝓞_K`, whose theta series is `θ`.
 -/
+
+@[expose] public section
 
 /-!
 ## Least valuations along a tight frame at non-split primes
@@ -604,7 +608,7 @@ lemma leastValLE_six_of_isNearPair (D : Data P) {p : ℕ} [Fact p.Prime] [PadicP
           (padicValNat p (partnerDegree (P.partner D.towerExp p) Φ₀ e j x)! : ℝ)) := by
   rcases Φ₀.eq_empty_or_nonempty with rfl | ⟨τ, hτ⟩
   · -- Without near pairs, in particular for `p = d`, the degree is `0`.
-    simpa [powerDegree, partnerDegree] using leastValLE_zero
+    simpa [powerDegree, partnerDegree, Nat.padicValNat_def] using leastValLE_zero
   have h_inert : chiK P.d p = -1 := (he τ hτ).inert
   obtain ⟨ϖ, lam, hϖ, h_lam_unit, h_normal⟩ :=
     D.exists_hasNormalForm_resolutionForms (p := p) hw h_inert

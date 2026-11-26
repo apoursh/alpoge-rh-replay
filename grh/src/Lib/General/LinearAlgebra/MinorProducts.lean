@@ -1,5 +1,7 @@
-import Lib.DiscreteSeries.FlenstedJensen.Defs
-import Lib.General.Analysis.HolomorphicIntegrals
+module
+
+public import Lib.DiscreteSeries.FlenstedJensen.Defs
+public import Lib.General.Analysis.HolomorphicIntegrals
 
 /-!
 # Products of principal minors, Fischer's inequality and the Cauchy–Binet formula
@@ -24,6 +26,8 @@ m_w and the closure properties of the invertible triangular matrices `New.IsBore
 * `New.det_fromCols_eq_sum_minors`, `New.sum_norm_det_fromCols_sq_le`: the Laplace expansion along
   a block of columns and a bound for its complementary minors.
 -/
+
+@[expose] public section
 
 /-!
 ## The products m_w of principal minors and invertible triangular matrices
@@ -183,7 +187,7 @@ lemma weightMinors_diagonal_mul (hx : x.det ≠ 0) (hd : ∀ i : n, d i ≠ 0) :
       Int.card_Ioc_of_le _ _ (h_bound i).1, add_sub_cancel]
   have h_minor (t : ℤ) : principalMinor (diagonal d * x) (t ≤ w ·) =
       (∏ i, ite (t ≤ w i) (d i) 1) * principalMinor x (t ≤ w ·) := by
-    rw [principalMinor_mul (by grind [diagonal_apply])]
+    rw [principalMinor_mul (by grind [Matrix.diagonal_apply])]
     simp [principalMinor_eq_det, ← diagonal_one, apply_ite]
   have h_det : (diagonal d * x).det ≠ 0 := by simp [prod_eq_zero_iff, hd, hx]
   simp_rw [weightMinors_eq_det_zpow_mul_prod h_det _ _ h_bound, det_mul, det_diagonal, h_minor,
@@ -229,7 +233,7 @@ theorem IsBorelMatrix.inv_apply_diag (ho : o.Injective) (hb : IsBorelMatrix o b)
     b⁻¹ i i = (b i i)⁻¹ := by
   -- Compare diagonal entries in `b⁻¹ * b = 1`.
   refine eq_inv_of_mul_eq_one_left ?_
-  rw [← mul_apply_diag ho hb.inv hb, nonsing_inv_mul _ hb.2.isUnit, one_apply_eq]
+  rw [← mul_apply_diag ho hb.inv hb, nonsing_inv_mul _ hb.2.isUnit, Matrix.one_apply_eq]
 
 end New
 
@@ -359,7 +363,7 @@ lemma exists_alternatingMap_det_fromCols [Fintype L] [DecidableEq L] (e : L ≃ 
   -- The determinant `g` is an alternating form in columns indexed by `Fin k ⊕ c`. Curry it along
   -- this sum and evaluate the arguments indexed by `c` at the columns of `Z`.
   let g : (L → R) [⋀^Fin k ⊕ c]→ₗ[R] R := detRowAlternating.domDomCongr e
-  let atZ : MultilinearMap R (fun _ : c ↦ L → R) R →ₗ[R] R :=
+  let atZ : MultilinearMap (RingHom.id R) (fun _ : c ↦ L → R) R →ₗ[R] R :=
     { toFun φ := φ fun b ↦ Z.col b
       map_add' _ _ := rfl
       map_smul' _ _ := rfl }
@@ -412,9 +416,10 @@ lemma norm_det_fromCols_one_submatrix [Fintype L] [DecidableEq L] [Fintype c] [D
     ext x y
     obtain ⟨x, rfl⟩ := ε.surjective x
     have h_eq (a : Fin k) : Sum.elim ι t x = ι a ↔ x = .inl a := h_bij.1.eq_iff (b := .inl a)
-    simp only [submatrix_apply, Equiv.trans_apply, Equiv.symm_apply_apply, Equiv.apply_symm_apply]
+    simp only [Matrix.submatrix_apply, Equiv.trans_apply, Equiv.symm_apply_apply,
+      Equiv.apply_symm_apply]
     -- compare the four blocks: `x` is a row in `ι` or in `t`, and `y` a column of `1` or of `Z`
-    cases x <;> cases h : e y <;> simp_all [ε, one_apply]
+    cases x <;> cases h : e y <;> simp_all [ε, Matrix.one_apply]
   rw [h_block, det_permute, det_submatrix_equiv_self, det_fromBlocks_zero₂₁]
   simp [abs_unit_intCast]
 
@@ -463,7 +468,7 @@ theorem sum_norm_det_fromCols_sq_le [Fintype L] [DecidableEq L] [Fintype c] [Fin
     _ ≤ ∏ b, ‖(Z'ᴴ * Z') b b‖ := hadamard_det_inequality (posSemidef_conjTranspose_mul_self Z')
     _ = ∏ b : c, ∑ x : L, ‖Z x b‖ ^ 2 := by
       refine (Fintype.prod_equiv ε _ _ fun b ↦ ?_).symm
-      simp [Z', mul_apply, Complex.conj_mul', ← Complex.ofReal_pow, ← Complex.ofReal_sum,
+      simp [Z', Matrix.mul_apply, Complex.conj_mul', ← Complex.ofReal_pow, ← Complex.ofReal_sum,
         abs_of_nonneg (sum_nonneg fun x _ ↦ sq_nonneg ‖Z x b‖)]
 
 end New

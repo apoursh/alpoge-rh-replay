@@ -1,6 +1,8 @@
-import Lib.Adelic.AutomorphicForms.Basic
-import Lib.Adelic.QuotientMeasure.IwasawaUnfolding
-import Lib.DiscreteSeries.Rigidity.KernelFixes
+module
+
+public import Lib.Adelic.AutomorphicForms.Basic
+public import Lib.Adelic.QuotientMeasure.IwasawaUnfolding
+public import Lib.DiscreteSeries.Rigidity.KernelFixes
 
 /-!
 # Convolution over real points, cusp kernels, the Petersson product and Poincaré series
@@ -49,6 +51,8 @@ projected to forms, from the theory of cusp forms. For sources see
 `Lib.Adelic.AutomorphicForms.Cuspidality`.
 -/
 
+@[expose] public section
+
 /-! ## Convolution over the real points; cusp kernels -/
 
 section RealConvolution
@@ -66,8 +70,10 @@ noncomputable def bumpProduct (α : NumberField.InfinitePlace E → DiscreteSeri
     C_c(GInf E s, ℂ) where
   toFun x := ∏ w : NumberField.InfinitePlace E, (α w).val.val (x w)⁻¹
   continuous_toFun := by fun_prop
-  hasCompactSupport' := HasCompactSupport.intro (isCompact_univ_pi fun w ↦ (α w).2.inv) (by
-    grind [prod_eq_zero_iff, image_eq_zero_of_notMem_tsupport, Set.mem_inv])
+  hasCompactSupport' := HasCompactSupport.intro (isCompact_univ_pi fun w ↦ (α w).2.inv)
+    (fun x hx ↦ by
+    obtain ⟨w, hw⟩ := not_forall.1 fun h ↦ hx (Set.mem_univ_pi.2 h)
+    exact prod_eq_zero (mem_univ w) (image_eq_zero_of_notMem_tsupport hw))
 
 /-- For `n` nonempty and `g` in G_∞, the product over the infinite places of the operator norms
 ‖g_w‖ is at least 1 and at least each of its factors. -/
@@ -289,11 +295,9 @@ theorem realConv_realConv (hF : IsBoundedMeasurable F) (hα : Integrable α) {p 
   ext ⟨g, k⟩
   -- Fubini's theorem and a left translation of the inner variable by `x * a`.
   have h_meas : Measurable fun x : GInf E s ↦ ((g * x, k) : G E s) := by fun_prop
-  have h_conv : ∫ x, α x * ∫ y, p y * F (g * (x * a * y), k) =
-      ∫ y, (∫ x, α x * p ((x * a)⁻¹ * y)) * F (g * y, k) :=
-    integral_smul_integral_eq_integral_conv_smul (fun x : GInf E s ↦ x * a) hα hp
+  have h_conv := integral_smul_integral_eq_integral_conv_smul (fun x : GInf E s ↦ x * a) hα hp
       (hF.comp h_meas) (by fun_prop)
-  simpa [realConv, mul_assoc, Prod.mul_def] using h_conv
+  simpa [realConv, mul_assoc, Prod.mul_def, smul_eq_mul] using h_conv
 
 /-- For a cusp kernel e (an integrable idempotent kernel on G_∞ with decay, `IsCuspKernel`) there is
 a continuous compactly supported α on G_∞ with α ∗ e = e, and so R(α)R(e)F = R(e)F for every bounded

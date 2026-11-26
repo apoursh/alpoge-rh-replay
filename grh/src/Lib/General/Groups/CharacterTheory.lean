@@ -1,4 +1,8 @@
-import Lib.Adelic.Unitary.Defs
+module
+
+public import Lib.Adelic.Unitary.Defs
+public import TauCeti.RepresentationTheory.CharacterTable.CentralCharacter
+public import TauCeti.RepresentationTheory.CharacterTable.Completeness
 
 /-!
 # Characters of finite groups: averages, virtual characters and central projections
@@ -32,6 +36,8 @@ This file sets up the character theory of a finite group `G` that is used for th
   projection in every unitary representation. Hence convolution with it does not increase `ℓ²`
   norms.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -87,8 +93,6 @@ omit [Finite G]
 
 lemma IsIrreducibleChar.isChar (hf : IsIrreducibleChar f) : IsChar f := hf.left
 
-lemma IsIrreducibleChar.classInner_self (hf : IsIrreducibleChar f) : classInner f f = 1 :=
-  hf.right.left
 
 /-- For an irreducible character `f`, a class function `h` and `y : G`, the inner product of `f`
 with the translate `t ↦ h (t * y)`, times `f 1`, is `classInner f h * f y`. -/
@@ -324,7 +328,7 @@ characters is an `S`-linear combination of characters. -/
 lemma comp_mem_virtualChars (hf : f ∈ virtualChars S G) {H : Type*} [Group H] [Finite H]
     (p : H →* G) : f ∘ p ∈ virtualChars S H :=
   -- precomposition with `p` is linear and maps characters to characters
-  mapsTo_span (f := funLeft S ℂ p) (fun _ hχ ↦ hχ.comp p) hf
+  mapsTo_span (f := funLeft S ℂ p) (s := {χ | IsChar χ}) (fun _ hχ ↦ IsChar.comp hχ p) hf
 
 omit [Finite G] in
 lemma isClassFunction_of_mem_virtualChars (hf : f ∈ virtualChars S G) : IsClassFunction f := by
@@ -450,8 +454,7 @@ end CentralProjections
 /-!
 ## Irreducibility criteria and expansion of class functions
 
-* `New.sum_mul_trace_block_eq_card_mul`, `New.classInner_eq_sum_of_eq_sum`: the trace computation
-  behind the expansion of a class function in the block characters, and Parseval's identity.
+* `New.classInner_eq_sum_of_eq_sum`: Parseval's identity for the expansion of a class function.
 * `New.IsChar.asAlgebraHom_groupAlgElem_eq_zero_iff`: `∑ g, conj (χ g) • g` acts as zero in `ρ` iff
   `χ` is orthogonal to the character of `ρ`. `New.IsChar.asAlgebraHom_groupAlgElem_eq_zero` is a
   sufficient condition for `∑ g, χ (i g * s) • g` to act as zero, `i` a group homomorphism.
@@ -466,75 +469,6 @@ attribute [local instance low] Fintype.ofFinite
 variable {G H V : Type*} [Group G] [Finite G] [Group H] {χ f : G → ℂ}
   [AddCommGroup V] [Module ℂ V] [Module.Finite ℂ V] {ρ : Representation ℂ G V}
   (Z : Type*) [CommSemiring Z] [Algebra Z ℂ]
-
-section Blocks
-
-variable {n : ℕ} {d : Fin n → ℕ} (e : ℂ[G] ≃ₐ[ℂ] ∀ i : Fin n, Matrix (Fin (d i)) (Fin (d i)) ℂ)
-
-/-- If `e` identifies `ℂ[G]` with a product of matrix algebras, `G` acts on column vectors through
-the `i`-th block. -/
-def blockRepresentation (i : Fin n) : Representation ℂ G (Fin (d i) → ℂ) :=
-  (lift ℂ _ G).symm (toLinAlgEquiv'.toAlgHom.comp ((Pi.evalAlgHom ℂ _ i).comp e.toAlgHom))
-
-omit [Finite G] in
-/-- Let `e` identify `ℂ[G]` with a product of matrix algebras of sizes `d i`. There is a character
-`χ` of degree `d i`, that of the dual of the `i`-th block, such that the `i`-th block of each
-`y : G` has trace `χ y⁻¹`. -/
-lemma exists_isChar_trace_block (i : Fin n) :
-    ∃ χ : G → ℂ, IsChar χ ∧ χ 1 = d i ∧ ∀ y : G, (e (single y 1) i).trace = χ y⁻¹ := by
-  let V : FDRep ℂ G := .of (dual (blockRepresentation e i))
-  have hρ (y : G) : blockRepresentation e i y = toLin' (e (single y 1) i) := rfl
-  refine ⟨V.character, ⟨V, rfl⟩, by simp [V], fun y ↦ ?_⟩
-  simp [← trace_toLin'_eq, ← hρ, V, FDRep.character]
-
-/-- Let `e` identify `ℂ[G]` with a product of matrix algebras. For a class function `φ` the element
-`∑ g, φ g • g` is central, so each of its blocks under `e` is a scalar matrix. -/
-lemma IsClassFunction.exists_block_eq_algebraMap {φ : G → ℂ} (hφ : IsClassFunction φ) (i : Fin n) :
-    ∃ c : ℂ, e (groupAlgElem φ) i = algebraMap ℂ (Matrix (Fin (d i)) (Fin (d i)) ℂ) c := by
-  have h_comm (A : ∀ j, Matrix (Fin (d j)) (Fin (d j)) ℂ) : Commute A (e (groupAlgElem φ)) := by
-    simpa using (IsClassFunction.commute (e := groupAlgElem φ) hφ (e.symm A)).map e
-  have h_center : e (groupAlgElem φ) i ∈ Subalgebra.center ℂ (Matrix (Fin (d i)) (Fin (d i)) ℂ) :=
-    Subalgebra.mem_center_iff.2 fun A ↦ by simpa using congrFun (h_comm (Pi.single i A)).eq i
-  exact (IsCentral.mem_center_iff ℂ).1 h_center
-
-/-- Let `e` identify `ℂ[G]` with a product of matrix algebras (the blocks). If the `i`-th block of
-`∑ g, φ g • g` is the scalar `c` and `χ` is a character such that the `i`-th block of each `y` has
-trace `χ y⁻¹`, then `∑ x, conj (χ x) * φ (x * y) = c * χ y`. -/
-lemma IsChar.sum_conj_mul_eq_of_block {φ : G → ℂ} {i : Fin n} {c : ℂ} (hχ : IsChar χ)
-    (h_trace : ∀ y : G, (e (single y 1) i).trace = χ y⁻¹)
-    (hc : e (groupAlgElem φ) i = algebraMap ℂ (Matrix (Fin (d i)) (Fin (d i)) ℂ) c) (y : G) :
-    ∑ x : G, conj (χ x) * φ (x * y) = c * χ y := by
-  classical
-  have h_repr : ∑ x : G, φ (x * y) • single x (1 : ℂ) = groupAlgElem φ * single y⁻¹ 1 := by
-    ext x
-    simp [Finsupp.single_apply]
-  calc
-    _ = (e (∑ x : G, φ (x * y) • single x (1 : ℂ)) i).trace := by
-      simp [-MonoidAlgebra.smul_single, h_trace, hχ.apply_inv, mul_comm (φ _)]
-    _ = c * χ y := by simp [h_repr, -MonoidAlgebra.smul_single, hc, h_trace, algebraMap_eq_smul_one]
-
-/-- Let `e` identify `ℂ[G]` with a product of matrix algebras (the blocks) of sizes `d i`. If the
-`i`-th block of `∑ g, φ g • g` is the scalar `c i` for each `i`, then `|G| * φ g` is the sum over
-`i` of `c i * d i` times the trace of the `i`-th block of `g⁻¹`. -/
-lemma sum_mul_trace_block_eq_card_mul {φ : G → ℂ} {c : Fin n → ℂ}
-    (hc : ∀ i : Fin n,
-      e (groupAlgElem φ) i = algebraMap ℂ (Matrix (Fin (d i)) (Fin (d i)) ℂ) (c i)) (g : G) :
-    ∑ i : Fin n, c i * (d i * (e (single g⁻¹ 1) i).trace) = Nat.card G * φ g := by
-  classical
-  -- Both sides are the trace of the left multiplication `L`, computed in the basis `b` of matrix
-  -- units and in the group basis.
-  let L : ℂ[G] →ₗ[ℂ] ℂ[G] := mulLeft ℂ (groupAlgElem φ * single g⁻¹ 1)
-  let b : Module.Basis (Σ i : Fin n, Fin (d i) × Fin (d i)) ℂ ℂ[G] :=
-    (Pi.basis fun i ↦ stdBasis ℂ (Fin (d i)) (Fin (d i))).map e.symm.toLinearEquiv
-  calc ∑ i : Fin n, c i * (d i * (e (single g⁻¹ 1) i).trace)
-      = traceAux ℂ b L := by
-        simp [L, b, hc, traceAux, Matrix.trace, stdBasis, toMatrix_apply, ← mul_sum,
-          Fintype.sum_prod_type, Fintype.sum_sigma, ← single_eq_of_single_single,
-          algebraMap_eq_smul_one]
-    _ = traceAux ℂ (basis G ℂ) L := by rw [traceAux_eq ℂ b (basis G ℂ)]
-    _ = Nat.card G * φ g := by simp [L, traceAux, Matrix.trace, toMatrix_apply, basis]
-
-end Blocks
 
 omit [Group G] in
 /-- Parseval's identity: if `φ = ∑ i, ⟨χ i, φ⟩ • χ i` for the inner product `New.classInner`, then
@@ -588,26 +522,65 @@ variable (G) in
 /-- A finite group has a finite family of characters in which every class function expands. -/
 lemma exists_isExpansionFamily : ∃ (n : ℕ) (χ : Fin n → G → ℂ), IsExpansionFamily χ := by
   classical
-  -- Wedderburn: `e` identifies `ℂ[G]` with a product of matrix algebras; `χ i` is the character of
-  -- the dual of the `i`-th block, of degree `d i`, and that block of `y` has trace `χ i y⁻¹`.
-  -- A class function `φ` acts by a scalar `c φ i` on the `i`-th block.
-  obtain ⟨n, d, hd, ⟨e⟩⟩ := IsSemisimpleRing.exists_algEquiv_pi_matrix_of_isAlgClosed ℂ ℂ[G]
-  choose χ hχ hχ_one hχ_trace using exists_isChar_trace_block e
-  choose! c hc using fun φ (hφ : IsClassFunction φ) ↦ hφ.exists_block_eq_algebraMap e
-  have h_translate (φ : G → ℂ) (hφ : IsClassFunction φ) (i : Fin n) (y : G) :
-      classInner (χ i) (fun x ↦ φ (x * y)) = (Nat.card G : ℂ)⁻¹ * (c φ i * χ i y) := by
-    rw [← (hχ i).sum_conj_mul_eq_of_block e (hχ_trace i) (hc φ hφ i) y, classInner, finMean,
-      finsum_eq_sum_of_fintype, div_eq_inv_mul]
-  have h_inner (φ : G → ℂ) (hφ : IsClassFunction φ) (i : Fin n) :
-      classInner (χ i) φ = (Nat.card G : ℂ)⁻¹ * (c φ i * d i) := by
-    simpa only [mul_one, hχ_one] using h_translate φ hφ i 1
-  refine ⟨n, χ, hχ, fun i ↦ by simp [hχ_one, NeZero.pos], fun {φ} hφ i y ↦ ?_,
+  have : Invertible (Nat.card G : ℂ) :=
+    invertibleOfNonzero (Nat.cast_ne_zero.2 Nat.card_pos.ne')
+  obtain ⟨d, ρ, hirr, hind, -⟩ := TauCeti.exists_irreducible_family_conjClasses ℂ G
+  have := hirr
+  let e : ConjClasses G ≃ Fin (Fintype.card (ConjClasses G)) := Fintype.equivFin (ConjClasses G)
+  let χ : Fin (Fintype.card (ConjClasses G)) → G → ℂ := fun i ↦ (ρ (e.symm i)).character
+  have hχ (i) : IsChar (χ i) := ⟨.of (ρ (e.symm i)), rfl⟩
+  have h_translate (φ : G → ℂ) (hφ : IsClassFunction φ) (i) :
+      ∃ c : ℂ, ∀ y : G, classInner (χ i) (fun x ↦ φ (x * y)) = (Nat.card G : ℂ)⁻¹ * (c * χ i y) := by
+    have hφ_inv : IsClassFunction (fun t : G ↦ φ t⁻¹) := fun g x ↦ by
+      simpa [mul_assoc] using hφ g⁻¹ x
+    let z : Subalgebra.center ℂ ℂ[G] :=
+      ⟨groupAlgElem fun t ↦ φ t⁻¹, Subalgebra.mem_center_iff.2 hφ_inv.commute⟩
+    refine ⟨TauCeti.Representation.centralCharacter (ρ (e.symm i)) z, fun y ↦ ?_⟩
+    rw [classInner, finMean, finsum_eq_sum_of_fintype, div_eq_inv_mul]
+    congr 1
+    have h_repr : ∑ u : G, φ (u⁻¹ * y) • single u (1 : ℂ) = z.1 * single y 1 := by
+      ext u
+      have h_swap : φ (y * u⁻¹) = φ (u⁻¹ * y) := by
+        simpa [mul_assoc] using hφ (u⁻¹ * y) u
+      simp [z, Finsupp.single_apply, h_swap]
+    have h_sum : ∑ x : G, conj (χ i x) * φ (x * y) = ∑ u : G, φ (u⁻¹ * y) * χ i u := by
+      refine Fintype.sum_equiv (Equiv.inv G) _ _ fun x ↦ ?_
+      simp [(hχ i).apply_inv, mul_comm]
+    calc ∑ x : G, conj (χ i x) * φ (x * y)
+        = LinearMap.trace ℂ _ ((ρ (e.symm i)).asAlgebraHom (z.1 * single y 1)) := by
+          rw [h_sum, ← h_repr, map_sum, map_sum]
+          refine Finset.sum_congr rfl fun u _ ↦ ?_
+          simp [χ, Representation.character]
+      _ = TauCeti.Representation.centralCharacter (ρ (e.symm i)) z * χ i y := by
+          rw [map_mul, TauCeti.Representation.asAlgebraHom_center]
+          simp [χ, Representation.character, Module.End.mul_eq_comp]
+  refine ⟨Fintype.card (ConjClasses G), χ, hχ, fun i ↦ ?_, fun {φ} hφ i y ↦ ?_,
     fun {φ} hφ ↦ funext fun g ↦ ?_⟩
-  · rw [h_translate φ hφ, h_inner φ hφ, hχ_one]
+  · have : Nontrivial (ρ (e.symm i)).asModule := IsSimpleModule.nontrivial ℂ[G] _
+    have : Nontrivial (Fin (d (e.symm i)) → ℂ) := (ρ (e.symm i)).asModuleEquiv.injective.nontrivial
+    have hpos : 0 < Module.finrank ℂ (Fin (d (e.symm i)) → ℂ) :=
+      Module.finrank_pos (R := ℂ) (M := Fin (d (e.symm i)) → ℂ)
+    simpa [χ, Representation.character] using hpos
+  · obtain ⟨c, hc⟩ := h_translate φ hφ i
+    have hc1 := hc 1
+    simp only [mul_one] at hc1
+    rw [hc y, hc1]
     ring
-  · have h_trace : ∑ i : Fin n, c φ i * (d i * χ i g) = Nat.card G * φ g := by
-      simpa only [hχ_trace, inv_inv] using sum_mul_trace_block_eq_card_mul e (hc φ hφ) g
-    simp [h_inner φ hφ, mul_assoc, ← mul_sum, h_trace]
+  · let Φ : TauCeti.ClassFunction ℂ G := ⟨φ, TauCeti.ClassFunction.mem_iff.2 hφ⟩
+    have h_pair (i : Fin (Fintype.card (ConjClasses G))) :
+        TauCeti.ClassFunction.characterPairing (TauCeti.ClassFunction.ofCharacter (ρ (e.symm i))) Φ =
+          classInner (χ i) φ := by
+      rw [TauCeti.ClassFunction.characterPairing_apply, classInner, finMean,
+        finsum_eq_sum_of_fintype, div_eq_inv_mul]
+      congr 1
+      refine Fintype.sum_equiv (Equiv.inv G) _ _ fun x ↦ ?_
+      simp [Φ, χ, (hχ i).apply_inv]
+    have hexp := TauCeti.ClassFunction.apply_eq_sum_characterPairing_mul_character ρ hind rfl Φ g
+    have hsum : ∑ i, classInner (χ i) φ * χ i g =
+        ∑ C, TauCeti.ClassFunction.characterPairing (TauCeti.ClassFunction.ofCharacter (ρ C)) Φ *
+          (ρ C).character g :=
+      Fintype.sum_equiv e.symm _ _ fun i ↦ by simp [h_pair i, χ]
+    simpa [Φ, Finset.sum_apply] using hexp.trans hsum.symm
 
 /-- Let `f` and `I` be class functions on a finite group `G` with `⟨I, f⟩ ≠ 0`, `⟨f, f⟩ = 1` and
 `0 ≤ re (f 1)`, where `⟨ , ⟩` is the inner product `New.classInner`. Suppose `⟨χ, f⟩` is an integer
@@ -652,13 +625,24 @@ lemma IsClassFunction.exists_eq_mul_groupAlgElem_mul (hf : IsClassFunction f) (a
     ∃ u : ℂ[G], a = u * groupAlgElem f * a := by
   -- Wedderburn: `e` identifies `ℂ[G]` with a product of matrix algebras, and the `i`-th block of
   -- `groupAlgElem f` is a scalar `c i`. Take for `u` the blockwise scalar `(c i)⁻¹`.
-  obtain ⟨n, d, -, ⟨e⟩⟩ := IsSemisimpleRing.exists_algEquiv_pi_matrix_of_isAlgClosed ℂ ℂ[G]
-  choose c hc using hf.exists_block_eq_algebraMap e
+  obtain ⟨n, d, hd, ⟨e⟩⟩ := IsSemisimpleRing.exists_algEquiv_pi_matrix_of_isAlgClosed ℂ ℂ[G]
+  have := hd
+  have (i : Fin n) := TauCeti.isIrreducible_blockRepresentation e i
+  let z : Subalgebra.center ℂ ℂ[G] := ⟨groupAlgElem f, Subalgebra.mem_center_iff.2 hf.commute⟩
+  let c : Fin n → ℂ := fun i ↦
+    TauCeti.Representation.centralCharacter (TauCeti.blockRepresentation e i) z
+  have hc (i : Fin n) : e (groupAlgElem f) i = algebraMap ℂ _ (c i) := by
+    have h := TauCeti.Representation.asAlgebraHom_center (TauCeti.blockRepresentation e i) z
+    simpa [z, c, TauCeti.asAlgebraHom_blockRepresentation, TauCeti.blockAlgHom_apply,
+      algebraMap_eq_smul_one] using congrArg Matrix.toLinAlgEquiv'.symm h
   refine ⟨e.symm (c⁻¹ • 1), e.injective (funext fun i ↦ ?_)⟩
   by_cases hi : c i = 0
   · -- `groupAlgElem f` acts as zero on the `i`-th block, so `a` does too
     have ha_zero : e a i = 0 := by
-      simpa [hc, hi, blockRepresentation, asAlgebraHom] using ha (.of (blockRepresentation e i))
+      have h := ha (.of (TauCeti.blockRepresentation e i)) (by
+        simp [TauCeti.asAlgebraHom_blockRepresentation, TauCeti.blockAlgHom_apply, hc, hi])
+      simpa [TauCeti.asAlgebraHom_blockRepresentation, TauCeti.blockAlgHom_apply] using
+        congrArg Matrix.toLinAlgEquiv'.symm h
     simp [ha_zero]
   · simp [hc, hi, algebraMap_eq_smul_one]
 

@@ -1,5 +1,7 @@
-import Lib.Weil.Construction.CanonicalTheta
-import Lib.Weil.DualPair.WeilAction
+module
+
+public import Lib.Weil.Construction.CanonicalTheta
+public import Lib.Weil.DualPair.WeilAction
 
 /-!
 # Weil representation of unitary pairs: finite action, sums, negation and change of point
@@ -33,6 +35,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.DualPair.GaloisLaw` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 

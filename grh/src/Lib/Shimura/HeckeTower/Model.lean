@@ -1,8 +1,10 @@
-import Lib.Shimura.AbelianScheme.IsogenyFlatness
-import Lib.Shimura.HeckeTower.HeckeData
-import Lib.Shimura.ThetaModuli.ThetaFamilyRigidity
-import Lib.Shimura.Uniformisation.LieExponential
-import Lib.Weil.Unramified.SplitHecke
+module
+
+public import Lib.Shimura.AbelianScheme.IsogenyFlatness
+public import Lib.Shimura.HeckeTower.HeckeData
+public import Lib.Shimura.ThetaModuli.ThetaFamilyRigidity
+public import Lib.Shimura.Uniformisation.LieExponential
+public import Lib.Weil.Unramified.SplitHecke
 
 /-!
 # Properties of a Kuga–Sato tower, Hecke operators at split places, torsion counts and levels
@@ -49,6 +51,8 @@ and 7–8.
 See also `Lib.Shimura.IntegralModel.TowerExistence`, `Lib.Shimura.Uniformisation.AppellHumbert` and
 `Lib.Shimura.AbelianScheme.IsogenyFlatness`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -791,7 +795,7 @@ lemma card_torsionBySet_adelicTorsion {I : Ideal (𝓞 E)} (hI : I ≠ ⊥) :
         -- `AddSubgroup.index` and the coercions of the fractional ideals
         simpa [ι, 𝔞, A, B, C] using! card_congr e.toEquiv
       _ = I.toAddSubgroup.relIndex ⊤ := relIndex_map_map_of_injective _ ⊤ Subtype.val_injective
-      _ = I.absNorm := relIndex_top_right _
+      _ = I.absNorm := (relIndex_top_right _).trans (Ideal.absNorm_of_ne_bot hI).symm
   -- the torsion is `(I⁻¹)ⁿ` modulo the vectors in `𝓞ⁿ`, a subgroup whose index is a product
   calc Nat.card (torsionBySet (𝓞 E) (AdelicTorsion E n) I)
     _ = Nat.card (frameTorsionClass (E := E) (n := n) 1 ∘ₗ J.compLeft n).range := by

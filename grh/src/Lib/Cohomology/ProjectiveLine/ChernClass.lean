@@ -1,4 +1,6 @@
-import Lib.Cohomology.TorsionTheories
+module
+
+public import Lib.Cohomology.TorsionTheories
 
 /-!
 # Tate module, Kummer sequence and the first Chern class of O(1) on the projective line
@@ -39,6 +41,8 @@ Notions from other files:
 Known; see `Lib.Cohomology.ProjectiveLine.ConstantLineFormula` and
 `Lib.PadicComparison.Duality.GoodPairs` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -201,7 +205,7 @@ private lemma isPrimitiveRoot_tateRoot_tateGen {c : C} {K : Type} [CommRing K] [
     rfl
   have h_root : (cyclotomic ℓ K).IsRoot ((tateRoot ψ (tateGen g c (.of ⟨⟩))).val : K) := by
     rw [h_val, ← map_cyclotomic ℓ φ]
-    exact isRoot_cyclotomic_compatibleRootsOfUnity.map
+    exact isRoot_cyclotomic_compatibleRootsOfUnity.map φ
   exact IsPrimitiveRoot.coe_units_iff.mp (isRoot_cyclotomic_iff.mp h_root)
 
 /-- Let A be local and absolutely integrally closed, with the prime ℓ invertible in A. If ℓ kills
@@ -516,7 +520,7 @@ Here `g : C ⥤ TestOver A` is a functor to tests over `A`, `New.Variety.ringOf 
 
 section LineChernClass
 
-open CategoryTheory AddCommGrpCat Abelian TotalH FreeAbelianGroup Ideal
+open CategoryTheory AddCommGrpCat Abelian TotalH FreeAddCommGroup Ideal
 
 set_option backward.isDefEq.respectTransparency false
 
@@ -611,7 +615,7 @@ lemma eq_and_eq_of_smul_unimodularRow_eq {q q' : projLine.obj B} {a b : Bˣ}
 
 /-- The unit by which `f` rescales the row of a point (`unimodularRow_map`), extended additively
 to the free abelian group on the points. -/
-def rowUnit : FreeAbelianGroup (projLine B) →+ Gm B' :=
+def rowUnit : FreeAddCommGroup (projLine B) →+ Gm B' :=
   lift fun q : projLine B ↦ ⟨(exists_unit_smul_unimodularRow (q.1.out.map f f)).choose⟩
 
 /-- The image under `f` of a point `q` is the class of the image of its chosen representative. -/
@@ -623,9 +627,9 @@ lemma map_eq_mk_map_out (f : B ⟶ B') (q : projLine B) :
 the chosen row of the image point of `q`. -/
 lemma unimodularRow_map :
     (unimodularRow q).map f f =
-      (rowUnit f (FreeAbelianGroup.of q)).down.toMul.val • unimodularRow (projLine.map f q) := by
+      (rowUnit f (FreeAddCommGroup.of q)).down.toMul.val • unimodularRow (projLine.map f q) := by
   -- `rowUnit f q` is the unit chosen for the image of the representative of `q`.
-  have h_unit : (rowUnit f (FreeAbelianGroup.of q)).down.toMul =
+  have h_unit : (rowUnit f (FreeAddCommGroup.of q)).down.toMul =
       (exists_unit_smul_unimodularRow (q.down.out.map f f)).choose :=
     congrArg (fun u : Gm B' ↦ u.down.toMul) (lift_apply_of _ q)
   rw [h_unit, map_eq_mk_map_out, ← (exists_unit_smul_unimodularRow _).choose_spec]
@@ -635,11 +639,11 @@ lemma unimodularRow_map :
 the unit `rowUnit f q`. -/
 lemma add_rowUnit_eq {q' : projLine B'} {a : Bˣ} {b : B'ˣ}
     (h_row : (a.val • unimodularRow q).map f f = b.val • unimodularRow q') :
-    Gm.map f ⟨a⟩ + rowUnit f (FreeAbelianGroup.of q) = ⟨b⟩ := by
+    Gm.map f ⟨a⟩ + rowUnit f (FreeAddCommGroup.of q) = ⟨b⟩ := by
   -- Write the image of `a • unimodularRow q` in two ways as a unit times a row; the unit is unique.
-  have h_smul : (Gm.map f ⟨a⟩ + rowUnit f (FreeAbelianGroup.of q)).down.toMul.val •
+  have h_smul : (Gm.map f ⟨a⟩ + rowUnit f (FreeAddCommGroup.of q)).down.toMul.val •
       unimodularRow (projLine.map f q) = b.val • unimodularRow q' := by
-    change (f a.val * (rowUnit f (FreeAbelianGroup.of q)).down.toMul.val) •
+    change (f a.val * (rowUnit f (FreeAddCommGroup.of q)).down.toMul.val) •
       unimodularRow (projLine.map f q) = _
     rw [mul_smul, ← unimodularRow_map, ← h_row]
     ext <;> simp
@@ -679,7 +683,7 @@ lemma affinePt_eq_map (x : B')
 also has a unit as first coordinate. -/
 lemma isUnit_fst_unimodularRow_map (h_unit : IsUnit (f (unimodularRow q).fst)) :
     IsUnit (unimodularRow (projLine.map f q)).fst := by
-  rw [show f (unimodularRow q).fst = (rowUnit f (FreeAbelianGroup.of q)).down.toMul.val *
+  rw [show f (unimodularRow q).fst = (rowUnit f (FreeAddCommGroup.of q)).down.toMul.val *
       (unimodularRow (projLine.map f q)).fst from congrArg Prod.fst (unimodularRow_map f q)]
     at h_unit
   exact (IsUnit.mul_iff.mp h_unit).right
@@ -778,7 +782,7 @@ end LineChernClass
 
 section EtaProduct
 
-open CategoryTheory AddCommGrpCat Abelian TotalH FreeAbelianGroup Ideal projLine
+open CategoryTheory AddCommGrpCat Abelian TotalH FreeAddCommGroup Ideal projLine
 
 set_option backward.isDefEq.respectTransparency false
 
@@ -828,7 +832,7 @@ then `η` pulls back to zero along `b`. -/
 lemma map_etaClass_eq_zero_of_coboundary (b : freeAb Y ⟶ freeAb (projLineAlong g))
     (u : ∀ c : C, Y c → (ringOf g ⋙ Gm) c)
     (h_coboundary : ∀ (c d : C) (f : c ⟶ d) (x : Y c), (ringOf g ⋙ Gm).map f (u c x) =
-      (cocycle g).component f (b c (FreeAbelianGroup.of x)) + u d (Y.map f x)) :
+      (cocycle g).component f (b c (FreeAddCommGroup.of x)) + u d (Y.map f x)) :
     H.map (tateModule g) b 2 (etaClass g) = 0 := by
   -- The units `u` trivialize the cocycle along `b`, so `b` lifts to the middle term of the
   -- extension `(cocycle g).extension`, and the extension class dies on the middle term.
@@ -1053,8 +1057,6 @@ def lineBasis : ∀ i : Bool, H (restrictAlong (elementsProj (projLineAlong g)) 
   | true => Ext.mk₀ (𝟙 (elementsProj (projLineAlong g) ⋙ M.functor))
   | false => M.cupClass
 
-lemma lineBasis_true :
-    M.lineBasis true = Ext.mk₀ (𝟙 (elementsProj (projLineAlong g) ⋙ M.functor)) := rfl
 
 lemma lineBasis_false : M.lineBasis false = M.cupClass := rfl
 

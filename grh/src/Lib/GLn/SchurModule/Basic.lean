@@ -1,4 +1,6 @@
-import Lib.Base
+module
+
+public import Lib.Base
 
 /-!
 # Schur modules: semi-invariants, minors, Fock pairing, Schur and Gram matrices
@@ -36,6 +38,8 @@ elements, so it acts on the Weyl module, and the Gram matrix is the coefficient 
 
 Known; see `Lib.GLn.SchurModule.MinorBasis` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -472,19 +476,20 @@ omit [DecidableEq σ] in
 /-- `linSubst A` substitutes for each variable the linear form of the matching row of `Aᵀ`. -/
 lemma linSubst_eq_bind₁ : linSubst A = bind₁ Aᵀ.toMvPolynomial := by
   ext s : 1
-  simp [linSubst, Matrix.toMvPolynomial, smul_eq_C_mul, C_mul_X_eq_monomial]
+  simp [linSubst, MvPolynomial.bind₁, Matrix.toMvPolynomial, smul_eq_C_mul, C_mul_X_eq_monomial]
 
 @[simp]
-lemma linSubst_one : linSubst 1 f = f := by simp [linSubst_eq_bind₁]
+lemma linSubst_one : linSubst 1 f = f := by
+  simp [linSubst_eq_bind₁, MvPolynomial.bind₁, aeval_X_left_apply]
 
 omit [DecidableEq σ] in
 lemma linSubst_mul : linSubst (A * B) f = linSubst A (linSubst B f) := by
-  simp [linSubst_eq_bind₁, bind₁_bind₁, ← toMvPolynomial_mul]
+  simp [linSubst_eq_bind₁, MvPolynomial.bind₁, comp_aeval_apply, ← toMvPolynomial_mul]
 
 omit [DecidableEq σ] in
 lemma map_linSubst :
     MvPolynomial.map ψ (linSubst A f) = linSubst (A.map ψ) (MvPolynomial.map ψ f) := by
-  simp [linSubst, map_bind₁, ← C_mul']
+  simp [linSubst, ← C_mul', aeval_def, eval₂_map, MvPolynomial.algebraMap_eq, hom_eval₂, map_comp_C]
 
 variable {a f} {S : Type _} [Fintype S] [DecidableEq S] (α : Monomials σ a)
 
@@ -509,7 +514,7 @@ lemma sum_monomials_eq_of_isHomogeneous (hf : f.IsHomogeneous a) :
 monomial basis, of `New.linSubst` A on forms of degree a. -/
 def symPowMatrix (a : ℕ) : Matrix σ σ R →* Matrix (Monomials σ a) (Monomials σ a) R where
   toFun A := of fun β α ↦ (linSubst A (monomial α.1 1)).coeff β.1
-  map_one' := by simp [eq_comm, one_apply, ← ext_iff]
+  map_one' := by simp [eq_comm, Matrix.one_apply, ← ext_iff]
   map_mul' A B := by
     ext β α
     -- Expand `linSubst B (monomial α 1)` in the monomials of degree `a`, then apply `linSubst A`.
@@ -634,7 +639,7 @@ lemma rowSubst_mem_nabla {f : MatrixPoly ((τ : Φ) × n' τ) R} (hf : f ∈ nab
   let zy (y' : ((τ : Φ) × n τ) × ℕ → S) (x : ((τ : Φ) × n' τ) × ℕ) : S :=
     ∑ a : n x.fst.fst, z x.fst.fst x.fst.snd a • y' (⟨x.fst.fst, a⟩, x.snd)
   have h_subst (y' : ((τ : Φ) × n τ) × ℕ → S) : aeval y' (rowSubst z f) = aeval (zy y') f := by
-    simp [zy, rowSubst, aeval_bind₁, Algebra.smul_def]
+    simp [zy, rowSubst, comp_aeval_apply, Algebra.smul_def]
   -- `z` combines rows of one colour, so it commutes with the right multiplication `borelMul`.
   have h_comm : zy (borelMul fst b y) = borelMul fst b (zy y) := by
     ext x
@@ -648,12 +653,13 @@ lemma rowSubst_mem_nabla {f : MatrixPoly ((τ : Φ) × n' τ) R} (hf : f ∈ nab
 lemma rowSubst_rowSubst (z' : (τ : Φ) → Matrix (n'' τ) (n' τ) R)
     (f : MatrixPoly ((τ : Φ) × n'' τ) R) :
     rowSubst z (rowSubst (n' := n'') z' f) = rowSubst (fun τ : Φ ↦ z' τ * z τ) f := by
-  simp [bind₁_bind₁, mul_smul, sum_smul, sum_comm (γ := n _), rowSubst, smul_sum, Matrix.mul_apply]
+  simp [comp_aeval_apply, mul_smul, sum_smul, sum_comm (γ := n _), rowSubst, smul_sum,
+    Matrix.mul_apply]
 
 @[simp]
 lemma rowSubst_one [∀ τ : Φ, DecidableEq (n τ)] (f : MatrixPoly (Sigma n) R) :
     rowSubst (fun τ : Φ ↦ (1 : Matrix (n τ) (n τ) R)) f = f := by
-  simp [rowSubst, Matrix.one_apply]
+  simp [rowSubst, Matrix.one_apply, aeval_X_left_apply]
 
 /-- The Fock pairing `⟨p, q⟩` is the sum, over the monomials `d` of `p`, of
 `p.coeff d * d! * q.coeff d`, where `d!` is the product of the factorials of the exponents. -/

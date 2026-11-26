@@ -1,5 +1,7 @@
-import Lib.Cohomology.Etale.Basic
-import New.Spanning.Frames.RealShells
+module
+
+public import Lib.Cohomology.Etale.Basic
+public import New.Spanning.Frames.RealShells
 
 /-!
 # The normalized cell integral Ξ and the local bounds at ℂ for cut Bessel functions
@@ -48,6 +50,8 @@ Notions from other files:
 The estimates supply the local bounds of the Bessel systems built in
 `New.Spanning.Bessel.FillingData`.
 -/
+
+@[expose] public section
 
 noncomputable section
 

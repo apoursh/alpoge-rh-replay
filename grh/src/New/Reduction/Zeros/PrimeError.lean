@@ -1,4 +1,6 @@
-import Lib.Analytic.EntireLFunction
+module
+
+public import Lib.Analytic.EntireLFunction
 
 /-!
 # A weighted prime-counting error term and its poles at zeros of L-functions
@@ -28,6 +30,8 @@ Euler's constant.
 The transform of a weighted prime sum in a residue class is computed by orthogonality of characters
 and partial summation. Source: Davenport, Multiplicative Number Theory.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -114,11 +118,6 @@ lemma sum_vonMangoldt_div_le (N : ℕ) : ∑ n ∈ Ioc 0 N, vonMangoldt n / n �
     _ ≤ 2 * ∑ _n ∈ Ioc 0 N, Real.log N := by gcongr with n hn <;> simp_all [mem_Ioc]
     _ = N * (2 * Real.log N) := by simp [mul_left_comm]
 
-lemma lambdaKResidueClass_nonneg_and_abs_le (n : ℕ) :
-    0 ≤ lambdaKResidueClass d q n ∧ |lambdaKResidueClass d q n| ≤ 2 * n :=
-  ⟨lambdaKResidueClass_nonneg d q n,
-    (abs_of_nonneg (lambdaKResidueClass_nonneg d q n)).trans_le
-      (lambdaKResidueClass_le_two_mul d q n)⟩
 
 /-- Growth of the partial sums. Let `d` be a prime, `q` any natural number, and
 `λ = lambdaKResidueClass d q` the weight `Λ(n) (1 - (n/d))` on `n ≡ 1` mod `q` and `0` elsewhere,

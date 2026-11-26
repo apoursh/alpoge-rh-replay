@@ -1,8 +1,10 @@
-import New.Determinant.Chain.NormOfChain
-import New.OneLift.ComparisonOperator.GluedForms
-import New.OneLift.ComparisonOperator.ProductsSpan
-import New.OneLift.FalseLifts.PeriodsOfFalseLifts
-import New.Spanning.SecondMoment.SpanningTheorem
+module
+
+public import New.Determinant.Chain.NormOfChain
+public import New.OneLift.ComparisonOperator.GluedForms
+public import New.OneLift.ComparisonOperator.ProductsSpan
+public import New.OneLift.FalseLifts.PeriodsOfFalseLifts
+public import New.Spanning.SecondMoment.SpanningTheorem
 
 /-!
 # The first factors and the gluing maps
@@ -41,6 +43,8 @@ Related work: Böcherer–Dummigan–Schulze-Pillot, Yoshida lifts and Selmer gr
 Hida family of theta lift from U(1) to definite U(2), 2024; Prasanna, Integrality of a ratio of
 Petersson norms and level-lowering congruences, 2006.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -226,10 +230,6 @@ pair of conditions on the blocks `V″` and `V°`, and its inverse is integral o
 lemma isGlued_glueLattice (i : ChoiceIndex j) : (splittingV j ϑ).IsGlued i.1 (glueLattice j ϑ i) :=
   isGlued_splittingV_of_isGlued j ϑ ((splittingV j 1).exists_isGlued i.1).choose_spec
 
-/-- The scalar `c_𝗀` of the lattice `L_Λ` does not depend on the twist. -/
-lemma weilScalar_glueLattice (i : ChoiceIndex j) :
-    (glueLattice j ϑ i).weilScalar = (glueLattice j 1 i).weilScalar := rfl
-
 /-! ### The first factors -/
 
 /-- The constant `c″ ≠ 0` that makes the vectors `c″ Υ_{ϑ,i} (h)` integral away from `Q`, and small
@@ -341,7 +341,6 @@ lemma weylNormSq_firstFactor_le (i : ChoiceIndex j) (h : Gf D.E (FirstFactorInde
 
 /-! ### The gluing map and the slices of lifts -/
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The gluing map `glue_ϑ`. For `ζ` in the copy `i` of the forms on `V°` it is `M ^ l₁` times the
 sum, over the classes `h` of level `J_Λ` and `h°` of level `J (ϖ²)`, of the forms supported on the
 class of `(h, h°) 𝗀` formed from the product vector `φ″ (h) · ζ (h°)` (`productForm`). Here `𝗀`
@@ -352,13 +351,39 @@ is the matrix of `glueLattice j ϑ i`, `M = D.M`, and `l₁` is
     ChoiceIndex j × D.SecondFactorClasses,
     stdClassSum (gluingLevel j ϑ b.1.1) fun h : Gf D.E (FirstFactorIndex j) ↦
       (splittingV j ϑ).productForm (glueLattice j ϑ b.1) (h, b.2.out) (firstFactor j ϑ b.1 h) (ζ b)
-  map_add' := by
-    simp [↓classAut_gluingLevel_eq_bot, classSum, ↓finsum_eq_sum_of_fintype, sum_add_distrib]
-  map_smul' a := by
-    simp [↓classAut_gluingLevel_eq_bot, smul_comm a, ← smul_sum, classSum,
-      ↓finsum_eq_sum_of_fintype]
+  map_add' x y := by
+    have h_sum_add {K : Subgroup (Gf D.E (FirstFactorIndex j))} [IsLevel K]
+        (f g : Gf D.E (FirstFactorIndex j) → (D.descentPair ϑ j).FormV) :
+        stdClassSum K (fun h ↦ f h + g h) = stdClassSum K f + stdClassSum K g := by
+      simp only [classSum, finsum_eq_sum_of_fintype, smul_add, sum_add_distrib]
+    rw [← smul_add, ← sum_add_distrib]
+    refine congrArg _ (sum_congr rfl fun b _ ↦ ?_)
+    have h_pt (h : Gf D.E (FirstFactorIndex j)) :
+        (splittingV j ϑ).productForm (glueLattice j ϑ b.1) (h, b.2.out) (firstFactor j ϑ b.1 h)
+            ((x + y) b) =
+          (splittingV j ϑ).productForm (glueLattice j ϑ b.1) (h, b.2.out) (firstFactor j ϑ b.1 h)
+            (x b) +
+          (splittingV j ϑ).productForm (glueLattice j ϑ b.1) (h, b.2.out) (firstFactor j ϑ b.1 h)
+            (y b) :=
+      map_add _ (x b : WeylIndex _ (D.descentPair ϑ j).colsMinus → ℂ) (y b)
+    exact (congrArg (stdClassSum _) (funext h_pt)).trans (h_sum_add _ _)
+  map_smul' a x := by
+    have h_sum_smul {K : Subgroup (Gf D.E (FirstFactorIndex j))} [IsLevel K]
+        (f : Gf D.E (FirstFactorIndex j) → (D.descentPair ϑ j).FormV) :
+        stdClassSum K (fun h ↦ a • f h) = a • stdClassSum K f := by
+      simp only [classSum, finsum_eq_sum_of_fintype, smul_comm a, smul_sum]
+    rw [RingHom.id_apply, smul_comm a]
+    congr 1
+    rw [smul_sum]
+    refine sum_congr rfl fun b _ ↦ ?_
+    have h_pt (h : Gf D.E (FirstFactorIndex j)) :
+        (splittingV j ϑ).productForm (glueLattice j ϑ b.1) (h, b.2.out) (firstFactor j ϑ b.1 h)
+            ((a • x) b) =
+          a • (splittingV j ϑ).productForm (glueLattice j ϑ b.1) (h, b.2.out)
+            (firstFactor j ϑ b.1 h) (x b) :=
+      map_smul _ a (x b : WeylIndex _ (D.descentPair ϑ j).colsMinus → ℂ)
+    exact (congrArg (stdClassSum _) (funext h_pt)).trans (h_sum_smul _)
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The period is a sum of slices. Let `φ` be a form on `V_j = V″ ⊕ V°` and `ζ` a tuple of forms on
 `V°`. The inner product of `ζ` with the adjoint of the gluing map `glue j ϑ` at `φ` is `M ^ l₁`
 (`M = D.M`, `l₁ = denominatorExponent`) times the sum, over the choices `i` with matrix `Λ = i.1`,
@@ -373,13 +398,18 @@ lemma inner_adjoint_glue (φ : (D.descentPair ϑ j).FormV) (ζ : FormTuples j) :
         stdClassSum (gluingLevel j ϑ i.1) fun h : Gf D.E (FirstFactorIndex j) ↦
           gramForm (cartanProduct (splittingV j ϑ).ε 1 (firstFactor j ϑ i h) (ζ (i, c)))
             (φ (U.block (splittingV j ϑ).ε (h, c.out) * (glueLattice j ϑ i).point)) := by
+  have h_sum {K : Subgroup (Gf D.E (FirstFactorIndex j))} [IsLevel K]
+      (f : Gf D.E (FirstFactorIndex j) → (D.descentPair ϑ j).FormV)
+      (g : Gf D.E (FirstFactorIndex j) → ℂ) (hfg : ∀ h, inner ℂ (f h) φ = g h) :
+      inner ℂ (stdClassSum K f) φ = stdClassSum K g := by
+    simp only [classSum, finsum_eq_sum_of_fintype, sum_inner]
+    refine sum_congr rfl fun x _ ↦ ?_
+    rw [← Rat.cast_smul_eq_qsmul ℂ, ← Rat.cast_smul_eq_qsmul ℂ, inner_smul_left,
+      map_ratCast, hfg, smul_eq_mul]
   rw [adjoint_inner_right, glue_apply, inner_smul_left, map_pow, map_natCast, sum_inner,
     sum_prod_type]
-  refine congrArg _ (sum_congr rfl fun i _ ↦ sum_congr rfl fun c _ ↦ ?_)
-  simp [↓classAut_gluingLevel_eq_bot, sum_inner, DividedSplitting.productForm, inner_classForm,
-    classSum, ↓ finsum_eq_sum_of_fintype, apply_eq_evalForm]
-  -- the two sides differ only in the implicit level of the forms on `V_j`
-  rfl
+  refine congrArg _ (sum_congr rfl fun i _ ↦ sum_congr rfl fun c _ ↦ h_sum _ _ fun h ↦ ?_)
+  exact inner_classForm _ _ _
 
 /-- The character of the lift to `V_j = V″ ⊕ V°`: the product of `ν″ = firstFactorChar` and
 `ν° = ν_η ^ (m / 2 - j)` is the character `charV` of `descentPair ϑ j`. All are characters of
@@ -848,57 +878,6 @@ lemma tamePart_twistPlace_ne_one (i : (D.descentPair ϑ j).TwistIndex) :
   (liftTamePart_eq_of_mem_Q ..).trans_ne (ϑ.tamePart_ne_one _ i.2)
 
 -- Keeps definitional checks from unfolding the finite sums.
-seal Finset.sum Finset.prod in
-/-- Periods of false lifts on `V_j` vanish, for the pair `W_j, V_j` at the twist `ϑ`. Let `Ξ` be a
-false lift (`falseLiftsAt`): it lies in the image of `D.e₀`, is killed by the Hecke polynomial
-operator for a split place `w` off the level at the value `liftHeckeRoot w`, and is orthogonal to
-the lifts of good forms. Let `ε` split `V_j` as `V″ ⊕ V°`, with bases `N` and `l` and
-`r + 2 rk V″ + 3 < t`. Let `h₁` be a finite point of `U(V″)` and `x` one of `U(V_j)` supported on
-the places of the level and their conjugates. Let `κ` be a diagram given by column counts at the
-infinite places, and `k` a function on the finite points of `U(V°)` with values vectors of weight
-`κ`, whose coordinates, moved by the real points (`GInf`), are multiples of conjugate theta kernels
-`pairTheta` of `W_j, V°` with Schwartz data `φ` fixed by the projection `Space.projOn` for the
-places off the level. Let the conjugate-linear map `C` carry these vectors to the space of values of
-`Ξ`, equivariantly for the representations `conjWeylRep` of `U(V°)_∞`. Then the pairing of `C (k h)`
-with `Ξ ((h₁, h) x)` is left invariant under the rational points, and its class sum is zero at every
-level `K` that fixes it. This is `stdClassSum_gramForm_eq_zero` for `descentPair ϑ j`. -/
-theorem stdClassSum_gramForm_eq_zero_of_mem_falseLiftsAt {N l : Type} [Fintype N] [DecidableEq N]
-    [Fintype l] [DecidableEq l] {w : FinPlace D.E} {hw : star w ≠ w}
-    {hS : w ∉ (D.descentPair ϑ j).places.conjClosure} {Ξ : (D.descentPair ϑ j).FormV}
-    (hΞ : Ξ ∈ (D.descentPair ϑ j).falseLiftsAt hw hS D.e₀ (D.goodLift ϑ j).rangeᗮ)
-    (ε : N ⊕ l ≃ D.RowIndex ⊕ Fin D.t) (h_rank : D.r + 2 * card N + 3 < D.t)
-    {κ : NumberField.InfinitePlace D.E → ℕ → ℕ}
-    (C : (WeylIndex l κ → ℂ) →ₗ⋆[ℂ] WeylIndex (D.RowIndex ⊕ Fin D.t) (D.descentPair ϑ j).columnCount
-      → ℂ)
-    (hC : ∀ (g : GInf D.E (1 : D.RowIndex ⊕ Fin D.t → ℤˣ)) (y : GInf D.E (1 : l → ℤˣ))
-      (ζ : WeylIndex l κ → ℂ),
-      (∀ τ : NumberField.InfinitePlace D.E,
-          (g τ : GL (D.RowIndex ⊕ Fin D.t) ℂ) = reindexGL ε (blockGL (1, y τ))) →
-        conjWeylRep (D.descentPair ϑ j).columnCount (D.descentPair ϑ j).detExp g (C ζ) = C
-          (conjWeylRep κ 0 y ζ))
-    (k : Gf D.E l → WeylIndex l κ → ℂ)
-    (h_kernels : ∀ i : WeylIndex l κ, ∃ (c : ℂ) (g : G D.E (D.signsW j)) (b : AutChar D.E)
-      (φ : 𝒮 ((D.descentPair ϑ j).W.hom (stdSpace D.E l))),
-      Space.projOn ((D.descentPair ϑ j).W.hom (stdSpace D.E l))
-          (D.descentPair ϑ j).places.conjClosureᶜ φ = φ ∧
-        ∀ (u : GInf D.E (1 : l → ℤˣ)) (h : Gf D.E l), conjWeylRep κ 0 u⁻¹ (k h) i =
-          c * conj (pairTheta (D.descentPair ϑ j).W (stdSpace D.E l) (D.descentPair ϑ j).charW b φ
-            (g, u, h)))
-    (h₁ : Gf D.E N) {x : Gf D.E (D.RowIndex ⊕ Fin D.t)}
-    (hx : x ∈ Gf.supportedOn (D.RowIndex ⊕ Fin D.t) (D.descentPair ϑ j).places) :
-    let f (h : Gf D.E l) : ℂ := gramForm (C (k h)) (Ξ (U.block ε (h₁, h) * x))
-    (∀ δ ∈ (stdSpace D.E l).Γ, ∀ h : Gf D.E l, f (δ.2 * h) = f h) ∧
-      ∀ (K : Subgroup (Gf D.E l)) [IsLevel K], K ≤ rightStabilizer f → stdClassSum K f = 0 := by
-  obtain ⟨⟨hΞ_range, hΞ_hecke⟩, hΞ_orth⟩ := hΞ
-  have h_gap : 2 * card D.RowIndex + 2 * card N + 3 < card (D.RowIndex ⊕ Fin D.t) := by
-    rw [D.card_rowIndex_sum_fin, D.card_rowIndex]
-    linarith [D.t_eq_five_mul_r]
-  exact stdClassSum_gramForm_eq_zero (D.fitsParams_descentPair ϑ j) (tamePart_twistPlace_ne_one j ϑ)
-    (hyperplaneSum_apply_eq_zero j ϑ hΞ_range)
-    (normalizedDescent_eq_zero_of_mem_orthogonal j ϑ hΞ_range hΞ_orth) hΞ_hecke
-    h_gap ε C hC k h_kernels h₁ hx
-
--- Keeps definitional checks from unfolding the finite sums.
 seal Finset.univ in
 /-- Slices of false lifts vanish. Let `w` be a split place (`star w ≠ w`) off the level of the pair
 `descentPair ϑ j`, and let `Ξ` be a false lift at `w`: a form on `V_j = V″ ⊕ V°` in the image of the
@@ -945,7 +924,6 @@ lemma sum_slice_eq_zero_of_mem_falseLiftsAt {w : FinPlace D.E} {hw : star w ≠ 
   simpa [↓h_small, classSum, ↓ finsum_eq_sum_of_fintype, DividedSplitting.productForm,
     inner_classForm] using! h_period
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Let `Ξ` be a false lift on `V_j` at a split place `w` off the level of `descentPair ϑ j`: a form
 in the image of `D.e₀` that is killed by the Hecke polynomial operator at `w` and is orthogonal to
 the lifts of good forms. The adjoint of the gluing map `glue j ϑ` takes `Ξ` to a tuple of forms on
@@ -972,6 +950,7 @@ lemma thetaKernelPairing_adjoint_glue_eq_zero {w : FinPlace D.E} {hw : star w �
     · simp only [η, ite_eq_left hi]
       exact sum_slice_eq_zero_of_mem_falseLiftsAt j ϑ hΞ (glueLattice j ϑ i') h _ _ _ g
     · simp [η, hi]
+      exact Finset.sum_eq_zero fun _ _ ↦ rfl
   refine star_eq_zero.1 ?_
   calc star (thetaKernelPairing j (fun c ↦ (glue j ϑ).adjoint Ξ (i, c)) g)
       = ∑ c, inner ℂ (θ c) ((glue j ϑ).adjoint Ξ (i, c)) := by

@@ -1,4 +1,6 @@
-import Lib.ClassField.Global.NormTheorems
+module
+
+public import Lib.ClassField.Global.NormTheorems
 
 /-!
 # Kummer characters, power indices and the existence theorem for totally complex fields
@@ -33,6 +35,8 @@ Notions from other files:
 
 Known; see `Lib.ClassField.Global.AlbertBrauerHasseNoether` for sources.
 -/
+
+@[expose] public section
 
 namespace New
 
@@ -746,12 +750,10 @@ lemma QZChar.commutator_le_commutator_ker {G : Type*} [Group G] [TopologicalSpac
   -- `k` lies in `U`, so its commutators with all of `G` lie in `⁅G, U⁆`, and its class is central.
   have h_exp : expUnit (toHom χ k) = 1 := congrArg Subtype.val (MonoidHom.mem_ker.mp hk')
   have hkU : k ∈ U := MonoidHom.mem_ker.mpr (expUnit_eq_one_iff.mp h_exp)
-  refine mem_center_iff.mpr fun q ↦ ?_
-  obtain ⟨g, rfl⟩ := mk_surjective q
-  have h_comm : g * k * g⁻¹ * k⁻¹ ∈ ⁅(⊤ : Subgroup G), U⁆ :=
-    commutator_mem_commutator (mem_top g) hkU
-  rwa [← commutatorElement_eq_one_iff_mul_comm, commutatorElement_def, ← mk_inv, ← mk_inv,
-    ← mk_mul, ← mk_mul, ← mk_mul, QuotientGroup.eq_one_iff]
+  have h_center : U.map (mk' ⁅(⊤ : Subgroup G), U⁆) ≤ Subgroup.center _ := by
+    rw [← commutator_top_left_eq_bot_iff_le_center, ← map_top_of_surjective _ (mk'_surjective _),
+      ← map_commutator, map_mk'_self]
+  exact h_center ⟨k, hkU, rfl⟩
 
 omit [NumberField K] in
 /-- Let `χ` be a continuous character of `Γ` with values in `ℚ/ℤ` such that `Γ ⧸ ker χ` is finite,

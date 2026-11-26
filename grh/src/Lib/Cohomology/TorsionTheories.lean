@@ -1,8 +1,10 @@
-import Lib.Adelic.Unitary.Defs
-import Lib.Cohomology.Etale.RelativeChains
-import Lib.Cohomology.LerayHirsch
-import Lib.General.Algebra.CohomologyBaseChange
-import Lib.PadicComparison.HodgeTate.ExtCocycles
+module
+
+public import Lib.Adelic.Unitary.Defs
+public import Lib.Cohomology.Etale.RelativeChains
+public import Lib.Cohomology.LerayHirsch
+public import Lib.General.Algebra.CohomologyBaseChange
+public import Lib.PadicComparison.HodgeTate.ExtCocycles
 
 /-!
 # Tensoring degree-two classes; cohomology theories with ℓ-torsion coefficients
@@ -63,6 +65,8 @@ is stated here. Source: for the setting, Milne, Étale Cohomology, Ch. VI.
 See also `Lib.Cohomology.Etale.FilteredLimits` and `Lib.PadicComparison.Duality.GoodPairs`.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 namespace New.Variety
@@ -95,7 +99,7 @@ def tensorPoint (ρ : freeAb.obj (onePointFunctor C) ⟶ K) :
   app S :=
     { app c :=
         ofHom ((TensorProduct.mk ℤ (S.obj c) (K.obj c)).flip
-          (ρ.app c (FreeAbelianGroup.of ⟨⟩))).toAddMonoidHom
+          (ρ.app c (FreeAddCommGroup.of ⟨⟩))).toAddMonoidHom
       naturality c c' f := by
         -- The elements `ρ.app c (.of ⟨⟩)` are compatible with the maps of `K`; so on `x` both
         -- sides are `S.map f x ⊗ K.map f (ρ [pt])`, by the definition of `abTensor`.
@@ -448,7 +452,8 @@ def sliceEquiv :
     TotalH (abTensor N (freeAb X)) F ≃+ TotalH (elementsProj X ⋙ N) (elementsProj X ⋙ F) :=
   -- restrict to the points of `X`, then pull back along
   -- `tensorPoint (freeAbMap tautologicalSection)`, the map `n ↦ n ⊗ [tautological point]`
-  AddEquiv.ofBijective ((TotalH.comp _).comp (TotalH.map (restrictAlong (elementsProj X)))) <| by
+  AddEquiv.ofBijective ((TotalH.comp (.homClass (tensorPoint (freeAbMap tautologicalSection)
+      (elementsProj X ⋙ N)))).comp (TotalH.map (restrictAlong (elementsProj X)))) <| by
     -- by dévissage it suffices to treat `N = ℤ[Y]`, `Y` a sum of representable functors
     -- `h_bij`: the comparison is bijective in every degree at `N`
     have h_bij :=
@@ -898,7 +903,7 @@ lemma IdealFamily.constToZeros_zsmul_mk (c : C) (n : ℤ) :
     I.constToZeros c ⟦n • relFreeAb.mk I.topLocus ⟨⟩⟧ = ⟦⟨.const _ n⟩⟧ := by
   refine congrArg (⟦·⟧) ?_
   -- `oneLocConst` sends the generator to the constant function `1`
-  show ((oneLocConst (g := g)).app c).hom' (n • FreeAbelianGroup.of PUnit.unit) = _
+  show ((oneLocConst (g := g)).app c).hom' (n • FreeAddCommGroup.of PUnit.unit) = _
   have h_one : ((oneLocConst (g := g)).app c).hom' (.of PUnit.unit) =
       ⟨LocallyConstant.const _ (1 : ZMod ℓ)⟩ := freeAb.desc_of ..
   rw [map_zsmul, h_one, ← zsmul_one]

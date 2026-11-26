@@ -1,5 +1,7 @@
-import New.OneLift.ComparisonOperator.DeterminantProducts
-import New.UpperBound.Kernels.ThetaLiftGauge
+module
+
+public import New.OneLift.ComparisonOperator.DeterminantProducts
+public import New.UpperBound.Kernels.ThetaLiftGauge
 
 /-!
 # Rational equivariance, integrality and size of definite theta kernels
@@ -31,6 +33,8 @@ Notions from other files:
 * `New.Rows.twoSidedSubst`: the substitution `x_τ ↦ c_τᵀ x_τ g_τᵀ` on complex polynomials in the
   entries of `N × L` matrices `x_τ`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -197,8 +201,7 @@ lemma norm_map_eval_le_of_isHomogeneous {ι : Type*} {Q : MvPolynomial ι ℂ} {
   -- Scale `z` by `u = σ⁻¹ (t⁻¹)`: this divides `σ z` by `t` and `σ (Q z)` by `t ^ d`.
   let u : ℂ := σ.symm (t : ℂ)⁻¹
   have h_eval : Q.eval (fun i ↦ u * z i) = u ^ d * Q.eval z := by
-    simpa [aeval_bind₁, aeval_eq_eval, -coe_aeval_eq_eval] using
-      congrArg (aeval z) (isHomogeneous_iff_aeval_smul_X.1 hQ u (by simp [u, ht.ne']))
+    simpa only [Pi.smul_def, smul_eq_mul] using hQ.eval_smul u z
   have h_scaled : ‖σ (Q.eval fun i ↦ u * z i)‖ ≤ B :=
     hB _ fun i ↦ by simpa [u, abs_of_pos ht, inv_mul_le_iff₀ ht] using hz i
   rw [h_eval] at h_scaled

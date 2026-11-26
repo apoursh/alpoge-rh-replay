@@ -1,4 +1,6 @@
-import Lib.PadicComparison.Primitive.PeriodCoefficients
+module
+
+public import Lib.PadicComparison.Primitive.PeriodCoefficients
 
 /-!
 # The perfect projective line glued from two perfect discs has the cohomology of a point
@@ -32,6 +34,8 @@ Notions from other files:
 
 Known; see `Lib.Cohomology.ProjectiveLine.ConstantLineFormula` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -110,7 +114,7 @@ abbrev gluing : freeAb (tiltPointsSum pointOrTorus ψ) ⟶ freeAb (twoDiscs ψ) 
         .of ⟨⟨false⟩, ⟨ψ.map (discToTorus (-coeHom)) ≫ t.1⟩⟩ -
           .of ⟨⟨true⟩, ⟨ψ.map (discToTorus coeHom) ≫ t.1⟩⟩
       | _, ⟨⟨false⟩, t⟩ =>
-        FreeAbelianGroup.of ⟨⟨false⟩, ⟨ψ.map (evalZero (pointOrTorus { down := false })) ≫ t.1⟩⟩)
+        FreeAddCommGroup.of ⟨⟨false⟩, ⟨ψ.map (evalZero (pointOrTorus { down := false })) ≫ t.1⟩⟩)
     (by bound)
 
 @[simp]
@@ -124,14 +128,14 @@ variable {B : ULift.{1} Bool → CommAlg OFlat} (Δ : ∀ b : ULift.{1, 0} Bool,
 /-- For a set-valued functor X on p-adic tests (by default the point), the morphism
 ℤ[X] → ℤ[two discs] sending every point to the origin T = 0 of the disc with index a. -/
 abbrev origin : freeAb X ⟶ freeAb twoDiscs :=
-  freeAb.desc (fun _ _ ↦ FreeAbelianGroup.of ⟨a, ⟨evalZero _⟩⟩) fun _ _ _ _ ↦ by
+  freeAb.desc (fun _ _ ↦ FreeAddCommGroup.of ⟨a, ⟨evalZero _⟩⟩) fun _ _ _ _ ↦ by
     congr
     simp
 
 /-- The map ℤ[Hom(B_true, S^♭) ⊔ Hom(B_false, S^♭)] → ℤ[Hom(B_true, S^♭)] that keeps the points
 of the first part and sends those of the second to 0. -/
 abbrev projFirst : freeAb (tiltPointsSum B) ⟶ freeAb (tilt ⋙ reprBy (B ⟨true⟩)) :=
-  freeAb.desc (fun | _, ⟨⟨true⟩, t⟩ => FreeAbelianGroup.of t | _, ⟨⟨false⟩, _⟩ => 0) (by bound)
+  freeAb.desc (fun | _, ⟨⟨true⟩, t⟩ => FreeAddCommGroup.of t | _, ⟨⟨false⟩, _⟩ => 0) (by bound)
 
 /-- For endomorphisms Δ_b of the O^♭-algebras B_b, the endomorphism 1 − Δ of the functor S ↦
 ℤ[⊔_b Hom(B_b, S^♭)], sending [x] to [x] − [x∘Δ_b]. -/
@@ -199,7 +203,7 @@ instance : Mono gluing := by
   -- point of the disc `true` goes to `∗ - t` if it comes from a point `t` of the torus (unique by
   -- `h_epi`), and to `∗` otherwise.
   refine (NatTrans.mono_iff_mono_app _).mpr fun c ↦ SplitMono.mono
-    ⟨AddCommGrpCat.ofHom (FreeAbelianGroup.lift fun ⟨⟨b⟩, ⟨t⟩⟩ ↦
+    ⟨AddCommGrpCat.ofHom (FreeAddCommGroup.lift fun ⟨⟨b⟩, ⟨t⟩⟩ ↦
       .of ⟨⟨false⟩, ⟨structureMap⟩⟩ -
         cond b (extend (fun s ↦ discToTorus coeHom ≫ s) (fun s ↦ .of ⟨⟨true⟩, ⟨s⟩⟩) 0 t) 0), ?_⟩
   dsimp [freeAb, AddCommGrpCat.free]

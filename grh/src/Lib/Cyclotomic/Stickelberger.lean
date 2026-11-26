@@ -1,5 +1,7 @@
-import Lib.GaloisRep.Main.SelmerModules
-import Lib.General.NumberTheory.FrobeniusOrbits
+module
+
+public import Lib.GaloisRep.Main.SelmerModules
+public import Lib.General.NumberTheory.FrobeniusOrbits
 
 /-!
 # A weak form of Stickelberger's theorem for Gauss sums, and a family of Jacobi-type quotients
@@ -34,6 +36,8 @@ The product relation is proved for Jacobi-type quotients of Gauss sums and only 
 unity. Source: L. Washington, Introduction to Cyclotomic Fields, 2nd ed. 1997, 6.2 and Thm 15.1; for
 the product relation, H. Davenport, H. Hasse, J. reine angew. Math. 172 (1935).
 -/
+
+@[expose] public section
 
 namespace New.OddPart
 
@@ -255,8 +259,6 @@ structure IsJacobiFamily (p : ℕ) (B : ClosurePlace) (c M : ℕ) [NeZero M]
     A.valuation (J x).toMul.val = 1
   /-- The order of `J x` at `B` is `floorDiff c x`. -/
   ordRat_eq {x : QZ} (hx : M • x = 0) : ordRat ℚ B (J x) = floorDiff c x
-  /-- `J x` has absolute value one in every complex embedding. -/
-  norm_eq_one {x : QZ} (hx : M • x = 0) (τ : Ω →+* ℂ) : ‖τ (J x).toMul.val‖ = 1
   /-- For a prime `q ∣ p - 1` and `q • b = 0`, the quotient `J (x + b) / J x` is `≡ 1` at every
   place above `q`. -/
   sub_mem_principalUnits {x : QZ} (hx : M • x = 0) (q : ℕ) [Fact q.Prime] (A : ClosurePlace)
@@ -392,7 +394,6 @@ lemma exists_isJacobiFamily (hB : B.valuation p < 1) (c : ℕ) :
       galUnitsRep_apply := h_gal _
       valuation_eq_one := h_unit _
       ordRat_eq := h_ord _
-      norm_eq_one := h_abs _
       sub_mem_principalUnits := fun hx q _ A b hb hq hA ↦ ?_ }
   obtain ⟨t, rfl, -⟩ := S_surj hx
   obtain ⟨s, rfl, hs⟩ := exists_apply_eq_and_nsmul_eq_zero_of_injective hS hb hq

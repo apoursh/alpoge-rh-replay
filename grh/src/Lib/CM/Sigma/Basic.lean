@@ -1,5 +1,7 @@
-import Lib.General.NumberTheory.ImaginaryQuadraticField
-import Lib.Shimura.ComplexTheta.DimensionFormula
+module
+
+public import Lib.General.NumberTheory.ImaginaryQuadraticField
+public import Lib.Shimura.ComplexTheta.DimensionFormula
 
 /-!
 # Sigma and Weierstrass functions, lattice invariants and lattices with complex multiplication
@@ -47,6 +49,8 @@ modular forms of negative weight. Source: J. Silverman, The Arithmetic of Ellipt
 Advanced Topics (1994), I.5; A. Weil, Elliptic Functions according to Eisenstein and Kronecker
 (1976); for uniformisation, A. Sutherland, 18.783 Lecture 15 (2023), Cor. 15.12.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -630,14 +634,14 @@ lemma New.deriv_derivWeierstrassP (L : PeriodPair) {z : ℂ} (hz : z ∉ L.latti
   -- Differentiate `℘' ^ 2 = 4 ℘ ^ 3 - g₂ ℘ - g₃`; where `℘'` is not zero, divide by `2 ℘'`.
   have h_first (w : ℂ) (hw : w ∉ L.lattice) :
       2 * ℘'[L] w * deriv ℘'[L] w = 4 * (3 * ℘[L] w ^ 2 * ℘'[L] w) - L.g₂ * ℘'[L] w := by
-    simpa (disch := fun_prop) using EqOn.deriv L.derivWeierstrassP_sq h_open hw
+    simpa (disch := fun_prop) using EqOn.deriv (fun w ↦ L.derivWeierstrassP_sq w) h_open hw
   rcases ne_or_eq (℘'[L] z) 0 with h_ne | h_zero
   · apply mul_left_cancel₀ (mul_ne_zero two_ne_zero h_ne)
     linear_combination h_first z hz
   -- At a zero of `℘'`, differentiate once more; only the terms free of `℘'` remain.
   have h_second : 2 * deriv ℘'[L] z * deriv ℘'[L] z =
       4 * (3 * ℘[L] z ^ 2 * deriv ℘'[L] z) - L.g₂ * deriv ℘'[L] z := by
-    simpa (disch := fun_prop) [h_zero] using EqOn.deriv h_first h_open hz
+    simpa (disch := fun_prop) [h_zero] using EqOn.deriv (fun w ↦ h_first w) h_open hz
   -- There `℘''` is not zero: `2 z` is a lattice point, a simple zero of `σ`, and the derivative of
   -- the duplication formula reads `2 σ' (2 z) = -℘'' z σ z ^ 4`.
   have h_simple : deriv L.σ (2 * z) ≠ 0 :=
@@ -935,15 +939,8 @@ lemma exists_eq_zero_of_weight_twelve_of_tendsto_one (g : ModularForm 𝒮ℒ 12
     (congrFun (levelOne_neg_weight_eq_zero (by norm_num) g_inv) UpperHalfPlane.I)
 
 /-- The Eisenstein series E₄ tends to 1 at the cusp i∞. -/
-lemma tendsto_E₄_atImInfty : Filter.Tendsto E₄ atImInfty (nhds 1) := by
-  have hE : Filter.Tendsto E₄ atImInfty (nhds (valueAtInfty E₄)) :=
-    tendsto_sub_nhds_zero_iff.1 (IsZeroAtImInfty.of_exp_decay (exp_decay_sub_atImInfty' E₄))
-  -- The value at the cusp is the constant term 1 of the `q`-expansion with period 1.
-  have h_one : (qExpansion 1 E₄).coeff 0 = 1 :=
-    E_qExpansion_coeff_zero (show 3 ≤ 4 by norm_num) (show Even 4 by decide)
-  rwa [← h_one, qExpansion_coeff_zero one_pos
-    (ModularFormClass.analyticAt_cuspFunction_zero E₄ one_pos one_mem_strictPeriods_SL)
-    (SlashInvariantFormClass.periodic_comp_ofComplex E₄ one_mem_strictPeriods_SL)]
+lemma tendsto_E₄_atImInfty : Filter.Tendsto E₄ atImInfty (nhds 1) :=
+  tendsto_E_atImInfty
 
 /-- For complex numbers a, b with a³ − 27b² ≠ 0 there is a period lattice L with Weierstrass
 invariants g₂(L) = a and g₃(L) = b.

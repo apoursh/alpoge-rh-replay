@@ -1,4 +1,6 @@
-import Lib.ClassField.Global.ExistenceTheorem
+module
+
+public import Lib.ClassField.Global.ExistenceTheorem
 
 /-!
 # Selmer cocycles, N-units, split places and the equivariant S-unit theorem
@@ -38,6 +40,8 @@ Notions from other files:
 Known; see `Lib.ClassField.GreenbergWiles.CocycleCounts` and `Lib.ClassField.Places.LocalFields` for
 sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -96,7 +100,8 @@ def PlaceAboveLevel : Type := {B : ClosurePlace // B N < 1} ⊕ InfinitePlace Ω
 instance : MulAction G (PlaceAboveLevel N) :=
   @Sum.instMulAction G {B : ClosurePlace // B N < 1} (InfinitePlace Ω) _
     -- the places above `N` form a set that is stable under `G`, as `G` fixes `N`
-    (SubMulAction.mk _ fun g _ hB ↦ by simpa using! (smul_apply_smul_lt_one_iff g).mpr hB).mulAction
+    (SubMulAction.mk {B : ClosurePlace | B N < 1} fun g _ hB ↦ by
+      simpa using! (smul_apply_smul_lt_one_iff g).mpr (Set.mem_setOf_eq.mp hB)).mulAction
     -- on the infinite places `G` acts through the automorphisms of `Ω` over `ℚ`
     (.compHom _ (toAlgAut G ℚ Ω))
 

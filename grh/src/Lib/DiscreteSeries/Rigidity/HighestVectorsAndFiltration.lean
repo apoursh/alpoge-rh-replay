@@ -1,5 +1,7 @@
-import Lib.DiscreteSeries.Holomorphic.HighestVectorExtension
-import Lib.General.LinearAlgebra.Eigenvalues
+module
+
+public import Lib.DiscreteSeries.Holomorphic.HighestVectorExtension
+public import Lib.General.LinearAlgebra.Eigenvalues
 
 /-!
 # K-highest vectors, norm bounds, Casimir growth on the filtration, and analytic vectors
@@ -54,6 +56,8 @@ Source: R. Parthasarathy, Classification of discrete series by minimal K-type, R
 of Math. 102 (1975) 535-564; Vogan-Zuckerman, Compositio 53 (1984) Prop 6.1; Nelson, Analytic
 vectors, Ann. of Math. 70 (1959) 572-615.
 -/
+
+@[expose] public section
 
 namespace New
 
@@ -351,8 +355,8 @@ theorem HCParam.IsKHighest.casimirK_bound_of_highest (hx : l.IsKHighest ρ ν x)
   -- `W` is `𝔨`-stable: `ρ.E a b` commutes with `T`, and its adjoint `ρ.E b a` preserves `U`.
   have hW_stable (a b : n) (hab : ε a = ε b) : W ∈ (ρ.E a b).invtSubmodule := by
     refine fun z ⟨hzU, hz_orth⟩ ↦ ⟨hU_stable a b hab hzU, fun u hu ↦ ?_⟩
-    simpa [T, hρ.inner_E_left, ← End.mul_apply, (hD_comm ..).eq, hab,
-      ((hD_comm ..).mul_right (commute_E_casimirK ..)).eq] using
+    simpa [T, hρ.inner_E_left, ← mul_apply_eq_comp, -FunLike.coe_mul_eq_comp, sub_mul,
+      (hD_comm ..).eq, hab, ((hD_comm ..).mul_right (commute_E_casimirK ..)).eq] using
       hz_orth (ρ.E b a u) (hU_stable b a hab.symm hu)
   have : FiniteDimensional ℂ W := finiteDimensional_of_le inf_le_left
   obtain ⟨μ, z, ⟨hzU, hz_orth⟩, hz_ne, hz_wt, hz_high⟩ := l.exists_highest_vector W hW_ne hW_stable

@@ -1,4 +1,6 @@
-import Lib.GLn.SchurModule.LeadingRows
+module
+
+public import Lib.GLn.SchurModule.LeadingRows
 
 /-!
 # Branching from GL(n+1) to GL(n) × GL(1): the branching vector and the norm bound
@@ -36,6 +38,8 @@ Notions from other files:
 
 Known; see `Lib.GLn.Branching.IntegralMap` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -540,7 +544,7 @@ lemma weylEval_dotProduct_weylGram_mulVec_weylEval (y z : (Σ τ : Φ, n τ) × 
   refine Finset.prod_congr rfl fun τ _ ↦ Finset.prod_congr rfl fun h _ ↦ ?_
   rw [← det_transpose]
   refine congrArg (· ^ _) (congrArg det (Matrix.ext fun s t ↦ ?_))
-  simp [squarePart, mul_apply, mul_comm]
+  simp [squarePart, Matrix.mul_apply, mul_comm, Function.swap]
 
 /-- Let `v` be the Gram matrix `weylGramOver` times the evaluation vector at the permutation array
 of `rowEquivFin`. Let the integral matrix `B` be equivariant for the block group, and let the row

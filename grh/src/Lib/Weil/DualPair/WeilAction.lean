@@ -1,9 +1,11 @@
-import Lib.Adelic.AutomorphicForms.Basic
-import Lib.Adelic.AutomorphicForms.SmoothAlgebraicForms
-import Lib.Adelic.Witt.IwasawaDecomposition
-import Lib.Weil.Fock.OscillatorPair
-import Lib.Weil.MixedModel.ThetaInvariance
-import Lib.Weil.Periods.Grading
+module
+
+public import Lib.Adelic.AutomorphicForms.Basic
+public import Lib.Adelic.AutomorphicForms.SmoothAlgebraicForms
+public import Lib.Adelic.Witt.IwasawaDecomposition
+public import Lib.Weil.Fock.OscillatorPair
+public import Lib.Weil.MixedModel.ThetaInvariance
+public import Lib.Weil.Periods.Grading
 
 /-!
 # Laws of the Weil action of a pair: translations, real points, levels, rational maps
@@ -57,6 +59,8 @@ Notions from other files:
 Known; see `Lib.Weil.DualPair.ThetaLiftConvergence`, `Lib.Weil.Fock.OscillatorPair`,
 `Lib.Weil.CompactLift.DefiniteThetaLift` and `Lib.Weil.Periods.Unfolding` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -349,8 +353,9 @@ lemma continuous_realPairWeil :
     Continuous fun q : (GInf E s × GInf E s') × PairFock E s s' ↦ realPairWeil γ γ' q.1 q.2 := by
   have h_pairHomInf : Continuous (pairHomInf : GInf E s × GInf E s' →
       USign fun (p : NumberField.InfinitePlace E × n' × n) ↦ homSigns s s' p.2) := by
-    simp [continuous_U_iff_matrix, pairHomInf]
-    fun_prop [kroneckerMap]
+    simp [continuous_U_iff_matrix, pairHomInf, coe_pairHom, Prod.map]
+    simp only [← Matrix.coe_units_inv]
+    fun_prop [kroneckerMap, Units.continuous_coe_inv]
   simp [realPairWeil]
   fun_prop (disch := simp [GeneralLinearGroup.det_ne_zero, zpow_ne_zero])
 
@@ -786,7 +791,7 @@ lemma finCoord_homAtPoint :
     finCoord (V.homAtPoint V' x) =
       matrixToVec (A.α⁻¹.val • (V'.xFin⁻¹.val * x.map snd * V.xFin.val)) := by
   funext c
-  simp [homAtPoint, matrixToVec, xFin, mul_apply, snd_sum, ← map_inv]
+  simp [homAtPoint, matrixToVec, xFin, Matrix.mul_apply, snd_sum, ← map_inv]
 
 /-- The Heisenberg operator ϱ on 𝒮(Hom(V, V′)) at `New.Space.homAtPoint` of an adelic matrix x :
 V → V′ given in rational coordinates. -/

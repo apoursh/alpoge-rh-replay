@@ -1,5 +1,7 @@
-import New.Spanning.SecondMoment.FewTranslates
-import New.Spanning.Unfolding.MomentBounds
+module
+
+public import New.Spanning.SecondMoment.FewTranslates
+public import New.Spanning.Unfolding.MomentBounds
 
 /-!
 # The second moments of the operators `P* s P`, and good forms
@@ -49,6 +51,8 @@ Michel–Ramakrishnan–Yang, Bessel periods on U(2,1)×U(1,1), 2023.
 See `New.Spanning.SecondMoment.SpanningTheorem` and `New.Spanning.RemainingTerms.Sum` for related
 work.
 -/
+
+@[expose] public section
 
 namespace New.Filling
 
@@ -312,7 +316,8 @@ lemma HasAmplitudeBlocks.adjoint_comp_rep_mul_right [HasPrimitiveRoot5040 E]
         if d' = e then S.unipotentCovolume * N j k else 0 := by
       rw [← Complex.star_def, ← amplitudeSum_besselS_inv, amplitudeSum_besselS_apply hδ hδ_over hN]
     by_cases h : d' = e
-    · simp [besselTranslate, h_block, h, S.unipotentCovolume_pos.ne', Pi.single_apply]
+    · simp [besselTranslate, h_block, h, S.unipotentCovolume_pos.ne', Pi.single_apply,
+        Matrix.of_apply, Function.swap]
     · simp [besselTranslate, h_block, h, Ne.symm h]
   -- The blocks of all terms transform in the same way, as the set of all terms is stable.
   have h_move : S.amplitudeSum .full .univ c (s * t) d (i, j) =
@@ -413,7 +418,7 @@ lemma HasAmplitudeBlocks.hilbertSchmidtNorm_sub_besselTranslate_sq [HasPrimitive
     rw [LinearMap.sub_apply, inner_sub_left, LinearMap.comp_apply, LinearMap.adjoint_inner_left,
       LinearMap.comp_apply, hP s x y, amplitudeSum_eq_inter_compl_add_inter Set.univ
         (S.ratMiddle E).besselS]
-    simp [besselTranslate, inner_single_right, add_div]
+    simp [besselTranslate, inner_single_right, add_div, Set.univ_inter]
   calc hilbertSchmidtNorm (P.adjoint ∘ₗ ρ s ∘ₗ P - S.besselTranslate s) ^ 2
     _ = ∑ x : S.Classes × S.BesselCoord, ∑ y : S.Classes × S.BesselCoord,
         ‖S.amplitudeSum .full (S.ratMiddle E).besselSᶜ x.1 s y.1 (x.2, y.2) / S.unipotentCovolume‖ ^
@@ -714,8 +719,8 @@ lemma mem_besselU_of_reduction_eq_one {c : S.Classes} {γ : S.G E} {j : Fin 2}
   have h_red (w : S.chosenPlaces j) : S.reduction ⟨S.inclHFin y, hyK⟩ j w = 1 := by
     ext a b
     rcases besselH_apply_eq_or hy (inclHFin_mem_besselH y) a b with h_entry | h_entry
-    · rw [reduction_apply_congr k j w (by simpa using h_entry), hk_red, one_apply]
-    · rw [reduction_apply_congr 1 j w h_entry, map_one, one_apply, one_apply]
+    · rw [reduction_apply_congr k j w (by simpa using h_entry), hk_red, Pi.one_apply]
+    · rw [reduction_apply_congr 1 j w h_entry, map_one, Pi.one_apply, Pi.one_apply]
   -- Freeness: a rational `δ` whose conjugate `y` is integral and reduces to `1` is `1`.
   obtain rfl := eq_one_of_reduceAt_eq_one le_rfl j _ fun w ↦
     (S.reduction_inclHFin_eq_one_iff hyK j w).mp (h_red w)
@@ -937,7 +942,7 @@ lemma sum_sq_norm_integral_extendedBesselChar_conjugate_le {T : Finset (FinPlace
     have h_coset (s : ι) : ∫⁻ z in C s, ‖a z‖ₑ ^ 2 ∂F.groupMeasure =
         ‖a (S.toPlaces T (σ s))‖ₑ ^ 2 * F.groupMeasure F.congruenceSubgroup := by
       rw [setLIntegral_congr_fun (hC_meas s) fun z hz ↦ by rw [ha_const s z hz]]
-      simp [C]
+      simp [C, Set.univ_inter]
     have h_rank : 𝔰.n + 2 * 10 ^ 9 * 𝔰.n ^ 4 ≤ 𝔰.k := by
       grind [S.pow_chain, Nat.le_self_pow (n := 4) (by norm_num) 𝔰.n]
     calc (∑ s : ι, ‖a (S.toPlaces T (σ s))‖ₑ ^ 2) * F.groupMeasure F.congruenceSubgroup

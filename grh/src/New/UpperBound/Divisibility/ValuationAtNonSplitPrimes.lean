@@ -1,5 +1,7 @@
-import New.UpperBound.Divisibility.ChainValuation
-import New.UpperBound.Objects.CharactersAtLevel
+module
+
+public import New.UpperBound.Divisibility.ChainValuation
+public import New.UpperBound.Objects.CharactersAtLevel
 
 /-!
 # Valuations of lifts at non-split primes
@@ -42,6 +44,8 @@ Notions from other files:
 
 See `New.UpperBound.Divisibility.ValuationAtLevel` for related work.
 -/
+
+@[expose] public section
 
 /-! ## One lift, evaluated at a neighbor -/
 
@@ -244,9 +248,10 @@ lemma IsMarked.sum_neighborExponent_mul_lastEntry_eq_zero (hΛ : D.IsMarked Λ) 
   rw [← hΛ.sum_inducedPlace_sub_star_eq_zero (j + 1) fun c w ↦ #(J w) * ((D.n j / 2 : ℤ) - c)]
   refine sum_congr rfl fun τ _ ↦ ?_
   by_cases h_mem : inducedPlace τ ∈ Λ
-  · simp [lastEntry, neighborExponent, markedIndices, h_mem, hΛ.star_notMem _ h_mem]
+  · simp [lastEntry, neighborExponent, markedIndices, h_mem, hΛ.star_notMem _ h_mem,
+      Finset.univ_inter _]
   · by_cases h_star_mem : star (inducedPlace τ) ∈ Λ <;>
-      simp [lastEntry, neighborExponent, markedIndices, h_mem, h_star_mem]
+      simp [lastEntry, neighborExponent, markedIndices, h_mem, h_star_mem, Finset.univ_inter _]
 
 /-- Let `Λ` be a marked set of primes, let `J l` be sets of at most `r` indices in `X_{j+1}` at the
 primes `l` of `Λ`, and let `T` be a filling of the diagrams `D.columnCount`. Summed over the boxes

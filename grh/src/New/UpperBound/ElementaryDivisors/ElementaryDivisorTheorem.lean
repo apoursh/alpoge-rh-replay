@@ -1,7 +1,9 @@
-import New.Reduction.Lattices.Colength
-import New.UpperBound.ElementaryDivisors.AveragingMap
-import New.UpperBound.ElementaryDivisors.DefectCount
-import New.UpperBound.ElementaryDivisors.Depth
+module
+
+public import New.Reduction.Lattices.Colength
+public import New.UpperBound.ElementaryDivisors.AveragingMap
+public import New.UpperBound.ElementaryDivisors.DefectCount
+public import New.UpperBound.ElementaryDivisors.Depth
 
 /-!
 # Elementary divisors of the edge Hecke operator
@@ -47,6 +49,8 @@ Notions from other files:
 * `New.FrobeniusCycle.divisorConstant`: the bound `c_div` for the mean depth of the forms that are
   deep for all edges.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -131,10 +135,10 @@ lemma card_add_card_le_mul_finrank [Fintype X] [Fintype I] [DecidableEq X] [Deci
     (R.fromRows (U⁻¹.val - U⁻¹.val * Q * R)) ?_ ?_
   · rw [h_blocks]
     rintro (j | j) hj (i | i)
-    · simp [one_apply]
+    · simp [Matrix.one_apply]
     · simp
     · simp [hRU i (inr_mem_disjSum.1 hj)]
-    · simp [one_apply, mul_apply (N := R * U.val), hRU _ (inr_mem_disjSum.1 hj)]
+    · simp [Matrix.one_apply, Matrix.mul_apply (N := R * U.val), hRU _ (inr_mem_disjSum.1 hj)]
   · rintro (j | j) hj
     exacts [hQ j, hU j (inr_mem_disjSum.1 hj)]
 
@@ -329,7 +333,8 @@ lemma pairingMap_mul_nearInverse_apply (u : Ed → GL H O) (Av : Matrix L L O) (
       = ∑ x : H × Ed, (fun l : L ↦ Q' (x, l) i) ⬝ᵥ (B *ᵥ fun l : L ↦ R' j (x, l)) := by
         -- The matrix `1 ⊗ₖ B` is block diagonal over `H × Ed`.
         rw [h_product]
-        simp [mul_apply, Fintype.sum_prod_type (α₁ := H × Ed), one_apply, dotProduct, mulVec]
+        simp [Matrix.mul_apply, Fintype.sum_prod_type (α₁ := H × Ed), Matrix.one_apply, dotProduct,
+          mulVec]
     _ = _ := by simp only [hB]
 
 end Edgewise
@@ -622,8 +627,6 @@ structure IsEdgeCondition {N k n : ℕ} {W O : Type} [NeZero N] [CommRing W] [Is
     (Av : Matrix (Exponents N k n) (Exponents N k n) O) : Prop where
   /-- The conditions hold for the forms in the halfway lattices of all edges from the origin. -/
   allEdgesForms_le : T.allEdgesForms k n r ≤ C
-  /-- The conditions are congruences modulo `w ^ c`: multiples of `w ^ c` satisfy them. -/
-  pow_smul_mem : ∀ h : Exponents N k n → O, T.sqrtPrime ^ c • h ∈ C
   /-- The values of `Av` satisfy the conditions. -/
   average_mem : ∀ h : Exponents N k n → O, Av *ᵥ h ∈ C
   /-- Against the forms in the halfway lattices of all edges from the origin of the dual edge, `Av`
@@ -679,7 +682,7 @@ and `ρ(gᵀ)` are adjoint for `(h, h') ↦ h' ⬝ᵥ (b * h)`, with `b * b' = p
 `c₀ = T.multinomialExponent k` (`hb`). Put `c = T.congruencePrecision k = 5 N c₀`, and let
 `M = T.allEdgesForms k n r` be the module of forms that lie in the halfway lattices of all edges
 from a lattice. Then there are
-* a module `C` of forms that contains `M` and the multiples of `w ^ c`,
+* a module `C` of forms that contains `M`,
 * a matrix `Av` with values in `C` that, paired against `M`, is multiplication by `p ^ (N c₀)`
   modulo `w ^ c`,
 * a space `S` over the residue field of `O` that contains the reductions of the `h` with
@@ -717,7 +720,6 @@ theorem exists_isEdgeCondition (hp : ¬IsUnit (T.p : O)) {r : ℕ} {θ : ℝ}
         h_large.proportion_le_one h_large.mul_defectThreshold_le_mul_degree
   exact ⟨C, S, Av,
     { allEdgesForms_le := T.allEdgesForms_le_defectConditions ha.le c
-      pow_smul_mem := fun h g _ β _ ↦ by simp [mulVec_smul, Ideal.mem_span_singleton]
       average_mem := h_mem
       pow_dvd_pairing_average := h_pairing
       residue_mem := fun h h_cond ↦ T.residue_mem_translatesIn
@@ -938,8 +940,8 @@ lemma IsEdgePairing.pairingMap_mul_nearInverse_one {H Ed ι : Type*} [Fintype H]
     _ = ∑ x : H × Ed, a * ∑ β : Exponents N k n, R' j (x, β) * Q' (x, β) i := by
         refine sum_congr rfl fun x _ ↦ ?_
         rw [hb.pairing_mul_eq_pow_mul_dotProduct, dotProduct_comm, dotProduct]
-    _ = a * (R' * Q') j i := by rw [mul_apply, Fintype.sum_prod_type (α₁ := H × Ed), mul_sum]
-    _ = (a • (1 : Matrix ι ι O)) i j := by simp [hR', one_apply, eq_comm]
+    _ = a * (R' * Q') j i := by rw [Matrix.mul_apply, Fintype.sum_prod_type (α₁ := H × Ed), mul_sum]
+    _ = (a • (1 : Matrix ι ι O)) i j := by simp [hR', Matrix.one_apply, eq_comm]
 
 /-- A near inverse. Let `T` be a Frobenius cycle with `N` letters and prime `p = w ^ 2`, `k` the
 rank, `n` the degree and `c₀ = T.multinomialExponent k`. The weights `b` pair forms, with

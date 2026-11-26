@@ -1,4 +1,6 @@
-import Lib.Adelic.Adeles.IdeleModulus
+module
+
+public import Lib.Adelic.Adeles.IdeleModulus
 
 /-!
 # Idelic theta sums over principal ideles as Riemann sums
@@ -30,6 +32,8 @@ Notions from other files:
 Known; see `Lib.ClassField.HeckeL.ContinuationAtOne` for sources.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 section IdelicThetaSum
@@ -52,12 +56,9 @@ lemma abs_max_sub_max_le_mul_max {r ε D D' : ℝ} (hr : 0 < r) (hε : 0 < ε)
     rw [h_max_low, h_max_mid, sub_zero, abs_zero]
     positivity
   · -- The tent loses at most `2 * ε * r / 3`, while `r - D > 2 * r / 3`.
-    have h_max_mid : max (r / 3 - D) 0 = r / 3 - D := max_eq_left (by linarith)
-    have h_max_top : max (r - D) 0 = r - D := max_eq_left (by linarith)
-    have h_ε_le : ε * (2 * r / 3) ≤ ε * (r - D) := mul_le_mul_of_nonneg_left (by linarith) hε.le
-    have h_low_le : max ((r - ε * r) / 3 - D') 0 ≤ r / 3 - D := max_le (by linarith) (by linarith)
-    rw [h_max_mid, h_max_top, abs_le]
-    exact ⟨by linarith [le_max_left ((r - ε * r) / 3 - D') 0], by linarith⟩
+    have h_top := mul_le_mul_of_nonneg_left (le_max_left (r - D) 0) hε.le
+    have h_εD := mul_lt_mul_of_pos_left hD_lt hε
+    exact (abs_max_sub_max_le_abs _ _ 0).trans (abs_le.mpr ⟨by linarith, by linarith⟩)
 
 namespace New.ZetaIntegral
 
@@ -277,7 +278,8 @@ lemma hasSum_adelicTent_mul_range
   -- Only finitely many points of the discrete `j.range` lie in the compact support of `f`.
   have h_fin_supp : Function.HasFiniteSupport fun y : j.range ↦ f y :=
     tendsto_coe_cofinite_of_isDiscrete _ ⟨h_disc⟩ <|
-      Filter.mem_cocompact'.mpr ⟨_, hasCompactSupport_adelicTent_mul ρ d (b * γ), subset_closure⟩
+      (Filter.mem_cocompact' (s := {x | f x = 0})).mpr
+        ⟨_, hasCompactSupport_adelicTent_mul ρ d (b * γ), subset_tsupport f⟩
   rw [(summable_of_hasFiniteSupport h_fin_supp).hasSum_iff]
   calc ∑' y : j.range, f y
       = ∑' γ' : principalIdeles K, f (g γ') :=

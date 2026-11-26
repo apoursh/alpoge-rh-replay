@@ -1,4 +1,6 @@
-import Lib.Base
+module
+
+public import Lib.Base
 
 /-!
 # The q-binomial theorem, fibre sums, and Schur polynomials in the coefficients
@@ -30,6 +32,8 @@ algebraic facts serve to extract values of Schur polynomials from vanishing line
 Known results: the q-binomial theorem, counted over the subspaces of a finite vector space, and the
 bialternant formula for Schur polynomials.
 -/
+
+@[expose] public section
 
 /-! ## The q-binomial theorem over the subspaces of a finite vector space -/
 
@@ -169,7 +173,7 @@ lemma New.Variety.finsum_image_eq_zero_of_fibers {T C : Type*} {S : Set T} (hS :
   have fibre (t : T) (ht : t ∈ S) : F (ψ t) = ∑ s ∈ S with ψ s = ψ t, G s / D := by
     -- By `h_ratio` the summand is constant on the fibre.
     have const : ∀ s ∈ {s ∈ S | ψ s = ψ t}, G s / D = F (ψ t) / {s ∈ S | ψ s = ψ t}.card := by
-      simp +contextual [← h_ratio]
+      simp +contextual [← h_ratio, ← Set.ncard_coe_finset]
     rw [Finset.sum_eq_card_nsmul const, nsmul_eq_mul,
       mul_div_cancel₀ _ (Nat.cast_ne_zero.2 (Finset.card_ne_zero.2 ⟨t, by simp [ht]⟩))]
   rw [S.sum_image' (fun s ↦ G s / D) fibre, ← S.sum_div, h_sum, zero_div]
@@ -237,7 +241,7 @@ lemma rootCoeffEval_genericSchur_mul_det [IsDomain R] :
     ext i j
     rw [of_apply, ← h_rem i j]
     conv_rhs => rw [← sum_modByMonic_coeff (monic_freeMonic ℤ a) (degree_freeMonic ℤ a).le]
-    simp [mul_apply, mul_comm, eval₂_finsetSum]
+    simp [Matrix.mul_apply, mul_comm, eval₂_finsetSum]
   rw [hφ_eq, genericSchur, mul_comm, AlgHom.map_det, ← det_mul, h_mul]
 
 end New.Variety

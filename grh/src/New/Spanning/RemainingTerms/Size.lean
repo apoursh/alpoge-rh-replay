@@ -1,6 +1,8 @@
-import New.Spanning.Bessel.OpenCellPairing
-import New.Spanning.RemainingTerms.SchurOrbit
-import New.Spanning.Unfolding.TermStructure
+module
+
+public import New.Spanning.Bessel.OpenCellPairing
+public import New.Spanning.RemainingTerms.SchurOrbit
+public import New.Spanning.Unfolding.TermStructure
 
 /-!
 # The orbit bound: a bound for a block of amplitudes; the second moment of a set of terms
@@ -49,6 +51,8 @@ Notions from other files:
 
 See `New.Spanning.RemainingTerms.Sum` for related work.
 -/
+
+@[expose] public section
 
 /-!
 ## Second moment of a set of terms and transfer to cut Bessel functions
@@ -606,7 +610,7 @@ lemma enorm_amplitudeSum_le_of_termDiscNorm_le (hT : S.IsStable T) {j : Fin (�
     obtain ⟨⟨hu_mem, hu_over⟩, -⟩ := hu γ
     obtain ⟨⟨hv_mem, hv_over⟩, -⟩ := hv γ
     exact ⟨(hT (u γ)⁻¹ (inv_mem hu_mem) _ hv_mem _).2 hγT,
-      by simpa using termsOver.mul (.mul hu_over hγ_over) hv_over⟩
+      by simpa using termsOver.mul (termsOver.mul hu_over hγ_over) hv_over⟩
   -- `rep γ` is the chosen element of the orbit of `γ`.
   let rep (γ : X) : X := ⟨u γ * γ.1 * v γ, rep_mem γ⟩
   have fibre_le (δ : X) : ∑' γ : rep ⁻¹' {δ}, S.amplitudeMajorant .cut c c' γ ≤

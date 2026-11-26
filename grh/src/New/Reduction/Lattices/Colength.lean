@@ -1,4 +1,6 @@
-import Lib.General.Algebra.FittingIdealsAndLengths
+module
+
+public import Lib.General.Algebra.FittingIdealsAndLengths
 
 /-!
 # Colength of modules, and endomorphisms surjective up to a bounded colength
@@ -18,6 +20,8 @@ images, preimages, sums of submodules and products of endomorphisms.
 * `New.ColengthDvd.relLength_le`, `New.IsOntoUpToColength.exists_relLength_le`: over a discrete
   valuation ring `New.ColengthDvd` bounds a length.
 -/
+
+@[expose] public section
 
 namespace New
 
@@ -53,7 +57,7 @@ lemma ColengthDvd.trans (hMN : ColengthDvd M N z) (hNP : ColengthDvd N P a) :
   obtain ⟨m, hm_det, hm_mem⟩ := hMN n Φ hΦ
   obtain ⟨m', hm'_det, hm'_mem⟩ := hNP n (fun i : Fin n ↦ ∑ k, m i k • Φ k) hm_mem
   have h_assoc (i : Fin n) : ∑ k, (m' * m) i k • Φ k = ∑ j, m' i j • ∑ k, m j k • Φ k := by
-    simpa [mul_apply, Finset.sum_smul, Finset.smul_sum, mul_smul] using Finset.sum_comm
+    simpa [Matrix.mul_apply, Finset.sum_smul, Finset.smul_sum, mul_smul] using Finset.sum_comm
   refine ⟨m' * m, ?_, fun i ↦ by simpa only [h_assoc] using hm'_mem i⟩
   simpa [mul_comm z] using mul_dvd_mul hm'_det hm_det
 

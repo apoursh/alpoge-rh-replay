@@ -5,8 +5,16 @@ Adapted from scripts/ci-cache-get.py of leanprover-community/riemann-hypothesis 
 differences are: records, maps, module manifests and artifacts are read from a namespace of
 their own (grh-lean/grh/ and artifacts/<repo>-grh-lean/grh/), shared with the grh/ project of
 branch grh-lean-cache and separate from the keys of the earlier main branch; the project may be
-a subdirectory of its Git repository; and the only lookup is by input fingerprint (no ancestor
-walk, no pinned baseline).
+a subdirectory of its Git repository; and records are looked up by input fingerprint only.
+
+With --baseline <ref> (CI uses origin/main), a miss falls back to a baseline: the record of the
+nearest first-parent ancestor of <ref> that has one, else the record pinned in
+scripts/cache-baseline.json. Candidates are looked up by their own input fingerprint, computed
+from Git objects with the same code, and must have the current toolchain and lake-manifest.json
+(otherwise no module would be reused). The baseline's map and module manifest are checked
+exactly as for an exact match, but against the baseline's inputs. Its modules are unpacked, and
+`lake build` then compiles the modules whose inputs differ (Lake compares each module's trace
+with its current inputs) and keeps the rest. Exit 4 means a baseline was restored.
 
 The record's immutable map and module manifest are checked against its SHA-256 values and
 against each other. Then, at the same time, the map is registered with `lake cache add` in
@@ -104,8 +112,9 @@ def local_path(root, relative, checked):
     return path
 
 
-def git(root, *args):
-    return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
+def git(root, *args, quiet=False):
+    return subprocess.check_output(["git", "-C", str(root), *args], text=True,
+                                   stderr=subprocess.DEVNULL if quiet else None).strip()
 
 
 def current_identity(root):
@@ -199,6 +208,85 @@ def matching_record(data, identity):
 def find_record(identity, fetcher=fetch):
     data = fetcher(f"{PREFIX}/inputs/{fingerprint(identity)}.json", MAX_RECEIPT)
     return None if data is None else matching_record(data, identity)
+
+
+def blob_sha256(root, revision, name, memo):
+    """SHA-256 and bytes of a file at a revision, memoised by blob id."""
+    oid = git(root, "rev-parse", "--verify", "--quiet", f"{revision}:{name}", quiet=True)
+    if oid not in memo:
+        if git(root, "cat-file", "-t", oid) != "blob" or int(git(root, "cat-file", "-s", oid)) > MAX_JSON:
+            raise ValueError(f"expected a bounded file: {name} at {revision}")
+        data = subprocess.check_output(["git", "-C", str(root), "cat-file", "blob", oid])
+        memo[oid] = (digest(data), data)
+    return memo[oid]
+
+
+def identity_at(root, revision, memo):
+    """The build inputs of a commit, from Git objects, in the form of current_identity."""
+    tree = git(root, "rev-parse", "--verify", "--quiet", f"{revision}:src", quiet=True)
+    if not SHA40.fullmatch(tree):
+        raise ValueError(f"invalid src Git tree at {revision}")
+    return {
+        "source_tree": tree, "build_roots": {},
+        "lakefile_sha256": blob_sha256(root, revision, "lakefile.toml", memo)[0],
+        "manifest_sha256": blob_sha256(root, revision, "lake-manifest.json", memo)[0],
+        "toolchain": blob_sha256(root, revision, "lean-toolchain", memo)[1].decode().strip(),
+    }
+
+
+BASELINE_FILE = Path(__file__).resolve().with_name("cache-baseline.json")
+
+
+def pinned_identity(path=BASELINE_FILE):
+    """The identity pinned in scripts/cache-baseline.json, checked against its fingerprint."""
+    pinned = decode(path.read_bytes())
+    if not isinstance(pinned, dict) or set(pinned) != {*FIELDS, "input_fingerprint"}:
+        raise ValueError(f"unexpected fields in {path.name}")
+    identity = {key: pinned[key] for key in FIELDS}
+    if (not SHA40.fullmatch(str(identity["source_tree"])) or identity["build_roots"] != {}
+            or not all(SHA256.fullmatch(str(identity[key])) for key in ("lakefile_sha256", "manifest_sha256"))
+            or not isinstance(identity["toolchain"], str)
+            or pinned["input_fingerprint"] != fingerprint(identity)):
+        raise ValueError(f"{path.name} is malformed or its input_fingerprint does not match its fields")
+    return identity
+
+
+def baseline_candidates(root, identity, ref, depth):
+    """Identities to try as a baseline, nearest first, each with a description.
+
+    The first-parent ancestors of ref (as many as are fetched, at most depth), then the pinned
+    identity. Only identities with the current toolchain and lake-manifest.json are useful."""
+    memo, seen = {}, {fingerprint(identity)}
+    listed = subprocess.run(["git", "-C", str(root), "rev-list", "--first-parent", f"--max-count={depth}",
+                             ref, "--"], capture_output=True, text=True)
+    if listed.returncode:
+        print(f"Cannot list the history of {ref}: {listed.stderr.strip()}", flush=True)
+    revisions = listed.stdout.split() if listed.returncode == 0 else []
+    candidates = ((revision, lambda revision=revision: identity_at(root, revision, memo)) for revision in revisions)
+    for label, compute in (*candidates, (BASELINE_FILE.name, lambda: pinned_identity(BASELINE_FILE))):
+        try:
+            candidate = compute()
+        except subprocess.CalledProcessError:
+            continue  # A commit without this project layout (src, lakefile.toml, ...).
+        key = fingerprint(candidate)
+        if (key not in seen and candidate["toolchain"] == identity["toolchain"]
+                and candidate["manifest_sha256"] == identity["manifest_sha256"]):
+            seen.add(key)
+            yield label, candidate
+
+
+def find_baseline(root, identity, ref, depth, fetcher=fetch):
+    tried = 0
+    for label, candidate in baseline_candidates(root, identity, ref, depth):
+        tried += 1
+        record = find_record(candidate, fetcher)
+        if record is not None:
+            print(f"Baseline: the record for {label} (input fingerprint {record['input_fingerprint']}),"
+                  f" found after looking up {tried} distinct build inputs.", flush=True)
+            return record, candidate
+    print(f"No baseline: none of {tried} candidate build inputs with this toolchain and"
+          " lake-manifest.json has a record.", flush=True)
+    return None, None
 
 
 def validated_blobs(record, identity, fetcher=fetch):
@@ -306,12 +394,16 @@ def register(root, env, service, temporary, items, shards=SHARDS):
         raise subprocess.CalledProcessError(max(codes), command)
 
 
-def unpack_jobs(root, cache, modules):
-    """leantar jobs for every module, refusing unsafe or symlinked source/output paths."""
+def unpack_jobs(root, cache, modules, baseline=False):
+    """leantar jobs for every module, refusing unsafe or symlinked source/output paths.
+
+    For a baseline, modules without a source now (removed since) are skipped."""
     jobs, checked = [], set()
     for name, input_hash, artifact in modules:
         module = Path(*name.split("."))
         if not local_path(root, Path("src") / module.with_suffix(".lean"), checked).is_file():
+            if baseline:
+                continue
             raise ValueError(f"missing source for {name}")
         archive = cache / "artifacts" / artifact
         if archive.is_symlink() or not archive.is_file():
@@ -381,8 +473,9 @@ def download_failure(code, report):
     return f"{reason}. {advice[0].upper()}{advice[1:]}"
 
 
-def consume(root, cache, record, identity, workers=24, fetcher=fetch):
-    contents, shas, modules = validated_blobs(record, identity, fetcher)
+def consume(root, cache, record, identity, workers=24, fetcher=fetch, baseline=None):
+    """Restore record, built for identity, or for the baseline identity if one is given."""
+    contents, shas, modules = validated_blobs(record, baseline or identity, fetcher)
     if current_identity(root) != identity:
         raise ValueError("project inputs changed during cache lookup")
     local_path(root, Path(".lake"), set()).mkdir(exist_ok=True)
@@ -402,7 +495,8 @@ def consume(root, cache, record, identity, workers=24, fetcher=fetch):
     entries = [decode(line) for line in contents.splitlines()[1:]]
     have = registered(cache, entries)
     fresh = [entry for entry in entries if entry[0] not in have]
-    print(f"Fetching {PROJECT} build cache {record['candidate_head']} for current build inputs: "
+    print(f"Fetching {PROJECT} build cache {record['candidate_head']} for "
+          f"{'baseline' if baseline else 'current'} build inputs: "
           f"{len(entries)} modules, {len(fresh)} not yet registered...", flush=True)
     with tempfile.TemporaryDirectory(prefix="ci-cache-", dir=root / ".lake") as temporary:
         temporary = Path(temporary)
@@ -434,7 +528,7 @@ def consume(root, cache, record, identity, workers=24, fetcher=fetch):
                          f" {download_failure(code, report)}")
     if current_identity(root) != identity:
         raise ValueError("project inputs changed before restoration")
-    jobs = unpack_jobs(root, cache, modules)
+    jobs = unpack_jobs(root, cache, modules, baseline is not None)
     for directory in dict.fromkeys(base for job in jobs for base in job["base"]):
         Path(directory).mkdir(parents=True, exist_ok=True)
     clear_output_hashes(root, modules)
@@ -442,6 +536,10 @@ def consume(root, cache, record, identity, workers=24, fetcher=fetch):
     print(f"Unpacking {len(jobs)} modules with stock leantar ({workers} workers)...", flush=True)
     subprocess.run([str(lean.with_name("leantar")), "--jobs", str(workers), "-f", "-x", "-j", "-"],
                    input=json.dumps(jobs), text=True, cwd=root, env=env, check=True)
+    if baseline:
+        print(f"Restored {len(jobs)} of {len(modules)} baseline modules; lake build compiles those whose"
+              " inputs changed since the baseline, and the modules that import them.", flush=True)
+        return
     print("Checking with lake build --no-build...", flush=True)
     result = subprocess.run(["lake", "-q", "--log-level=error", "build", "--no-build"], cwd=root, env=env)
     if result.returncode:
@@ -454,18 +552,30 @@ def main():
     parser.add_argument("--project", type=Path, default=Path.cwd())
     parser.add_argument("--cache-dir", type=Path)
     parser.add_argument("--jobs", type=int, default=24)
+    parser.add_argument("--baseline", metavar="REF",
+                        help="on a miss, restore the nearest record on REF's first-parent history (exit 4)")
+    parser.add_argument("--baseline-depth", type=int, default=200, help="commits of REF to try (default 200)")
+    parser.add_argument("--print-identity", action="store_true",
+                        help="print the current build inputs in the form of scripts/cache-baseline.json, and stop")
     args = parser.parse_args()
-    if args.jobs < 1:
-        parser.error("jobs must be positive")
+    if args.jobs < 1 or not 1 <= args.baseline_depth <= 1000:
+        parser.error("jobs must be positive; baseline depth must be 1..1000")
     root = args.project.resolve()
     identity = current_identity(root)
-    record = find_record(identity)
+    if args.print_identity:
+        print(json.dumps({**identity, "input_fingerprint": fingerprint(identity)}, indent=2))
+        return 0
+    record, baseline = find_record(identity), None
     if record is None:
         print("No equivalent successful cache found for the current build inputs.", flush=True)
-        return 3
+        if args.baseline is None:
+            return 3
+        record, baseline = find_baseline(root, identity, args.baseline, args.baseline_depth)
+        if record is None:
+            return 3
     cache = (args.cache_dir or Path(os.environ.get("LAKE_CACHE_DIR", str(root / ".lake/cache")))).resolve()
-    consume(root, cache, record, identity, args.jobs)
-    return 0
+    consume(root, cache, record, identity, args.jobs, baseline=baseline)
+    return 0 if baseline is None else 4
 
 
 if __name__ == "__main__":

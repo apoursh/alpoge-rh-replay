@@ -1,6 +1,8 @@
-import New.Congruences.GaloisRepresentations.AttachedRepresentations
-import New.Congruences.LocalLoss.LocalLattices
-import New.Congruences.Selmer.SelmerData
+module
+
+public import New.Congruences.GaloisRepresentations.AttachedRepresentations
+public import New.Congruences.LocalLoss.LocalLattices
+public import New.Congruences.Selmer.SelmerData
 
 /-!
 # Main summands are Selmer data
@@ -25,6 +27,8 @@ Notions from other files:
 
 See `New.Congruences.Selmer.TwistingTheorem` for related work.
 -/
+
+@[expose] public section
 
 namespace New.Selmer
 
@@ -334,7 +338,6 @@ theorem IsMainSummandLike.eventually_exists_selmerDatum (hrow : IsMainSummandLik
       finite_Z v' :=
         crysCocycles.fg (hrow.toIsConjSelfDualOfLevel.inClass_localLattice hrow hu
           v').isPotentiallyCrystalline
-      apply_mul_of_mem_Z _ _ hz := crysCocycles.apply_mul hz
       coboundary_mem_Z _ b := crysCocycles.coboundary_mem b
       span_range_eq_top := h_span_top
       sum_finrank_Z_le := hrow.sum_finrank_crysCocyclesAt_le hu

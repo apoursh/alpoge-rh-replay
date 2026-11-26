@@ -1,7 +1,9 @@
-import Lib.General.Groups.IndexOfProduct
-import Lib.SiegelWeil.RallisInner.SharpData
-import New.OneLift.HeckeValues.CharacterLift
-import New.Spanning.Multiplicities.HeckeEigensystems
+module
+
+public import Lib.General.Groups.IndexOfProduct
+public import Lib.SiegelWeil.RallisInner.SharpData
+public import New.OneLift.HeckeValues.CharacterLift
+public import New.Spanning.Multiplicities.HeckeEigensystems
 
 /-!
 # The lift Θ_W, its adjoint and its norm
@@ -50,6 +52,8 @@ Cossutta–Marshall, Theta lifting and cohomology growth in p-adic towers, arXiv
 Rallis, Injectivity properties of liftings associated to Weil representations, 1984; Rallis,
 L-functions and the oscillator representation, 1987.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -571,9 +575,9 @@ lemma DescentPair.isSharpFn_blockFn [WeilData E] :
     rintro _ ⟨k, hk, rfl⟩
     have h_all : stdLevel.reduceFamily O.placeAt k = 1 := O.ker_reductionGL_eq.le hk
     exact mem_levelOf.2 ⟨k.property, funext fun i ↦ congrFun h_all (.inl i)⟩
-  le_stdLevel := levelOf_le_stdLevel
   ne_zero h := by
-    have h_normSq : star O.blockFn ⬝ᵥ O.blockFn ≠ 0 := by simp [O.blockFn_normSq, prod_eq_zero_iff]
+    have h_normSq : star O.blockFn ⬝ᵥ O.blockFn ≠ 0 := by
+      simp [O.blockFn_normSq, prod_eq_zero_iff, IsDedekindDomain.HeightOneSpectrum.ne_bot]
     simp [h] at h_normSq
   fixes k hk := by
     -- This is the transformation law of the datum for the pair `(k, 1)`.

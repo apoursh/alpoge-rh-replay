@@ -1,6 +1,8 @@
-import Lib.ClassField.HeckeL.EulerProduct
-import Lib.ClassField.HeckeL.IdelicThetaSum
-import Lib.General.Analysis.HolomorphicIntegrals
+module
+
+public import Lib.ClassField.HeckeL.EulerProduct
+public import Lib.ClassField.HeckeL.IdelicThetaSum
+public import Lib.General.Analysis.HolomorphicIntegrals
 
 /-!
 # Analyticity at 1 of L-functions of nontrivial Hecke characters
@@ -50,6 +52,8 @@ fields and Hecke's zeta-functions, 1950, in Cassels–Fröhlich ch. XV, §4.4–
 Theory, VI 4.8–4.9 (finite order); S. Lang, Algebraic Number Theory (non-vanishing); Titchmarsh,
 Theory of the Riemann zeta-function, §2.11 (the Riemann-sum continuation is Müntz's formula over ℚ).
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -535,11 +539,9 @@ open NumberField.mixedEmbedding (mixedSpace)
 private theorem _root_.Valuation.map_eq_one_of_one_lt_of_mul_map_sub_one_le {R Γ₀ : Type*}
     [Ring R] [LinearOrderedCommGroupWithZero Γ₀] (v : Valuation R Γ₀) {a x : R} (ha : 1 < v a)
     (h_mul : v a * v (x - 1) ≤ 1) : v x = 1 := by
-  have h_sub : v (x - 1) < v 1 := by
-    rw [map_one]
-    by_contra! h_ge
-    exact (ha.trans_le (le_mul_of_one_le_right' h_ge)).not_ge h_mul
-  rw [← sub_add_cancel x 1, v.map_add_eq_of_lt_right h_sub, map_one]
+  have h_sub : v (x - 1) < 1 := lt_of_mul_lt_mul_of_le₀
+    (h_mul.trans_lt (ha.trans_eq (mul_one _).symm)) (zero_lt_one.trans ha) le_rfl
+  exact (v.map_eq_of_sub_lt (h_sub.trans_eq v.map_one.symm)).trans v.map_one
 
 /-- Let `v` be a valuation and `a`, `x` elements with `v a ≤ 1` and `v x ≤ 1`. Then
 `v a * v (x - 1) ≤ 1`. -/
@@ -714,11 +716,8 @@ private theorem _root_.abs_sub_le_mul_rpow_of_forall_exists_abs_sub_le {G : Type
     {a b : G} (ha_pos : 0 < N a) (h_eq : N b = N a) :
     |θ a - θ b| ≤ C * N a ^ δ * (|φ a| + |φ b|) := by
   obtain ⟨i, hi⟩ := h_approx (N a) ha_pos
-  calc |θ a - θ b| ≤ |i - θ a| + |i - θ b| := by
-        rw [abs_sub_comm i (θ a)]
-        exact abs_sub_le (θ a) i (θ b)
-    _ ≤ C * N a ^ δ * |φ a| + C * N a ^ δ * |φ b| := add_le_add (hi a rfl) (hi b h_eq)
-    _ = C * N a ^ δ * (|φ a| + |φ b|) := by ring
+  exact (dist_triangle_left (θ a) (θ b) i).trans
+    ((add_le_add (hi a rfl) (hi b h_eq)).trans_eq (mul_add _ _ _).symm)
 
 open Units Real ZetaIntegral in
 /-- Let `ψ ≠ 1` be the finite part of a Hecke character of type `n` (`IsHeckeOfType ψ n`). There

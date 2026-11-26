@@ -1,4 +1,6 @@
-import Lib.DiscreteSeries.Character.WeylCharacterFormula
+module
+
+public import Lib.DiscreteSeries.Character.WeylCharacterFormula
 
 /-!
 # Orbital integrals of discrete series coefficients and Weyl characters of U(n)
@@ -42,6 +44,8 @@ Notions from other files:
 This is part of the known computation of the discrete series character on the compact Cartan
 subgroup by orbital integrals, see `Lib.DiscreteSeries.Character.FormalDegree`.
 -/
+
+@[expose] public section
 
 /-!
 ## Principal minors of conjugated diagonal matrices
@@ -116,7 +120,7 @@ lemma norm_principalMinor_mul_gain_le (h : ℕ) (u : GL n ℂ) (l f : n → ℤ)
       -- and `m ≤ f c - g i` because `i` lies inside the minor
       have h_entry : principalMinor (twoPowDiagConj u (-g)) (· = j) =
           ((∑ k : n, ‖u k j‖ ^ 2 * 2 ^ (-g k) : ℝ) : ℂ) := by
-        simp [principalMinor, default, toSquareBlockProp, mul_apply, diagonal, ← conj_mul',
+        simp [principalMinor, default, toSquareBlockProp, Matrix.mul_apply, diagonal, ← conj_mul',
           mul_right_comm]
       have h_exp : m ≤ f c + -g i := by grind [Pi.inf_apply, inside i]
       simp only [q, hsep, true_and, Fintype.prod_ite_eq', h_entry, ofReal_re]
@@ -504,8 +508,8 @@ lemma exists_entry_large_outside_orbit (l : HCParam (n := n) ε) (h : ℕ) :
   obtain ⟨i, j, hij, hne⟩ : ∃ i j : n, ε i ≠ ε j ∧ (k : Matrix n n ℂ) i j ≠ 0 := by
     by_contra! h_block
     rw [← mem_blockDiagAlg, mem_blockDiagAlg_iff_commute] at h_block
-    have h_unitary : (k : Matrix n n ℂ)ᴴ * k = 1 := by simpa [U] using k.prop
-    exact hk ⟨⟨k, by simp [U, h_block.right_comm, h_unitary]⟩, 1,
+    have h_unitary : (k : Matrix n n ℂ)ᴴ * k = 1 := by simpa using mem_U.mp k.prop
+    exact hk ⟨⟨k, by simp [mem_U, h_block.right_comm, h_unitary]⟩, 1,
       by simp [IsBorelMatrix, blockTriangular_one]⟩
   -- at `r = 0` the left side vanishes and the right side does not
   refine (ContinuousAt.eventually_lt ?_ (by fun_prop) (by simp [hne])).mono

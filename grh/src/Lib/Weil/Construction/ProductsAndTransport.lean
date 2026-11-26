@@ -1,4 +1,6 @@
-import Lib.Weil.Construction.VacuumProjections
+module
+
+public import Lib.Weil.Construction.VacuumProjections
 
 /-!
 # Products of data along a splitting of coordinates, and changes of coordinates
@@ -34,6 +36,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.Construction.VacuumProjections` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 

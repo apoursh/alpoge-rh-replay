@@ -1,6 +1,8 @@
-import Lib.Cohomology.Etale.Basic
-import Lib.General.Geometry.DenseComplexPoints
-import Lib.Shimura.AbelianScheme.Basic
+module
+
+public import Lib.Cohomology.Etale.Basic
+public import Lib.General.Geometry.DenseComplexPoints
+public import Lib.Shimura.AbelianScheme.Basic
 
 /-!
 # Geometric points, specialisation, separating products and integral abelian varieties
@@ -42,6 +44,8 @@ Notions from other files:
 
 Known; see `Lib.Shimura.AbelianScheme.IsogenyFlatness` for sources.
 -/
+
+@[expose] public section
 
 /-! ## Points over algebraically closed fields -/
 
@@ -215,6 +219,7 @@ open CategoryTheory AlgebraicGeometry Algebra MorphismProperty TensorProduct Set
 namespace New.Variety
 
 /-- An étale algebra over an integral domain is reduced. -/
+@[stacks 033B "for an étale algebra over a domain"]
 lemma isReduced_of_algebra_etale (A B : Type*) [CommRing A] [CommRing B] [IsDomain A]
     [Algebra A B] [Algebra.Etale A B] : IsReduced B := by
   -- `B` is flat over `A`, so it embeds in `K ⊗[A] B`, which is unramified over the field `K`.
@@ -260,7 +265,7 @@ instance {k : Type} [Field k] [IsAlgClosed k] (A : Over (Spec ⟨k⟩)) [hA : Is
   let P : Type := MonoidalCategoryStruct.tensorUnit (Over (Spec ⟨k⟩)) ⟶ A
   let act : AddAction P (irreducibleComponents A.left) :=
     { vadd g C := ⟨(translation g).left ⁻¹' C, preimage_mem_irreducibleComponents C.prop
-        (translation g).left.isOpenEmbedding (by simp [C.prop.1.nonempty])⟩
+        (translation g).left.isOpenEmbedding (by simp [C.prop.1.nonempty, Set.inter_univ])⟩
       zero_vadd := by simp [HVAdd.hVAdd, preimage]
       add_vadd := by simp [P, HVAdd.hVAdd, preimage, ← Scheme.Hom.comp_apply, ← Over.comp_left,
         add_assoc, comp_add] }

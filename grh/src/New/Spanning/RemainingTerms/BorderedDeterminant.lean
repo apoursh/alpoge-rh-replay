@@ -1,4 +1,6 @@
-import New.Spanning.Unfolding.Link
+module
+
+public import New.Spanning.Unfolding.Link
 
 /-!
 # Links, lifts and gauges of a term
@@ -42,6 +44,8 @@ Notions from other files:
   it is `S.ratMiddle = diag(1, -N)`, and `S.linkForm` is the form `diag(T, -T)` for this matrix `T`.
 * `New.genIndex`: the generalised index `[a]` of an adele `a`; it is `0` for a non-unit.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -624,14 +628,14 @@ lemma New.Filling.isotropicRows_conjTranspose_mul_eq {R σ : Type*} [CommRing R]
   ext l i
   -- The products with the `e_a` are the `e*`-coordinates of the column `i`, which therefore vanish.
   have h_eStar (a : Fin 𝔰.ϱ) : n (Sum.inr (Sum.inr a)) i = 0 := by
-    simpa [mul_apply, splitGram, Matrix.one_apply, apply_ite star] using
+    simpa [Matrix.mul_apply, splitGram, Matrix.one_apply, apply_ite star] using
       congrFun (congrFun h_isotropic (Sum.inl a)) i
   -- The entry is the product of the column `i` with the vector of index `l` of `k f`.
   have h_frame : ((framePair k)ᴴ * T.splitGram * n) (Sum.inr l) i = 0 := by
     induction l using Fin.lastCases with
     | last => exact congrFun (congrFun h_z (Sum.inr ())) i
     | cast a => exact congrFun (congrFun h_isotropic (Sum.inr a)) i
-  simpa [mul_apply, splitGram, frameGram, h_eStar, neg_eq_iff_add_eq_zero,
+  simpa [Matrix.mul_apply, splitGram, frameGram, h_eStar, neg_eq_iff_add_eq_zero,
     conjTranspose_fromCols_eq_fromRows_conjTranspose, Matrix.one_apply,
     fromBlocks_conjTranspose] using h_frame
 

@@ -1,4 +1,6 @@
-import Lib.Base
+module
+
+public import Lib.Base
 
 /-!
 # Integral, congruence and unitary matrix groups over a ring, with their topology
@@ -19,6 +21,8 @@ The file also supplies the Polish and Borel instances on units, the measurable a
 structures on matrices, the Polish instance on unitary groups and the Borel instance on complex
 ones, local compactness of unitary groups, and the additive Haar measure on matrices.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -235,7 +239,7 @@ def intGL.map (f : O →+* S) : intGL n O →* GL n S :=
   (GeneralLinearGroup.map f).comp <| MonoidHom.toHomUnits
     { toFun := toMatrix
       map_one' := by aesop (add simp Matrix.one_apply)
-      map_mul' := by aesop (add simp mul_apply) }
+      map_mul' := by aesop (add simp Matrix.mul_apply) }
 
 variable {f : O →+* S} {k : intGL n O}
 
@@ -264,7 +268,7 @@ def congruenceGL (M : Submodule O R) (e : m → n) : Subgroup (GL n R) :=
     refine ⟨div_mem hg hk, fun i j ↦ ?_⟩
     -- `g k⁻¹ - 1 = ((g - 1) - (k - 1)) k⁻¹`, and `k⁻¹` has entries in `O`.
     have h_eq : (g * k⁻¹).1 - 1 = ((g.1 - 1) - (k.1 - 1)) * k⁻¹.1 := by simp [sub_mul]
-    rw [h_eq, mul_apply]
+    rw [h_eq, Matrix.mul_apply]
     refine sum_mem fun l _ ↦ ?_
     rw [mul_comm]
     exact M.smul_mem ⟨k⁻¹.val l j, (mem_intGL.mp hk).right l j⟩ (sub_mem (hg_row i l) (hk_row i l))

@@ -1,4 +1,6 @@
-import Lib.Weil.MixedModel.NamedData
+module
+
+public import Lib.Weil.MixedModel.NamedData
 
 /-!
 # Hom(S,T), the Weil representation and theta kernel of a pair, and data modulo an ideal
@@ -44,6 +46,8 @@ Notions from other files:
 Known; see `Lib.Weil.DualPair.ThetaLiftConvergence`, `Lib.Weil.MixedModel.ZeroTerm` and
 `Lib.Adelic.Unitary.WeakApproximation` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -318,14 +322,12 @@ structure IsGenerator (𝔪 : Modulus E) (t : (𝔸f E)ˣ) : Prop where
   reduction_eq_zero_iff (x : Ô E) : 𝔪.reduction x = 0 ↔ t⁻¹.val * x ∈ Ô E
   /-- The order of `t` at every place `w` is the multiplicity of `w` in `𝔪`. -/
   valued_apply (w : FinPlace E) : Valued.v (t.val w) = .exp (-multiplicity w.asIdeal 𝔪.ideal)
-  /-- For a finite adele `y`, `𝔪 y ⊆ Ô E` if and only if `t y ∈ Ô E`. -/
-  forall_smul_mem_iff (y : 𝔸f E) : (∀ c ∈ 𝔪.ideal, c • y ∈ Ô E) ↔ t.val * y ∈ Ô E
 
 /-- Every modulus `𝔪` is generated in `Ô E` by a finite idele that is `1` away from `𝔪`. -/
 lemma exists_generator : ∃ t : (𝔸f E)ˣ, 𝔪.IsGenerator t := by
-  obtain ⟨-, -, t, ⟨h_mem, h_one, h_ker⟩, h_order, h_smul⟩ :=
+  obtain ⟨-, -, t, ⟨h_mem, h_one, h_ker⟩, h_order, -⟩ :=
     (exists_reduction_and_idele_generator 𝔪.ne_bot).choose_spec
-  exact ⟨t, h_mem, h_one, h_ker, h_order, h_smul⟩
+  exact ⟨t, h_mem, h_one, h_ker, h_order⟩
 
 /-- A finite idele `t` generating `𝔪` in `Ô E`, chosen from `exists_generator`. It is integral,
 and equal to `1` at the places not dividing `𝔪`. The kernel of `𝔪.reduction` consists of the

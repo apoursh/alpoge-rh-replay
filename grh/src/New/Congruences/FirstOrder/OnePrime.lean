@@ -1,4 +1,6 @@
-import Lib.Weil.Unramified.HeckeGL
+module
+
+public import Lib.Weil.Unramified.HeckeGL
 
 /-!
 # Norms, logarithms and first-order deformations of the norm
@@ -34,6 +36,8 @@ Notions from other files:
   completion `E_w`, its ring of integers `O_w` and its residue field, which has `w.q` elements.
 * `New.localIntGL n w`: the subgroup `GL_n(O_w)` of `GL_n(E_w)`.
 -/
+
+@[expose] public section
 
 /-!
 ## Congruences, norms and the family
@@ -172,7 +176,7 @@ lemma commutingProd_sum {𝒜 : J → Subring R}
   have Φ_smul (y : ∀ j : J, 𝒜 j) (j : J) (r : ℕ) (a : 𝒜 j) :
       Φ (Function.update y j (r • a)) = r • Φ (Function.update y j a) := by
     rw [last y j (r • a), last y j a, AddSubgroupClass.coe_nsmul, mul_smul_comm]
-  let M : MultilinearMap ℕ (fun j : J ↦ 𝒜 j) R := .mk' Φ Φ_add Φ_smul
+  let M : MultilinearMap (RingHom.id ℕ) (fun j : J ↦ 𝒜 j) R := .mk' Φ Φ_add Φ_smul
   exact M.map_sum x
 
 /-- The coefficient `∏_{j ∈ S} ∂ j ∏_{j ∉ S} Nm j` of `∏_{j ∈ S} α j` in the family
@@ -418,8 +422,6 @@ noncomputable def firstEntry : residueLineStabilizer F N →* Fˣ :=
       map_one' := by simp
       map_mul' g h := mul_apply_zero_of_mem_residueLineStabilizer (g : GL (Fin N) F) h.property 0 }
 
-lemma coe_firstEntry (g : residueLineStabilizer F N) :
-    (firstEntry g : F) = (g : GL (Fin N) F) 0 0 := rfl
 
 /-- Let `d = diagGL t` be the diagonal matrix with entries `t i`. If `h⁻¹ d h` stabilises the line
 of the first basis vector, then the first column of `h` is an eigenvector of `d`, so the first entry
@@ -471,7 +473,7 @@ lemma transfer_firstEntry_diagGL (x : Fˣ) :
   · intro q hq
     have not_mem : q.out.out ∉ H := fun h ↦ hq (by rw [(eq_iff q.out).2 h, q.out_eq])
     obtain ⟨i, hi, entry_ne⟩ : ∃ i ≠ 0, q.out.out i 0 ≠ 0 := by
-      simpa [H, mem_residueLineStabilizer] using not_mem
+      simpa using mt mem_residueLineStabilizer.2 not_mem
     rw [firstEntry_conj_diagGL (g_pow _) _ entry_ne, Pi.mulSingle_eq_of_ne hi]
 
 /-- A character `τ` of `GL n F` with values in `Fˣ`, for a finite field `F`, is trivial on

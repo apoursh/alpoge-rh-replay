@@ -1,6 +1,8 @@
-import Lib.Weil.Lift
-import New.UpperBound.Objects.InsertBlock
-import New.UpperBound.Objects.LabelsAndIndexTypes
+module
+
+public import Lib.Weil.Lift
+public import New.UpperBound.Objects.InsertBlock
+public import New.UpperBound.Objects.LabelsAndIndexTypes
 
 /-!
 # Index sets, signs and parameters of the grids; the parameters of every step correspond
@@ -36,6 +38,8 @@ Notions from other files:
   `s`) and `l'` (signs `s'`) satisfy the block rule (`New.IsBlockRule`) for the weights `γ`, `γ'`.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 namespace New.Data
@@ -53,14 +57,6 @@ protected def GridIndex (j : ℕ) : Type :=
   BlockIndex (BlockIndex (BlockIndex D.RowIndex Unit z.toNat) (Fin (D.t + z.toNat)) i)
     (Fin (D.t - z.toNat)) j
   deriving Fintype, DecidableEq
-
-lemma gridIndex_false (j : ℕ) :
-    D.GridIndex false i j = BlockIndex (BlockIndex D.RowIndex (Fin D.t) i) (Fin D.t) j := rfl
-
-/-- The index set `D.GridIndex true i j` of the node `(i, j)` of grid `Ỹ` is `D.RowIndex ⊕ Unit`
-with `i` blocks `Fin (D.t + 1)` and then `j` blocks `Fin (D.t - 1)`. -/
-lemma gridIndex_true (j : ℕ) : D.GridIndex true i j =
-    BlockIndex (BlockIndex (D.RowIndex ⊕ Unit) (Fin (D.t + 1)) i) (Fin (D.t - 1)) j := rfl
 
 /-- The numbering of the base index set: `D.basisNumber` on `D.RowIndex`, and `r` for the extra
 point of grid `Ỹ`. -/

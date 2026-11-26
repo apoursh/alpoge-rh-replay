@@ -1,5 +1,7 @@
-import Lib.Shimura.HeckeTower.HeckeData
-import Lib.Weil.Unramified.SplitHecke
+module
+
+public import Lib.Shimura.HeckeTower.HeckeData
+public import Lib.Weil.Unramified.SplitHecke
 
 /-!
 # Steps E'/E of base change and commuting families of Hecke operators
@@ -37,6 +39,8 @@ Notions from other files:
 Known; see `Lib.GaloisRep.BaseChange.PrimeDegreeTransfer` and `Lib.Adelic.Hecke.ClassSums` for
 sources.
 -/
+
+@[expose] public section
 
 /-!
 ## Steps, compatible CM types and matched places
@@ -126,7 +130,7 @@ variable {E E' n : Type _} [Field E] [CMType E] [Field E'] [CMType E'] [Algebra 
 variable (E') in
 /-- The set of finite places of `E'` lying above a place of `S` or above the complex conjugate of a
 place of `S`. -/
-def placesAbove : Set (FinPlace E') := FinPlace.below (L := E') E ⁻¹' S.conjClosure
+noncomputable def placesAbove : Set (FinPlace E') := FinPlace.below (L := E') E ⁻¹' S.conjClosure
 
 omit [CMType E] in
 /-- If `σ` pulls the place `u` back to `v`, the component of `σ g` at `u` is the image of the

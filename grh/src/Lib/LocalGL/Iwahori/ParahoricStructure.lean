@@ -1,5 +1,7 @@
-import Lib.Adelic.Hecke.ClassSums
-import Lib.General.LinearAlgebra.HermiteForm
+module
+
+public import Lib.Adelic.Hecke.ClassSums
+public import Lib.General.LinearAlgebra.HermiteForm
 
 /-!
 # Parahoric and pro-p Iwahori subgroups of GL_n over a local field and U_t operators
@@ -48,6 +50,8 @@ The last section proves conjugacy in I₁ t I₁, twisted by an isometric automo
 
 See also `Lib.LocalGL.Iwahori.HeckeDegrees`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -345,7 +349,7 @@ lemma exists_row_reduction (g : GL n F) (s : Finset n) :
       grind
     have he_mul (r l : n) :
         (e * m) r l = if r < a then m r l - m r j / m a j * m a l else m r l := by
-      simp [e, col, updateCol_apply, mul_apply, Finset.sum_ite, Finset.filter_eq', Matrix.one_apply]
+      simp [e, col, updateCol_apply, Matrix.mul_apply, Finset.sum_ite, Finset.filter_eq', Matrix.one_apply]
       grind
     have he_mem (hg : g ∈ proIwahori) : e ∈ proIwahori := by
       obtain ⟨hm_int, -, -⟩ := mem_proIwahori.mp (hm_K hg)

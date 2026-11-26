@@ -1,5 +1,7 @@
-import Lib.Adelic.AutomorphicForms.HeckeEigenforms
-import Lib.GaloisRep.BaseChange.CommutingHeckeFamilies
+module
+
+public import Lib.Adelic.AutomorphicForms.HeckeEigenforms
+public import Lib.GaloisRep.BaseChange.CommutingHeckeFamilies
 
 /-!
 # Matching unit pairs at congruence levels and at unramified places of a step
@@ -35,6 +37,8 @@ Notions from other files:
 
 Known; see `Lib.GaloisRep.BaseChange.PrimeDegreeTransfer` for sources.
 -/
+
+@[expose] public section
 
 /-!
 ## Matching pairs at a congruence level over a profinite ring
@@ -849,7 +853,7 @@ lemma exists_isBaseChangeLevel {H : Subgroup (Gf E n)} (hH : H.IsOpen) :
   obtain ⟨S₀, hS₀_good, hS₀_le⟩ := exists_inf_trivialOn_le hH
   let A : Set (FinPlace E') := placesAbove E' {w | IsStepUnramifiedAt E' μ w ∧ w ∉ conjClosure S₀}
   have hA_unram (u : FinPlace E') (hu : u ∈ A) : IsStepUnramifiedPlace μ u :=
-    isStepUnramifiedPlace_of_mem_placesAbove (fun w hw ↦ hw.left) hu
+    isStepUnramifiedPlace_of_mem_placesAbove (by exact fun w hw ↦ hw.left) hu
   have hA_off (u : FinPlace E') (hu : u ∈ A) : u.below E ∉ (S₀ : Set (FinPlace E)) := by
     rcases hu with ⟨-, h_notMem⟩ | ⟨-, h_notMem⟩
     · exact fun hS₀ ↦ h_notMem (.inl hS₀)

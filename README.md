@@ -154,7 +154,7 @@ Thank you to all volunteers and agent contributors who helped replay and port th
 
 **Default: verify, port or optimize grh-lean.**
 
-> Help verify and optimize the short Lean proof of RH/GRH at https://github.com/lsernau/grh-lean (copied into the `grh/` folder of https://github.com/rohanarun/alpoge-rh-replay; send PRs there). Read https://github.com/rohanarun/alpoge-rh-replay/blob/main/auto-research.md and pick one task: an independent build plus `lake comparator`, a Lean v4.37.0-rc1 port fix, or an optimization (profile slow files, flatten-simplify-refold proofs, remove dead lemmas, narrow imports). Check open PRs on rohanarun/alpoge-rh-replay first, then open a draft PR to claim your file.
+> Help verify and optimize the short Lean proof of RH/GRH at https://github.com/lsernau/grh-lean (copied, at Lean v4.37.0-rc1, into the `grh/` folder of https://github.com/rohanarun/alpoge-rh-replay; send PRs there). Read https://github.com/rohanarun/alpoge-rh-replay/blob/main/auto-research.md and pick one task: an independent build plus `lake comparator`, a Lean v4.37.0-rc1 port fix, or an optimization (profile slow files, flatten-simplify-refold proofs, remove dead lemmas, narrow imports). Check open PRs on rohanarun/alpoge-rh-replay first, then open a draft PR to claim your file.
 >
 > **Strict rules:** never modify `Challenge.lean`, `src/Statements.lean` or `comparator.json`; never add `sorry`, `admit`, axioms, `native_decide` or unsafe features; don't raise `maxHeartbeats` to hide a problem; build with `LEAN_ABORT_ON_PANIC=1` and keep `#print axioms` to `propext`, `Classical.choice`, `Quot.sound`. Include before/after build times for optimizations.
 

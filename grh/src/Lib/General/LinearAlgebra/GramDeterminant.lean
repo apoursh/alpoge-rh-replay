@@ -1,4 +1,6 @@
-import Lib.General.LinearAlgebra.MinorProducts
+module
+
+public import Lib.General.LinearAlgebra.MinorProducts
 
 /-!
 # Gram determinants
@@ -18,6 +20,8 @@ Notions from other files:
 
 * `Matrix.gram ℂ x`: the matrix of the inner products `⟨x_i, x_k⟩`.
 -/
+
+@[expose] public section
 
 open Module Submodule Real LinearMap Matrix Fintype NormedField InnerProductSpace
 
@@ -82,8 +86,8 @@ lemma norm_det_mul_det_gram_mul_det_le_one {F : Type} [NormedField F] [IsUltrame
   have h_mem (z : F) : z ∈ (valuation (K := F)).integer ↔ ‖z‖ ≤ 1 := .rfl
   have h_entry (a b : S) :
       (u'ᴴᵀ * (gram ℂ φ * uᵀ)) a b = ⟪∑ c : S, u' a c • φ c, ∑ c : S, u b c • φ c⟫_ℂ := by
-    simp only [← star_dotProduct_gram_mulVec, mul_apply, dotProduct, mulVec, transpose_apply,
-      conjTranspose_apply, Pi.star_apply]
+    simp only [← star_dotProduct_gram_mulVec, Matrix.mul_apply, dotProduct, mulVec,
+      Matrix.transpose_apply, Matrix.conjTranspose_apply, Pi.star_apply]
   have h_int : ι (u'ᴴᵀ * (gram ℂ φ * uᵀ)).det ∈ (valuation (K := F)).integer := by
     rw [ι.map_det, det_apply']
     refine sum_mem fun σ _ ↦ mul_mem (intCast_mem _ _) (prod_mem fun b _ ↦ ?_)
@@ -106,7 +110,7 @@ lemma posSemidef_formGram [Fintype S] (hG : G.PosSemidef) (v : S → I → ℂ) 
   have h_eq : formGram G v = (of v)ᵀᴴ * G * (of v)ᵀ := by
     rw [Matrix.mul_assoc]
     ext i k
-    simp [formGram, mul_apply, dotProduct, mulVec]
+    simp [formGram, Matrix.mul_apply, dotProduct, mulVec]
   rw [h_eq]
   exact hG.conjTranspose_mul_mul_same _
 

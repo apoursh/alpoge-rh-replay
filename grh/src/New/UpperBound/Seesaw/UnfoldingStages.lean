@@ -1,10 +1,12 @@
-import Lib.Weil.Periods.Unfolding
-import New.UpperBound.Objects.CharactersAtLevel
-import New.UpperBound.Objects.RowChain
-import New.UpperBound.Seesaw.Frequency
-import New.UpperBound.Seesaw.GluedLevel
-import New.UpperBound.Seesaw.LevelIdeles
-import New.UpperBound.Seesaw.Sandwich
+module
+
+public import Lib.Weil.Periods.Unfolding
+public import New.UpperBound.Objects.CharactersAtLevel
+public import New.UpperBound.Objects.RowChain
+public import New.UpperBound.Seesaw.Frequency
+public import New.UpperBound.Seesaw.GluedLevel
+public import New.UpperBound.Seesaw.LevelIdeles
+public import New.UpperBound.Seesaw.Sandwich
 
 /-!
 # Unfolding the chain of lifts: double lifts and the functions of the unfolding
@@ -44,6 +46,8 @@ Notions from other files:
 See `New.UpperBound.Seesaw.SeesawIdentity` for related work. See
 `Lib.Weil.CompactLift.DefiniteThetaLift` for sources.
 -/
+
+@[expose] public section
 
 /-!
 ## Two unfolding steps and the double lift of the finite evaluation
@@ -108,7 +112,7 @@ lemma arrowProduct_integrated_polyVector (P : MvPolynomial (NumberField.Infinite
           (rename (fun (v, j, i) ↦ (v, Sum.inl i, j)) P *
             rename (fun (v, i, j) ↦ (v, Sum.inr i, j)) Q))
         (arrowTensor (Φ ⊗ₜ Φ')) := by
-  simp [arrowProduct, flipPoly, pairSign, rename_eq_aeval, bind₁_bind₁, map_integrated,
+  simp [arrowProduct, flipPoly, pairSign, rename_eq_aeval, bind₁_bind₁, aeval_bind₁, map_integrated,
     realMap_flipCoords_polyVector, boxProd_integrated, realBoxProd_polyVector]
   -- the two descriptions of the renamed variables of `P` and `Q` agree by definition
   rfl
@@ -620,8 +624,6 @@ noncomputable def unfoldStage (k : ℕ) (hk : k ≤ 2 * D.ϱ + 1) {X : Type} {s 
   (D.gradingY k hk).unfoldStep Y' (rankTwist (D.chainChar ϑ (k + 1))) (movedDatum ϑ ξ y k)
     (unfoldStageOn ϑ t φ ξ y k hk)
 
-lemma unfoldStageOn_zero (hk : 0 ≤ 2 * D.ϱ + 1) :
-    unfoldStageOn ϑ t φ ξ y 0 hk = (D.gradingY 0).sourceFn t φ.1 := rfl
 
 /-- On `R_{k+1}`, the Bessel group of `D.gradingY (k + 1) hk`, the function `unfoldStageOn` of the
 unfolding is `γ ↦ 𝒲_{k+1} (γ g_{k+1})`, where `𝒲_{k+1}` is `unfoldStage` at `k` and

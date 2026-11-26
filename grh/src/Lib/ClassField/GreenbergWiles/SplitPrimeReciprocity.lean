@@ -1,4 +1,6 @@
-import Lib.ClassField.GreenbergWiles.SelmerLevels
+module
+
+public import Lib.ClassField.GreenbergWiles.SelmerLevels
 
 /-!
 # Trivialised cocycles and power residue relations at split primes
@@ -40,6 +42,8 @@ Notions from other files:
 
 Known; see `Lib.ClassField.GreenbergWiles.CocycleCounts` for sources.
 -/
+
+@[expose] public section
 
 /-! ## Cocycles trivialised at places and corestriction -/
 
@@ -84,7 +88,7 @@ def map (u : A.Hom B) : A.trivialisedCocycles X I →+ B.trivialisedCocycles X I
   AddMonoidHom.mk'
     (fun p ↦ ⟨p.1.map (Function.comp u) (Function.comp u), by
       obtain ⟨⟨f, z⟩, h_cont, h_triv, h_zero⟩ := p
-      refine ⟨by fun_prop, fun g x ↦ ?_, fun g hg ↦ ?_⟩
+      refine ⟨by dsimp only [Prod.map_snd]; fun_prop, fun g x ↦ ?_, fun g hg ↦ ?_⟩
       · simpa [u.isIntertwining] using congrArg u (h_triv g x)
       · simpa using congrArg u (h_zero g hg)⟩)
     (by simp)
@@ -327,7 +331,7 @@ lemma IsTameGeneratorFor.exists_apply_eq_nsmul (h : IsPlaceOver A v) (hm : ↑m 
     simpa [← hγy, ← IsPrimitiveRoot.coe_units_iff] using isPrimitiveRoot_rootPowHom_one Ω m
   -- So, by the tame theorem, every value of `F` is a power of its value at `γ`.
   obtain ⟨-, tame⟩ := h_local.tame_inertia (h_unif hπ) (h.valuation_natCast_eq_one_iff.2 hm)
-    (congrArg Units.val hy) F (hf _).preimage_val.preimage_val fun g ↦ char_nsmul_eq_zero m (f g)
+    (congrArg Units.val hy) F (hf {0}).preimage_val.preimage_val fun g ↦ char_nsmul_eq_zero m (f g)
   have h_pow : ∀ g : inertiaGroup (decompGroup G A) A, ∃ c : ℕ, F g = F γ' ^ c :=
     (tame γ').left h_prim
   exact h_pow ⟨⟨τ, hτ.1⟩, hτ⟩

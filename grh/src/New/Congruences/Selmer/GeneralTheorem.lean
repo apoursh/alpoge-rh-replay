@@ -1,5 +1,7 @@
-import New.Congruences.Selmer.Line
-import New.Congruences.Selmer.RootsOfUnity
+module
+
+public import New.Congruences.Selmer.Line
+public import New.Congruences.Selmer.RootsOfUnity
 
 /-!
 # Twisting, general form
@@ -21,7 +23,7 @@ Notions from other files:
   valuations of `det(ρ g - 1)` for `g = g₀` and its conjugate inverse. `TwistedLengthLe Q ψ b`
   says that its Selmer group `Sel_Q(T ψ)` has normalised length at most `b` over all large
   coefficient rings (`CoeffRing.normLength`: `len (O / ℓ) = 1`).
-* `New.Selmer.StickelbergerSystem ℓ S₀ g₀`: a character `ϑ` unramified outside `S₀` with
+* `New.Selmer.StickelbergerSystem ℓ S₀ g₀`: a character `ϑ` with
   `ϑ g₀ ≠ 1`, elements `Θ_Q` of the group rings of class groups `Cl_Q` with a norm relation, and
   the number `β`.
 * `New.Selmer.TwistPolynomials T Y s₀ r N`: an auxiliary set `Q` of at most `s₀ / 2` primes,
@@ -29,6 +31,8 @@ Notions from other files:
   variables indexed by `Q` with a point whose coordinates have valuation at least `r`.
 * `New.ellVal`: the valuation `v` on `PadicAlgCl ℓ` with `v(ℓ) = 1`, read in `[0, ∞]`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -58,8 +62,6 @@ structure IsSmallTwist (ε : ℝ≥0) (Q : Finset (FinPlace E)) (ψ : Gal(Ω/E) 
   so it is locally constant, anticyclotomic, unramified outside `Q ∪ Q̄` and trivial on the
   decomposition groups above `ℓ`. -/
   isFromU1 : IsFromU1 (placesDividing E ℓ) Q ψ
-  /-- The order of `ψ` is a power of `ℓ`. -/
-  exists_pow_eq_one : ∃ h : ℕ, ψ ^ ℓ ^ h = 1
   /-- `ψ` is ramified at every prime of `Q`. -/
   ramified : ∀ v ∈ Q, ∃ g ∈ inertiaAbove {v}, ψ g ≠ 1
   /-- (a) `len Sel_Q(T ψ) ≤ β_T + ε` for each datum, with lengths scaled so that
@@ -285,7 +287,7 @@ the Selmer group of `T i` twisted by `ψ` when it is below `O.normLength (T i).�
 of `X.systemPoly k` at `x` is `ψ(Θ_Q)`. Suppose that `S₀` contains the places above `ℓ`, that all
 `ζ v - 1` have valuation at most `r`, with `s₀ r ≤ ε < 1`, and that these polynomials have at `x`
 valuation at most `O.normLength (T i).β + ε` and `(Y k).β + ε`. Then `ψ` satisfies `IsSmallTwist`:
-it is anticyclotomic of tame level `Q`, of `ℓ`-power order and ramified at every prime of `Q`; the
+it is anticyclotomic of tame level `Q` and ramified at every prime of `Q`; the
 Selmer lengths are at most `O.normLength (T i).β + ε`; the valuations of the `ψ(Θ_Q)` are at most
 `(Y k).β + ε`; and the valuations of `ψ(γ_w) - 1`, for generators `γ_w` of tame inertia above the
 primes `w` of `Q` and their conjugates, have sum at most `ε`. -/
@@ -298,7 +300,6 @@ lemma isSmallTwist_twist (hζ : ∀ v : X.auxPrimes, (ζ v : PadicAlgCl ℓ) ^ �
       ellVal (eval (fun v : X.auxPrimes ↦ ζ v - 1) (X.systemPoly k)).val ≤ (Y k).β + ε) :
     IsSmallTwist T Y ε X.auxPrimes (X.twist hζ) where
   isFromU1 := X.isFromU1_twist hζ
-  exists_pow_eq_one := ⟨N, X.twist_pow_eq_one hζ⟩
   ramified v hv := by
     obtain ⟨g, hg, h_value⟩ : ∃ g ∈ inertiaAbove {v}, X.twist hζ g = ζ ⟨v, hv⟩ :=
       X.exists_mem_inertiaAbove_twist_eq hζ ⟨v, hv⟩ (.inl rfl)

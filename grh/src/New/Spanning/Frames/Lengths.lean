@@ -1,4 +1,6 @@
-import Lib.DiscreteSeries.Bruhat.FloorGroups
+module
+
+public import Lib.DiscreteSeries.Bruhat.FloorGroups
 
 /-!
 # Sizes, lengths and balanced frames
@@ -89,6 +91,8 @@ Notions from other files:
 See `New.Spanning.MainTerm.EnergyEstimate` for related work.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 namespace New.Floors
@@ -159,13 +163,13 @@ lemma coe_weylRatio :
     obtain rfl | hik := eq_or_ne i k
     · by_cases hi : level i < 𝔰.ϱ
       · rw [diagonal_apply_eq, div_eq_inv_mul]
-        simp [weylRatio, weylElem, weylOn, mul_apply, hk, h_invol, h_floor, h_swap, hi]
-      · simp [weylRatio, weylElem, weylOn, mul_apply, hk, h_invol, h_floor, h_swap, hi,
+        simp [weylRatio, weylElem, weylOn, Matrix.mul_apply, hk, h_invol, h_floor, h_swap, hi]
+      · simp [weylRatio, weylElem, weylOn, Matrix.mul_apply, hk, h_invol, h_floor, h_swap, hi,
           division_def]
-    · simp [weylRatio, weylElem, weylOn, mul_apply, hk, h_invol, h_floor, hik]
+    · simp [weylRatio, weylElem, weylOn, Matrix.mul_apply, hk, h_invol, h_floor, hik]
   · obtain rfl | hik := eq_or_ne i k
-    · simp [weylRatio, weylElem, weylOn, mul_apply, hk]
-    · simp [weylRatio, weylElem, weylOn, mul_apply, hk, hik]
+    · simp [weylRatio, weylElem, weylOn, Matrix.mul_apply, hk]
+    · simp [weylRatio, weylElem, weylOn, Matrix.mul_apply, hk, hik]
 
 /-- The inverse of w_q⁻¹ w_p is w_p⁻¹ w_q. -/
 lemma weylRatio_inv : (weylRatio j p q : T.G)⁻¹ = weylRatio j q p := by simp [weylRatio]
@@ -386,15 +390,10 @@ def InducedLengthLe (g : T.G) (l i : ℕ) (y : 𝔰.BesselIndex → A) : Prop :=
   ∃ y' : 𝔰.BesselIndex → A, CongrBelow l y y' ∧ S.LengthLeAt g i y'
 
 /-- The vector e_a is balanced in Y^(a) at g, with bound L^i: its class has induced length at most
-L^i, and it has a dual of length at most L^i, a vector ζ orthogonal to the e_b, b < a, with
-⟨e_a, ζ⟩ = 1. The short dual stands for a lower bound on the length at a real place and for
-primitivity at the finite places. -/
+L^i. -/
 structure IsBalanced (g : T.G) (a : Fin 𝔰.ϱ) (i : ℕ) : Prop where
   /-- The class of e_a in Y^(a) has induced length at most L^i. -/
   inducedLengthLe : S.InducedLengthLe g a i (Pi.single (inl a) 1)
-  /-- Some ζ orthogonal to the e_b, b < a, with ⟨e_a, ζ⟩ = 1 has length at most L^i. -/
-  exists_dual : ∃ ζ : 𝔰.BesselIndex → A, IsOrthogonalBelow a ζ ∧ ζ (eStar a) = 1 ∧ S.LengthLeAt g i
-    ζ
 
 /-- The vector ω read at g agrees modulo r with a vector ω' read at g', where ω' is congruent to ω
 modulo the e_b, b < l: the vector (g⁻¹ ω - g'⁻¹ ω') / r has size i. -/

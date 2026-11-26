@@ -1,6 +1,8 @@
-import Lib.Adelic.Unitary.Defs
-import Lib.General.Analysis.FourierTransforms
-import Lib.General.NumberTheory.EmbeddingsAndDifferent
+module
+
+public import Lib.Adelic.Unitary.Defs
+public import Lib.General.Analysis.FourierTransforms
+public import Lib.General.NumberTheory.EmbeddingsAndDifferent
 
 /-!
 # Standard character, self-duality, strong approximation and one-sided Poisson summation
@@ -49,6 +51,8 @@ ch. XV, Theorem 4.1.4; for strong approximation, Cassels, ch. II §15.
 
 See also `Lib.Adelic.Unitary.WeakApproximation`.
 -/
+
+@[expose] public section
 
 /-!
 ## Rational points of a space embed injectively and discretely
@@ -396,19 +400,22 @@ instance isDualFamily_ratMatrices :
   periodic a := by
     refine ⟨(continuous_stdAddChar.comp (by fun_prop)).subtype_val, ?_⟩
     -- for a rational matrix `γ` the trace of `a γ` lies in `E`, where `ψ` is trivial
-    simp [mul_apply, ratMatrices, trace, mul_add, Finset.sum_add_distrib, AddChar.map_add_eq_mul,
-      ← map_mul, ← map_sum]
-  add_left := by simp [mul_apply, trace, add_mul, Finset.sum_add_distrib, AddChar.map_add_eq_mul]
-  add_right := by simp [mul_apply, trace, mul_add, Finset.sum_add_distrib, AddChar.map_add_eq_mul]
+    simp [Matrix.mul_apply, ratMatrices, trace, mul_add, Finset.sum_add_distrib,
+      AddChar.map_add_eq_mul, ← map_mul, ← map_sum]
+  add_left := by
+    simp [Matrix.mul_apply, trace, add_mul, Finset.sum_add_distrib, AddChar.map_add_eq_mul]
+  add_right := by
+    simp [Matrix.mul_apply, trace, mul_add, Finset.sum_add_distrib, AddChar.map_add_eq_mul]
   norm_eq_one := by simp [norm_coe]
   -- Both claims reduce to one entry: the trace pairing with a matrix supported at `(j, i)`
   -- picks out the entry `(i, j)`.
   mem_of_forall_eq_one x hx := mem_ratMatrices.2 fun i j ↦
     mem_ratAdeles_of_stdAddChar_eq_one fun a ↦ by
-    simpa [mul_apply, trace, single_apply, ite_and, coe_eq_one] using hx (.single j i a)
+    simpa [Matrix.mul_apply, trace, Matrix.single_apply, ite_and, coe_eq_one] using
+      hx (.single j i a)
   eq_zero_of_forall_eq_one a ha := Matrix.ext fun i j ↦
     isDualFamily_ratAdeles.eq_zero_of_forall_eq_one (a i j) fun x ↦ by
-      simpa [mul_apply, trace, single_apply, ite_and] using ha (.single j i x)
+      simpa [Matrix.mul_apply, trace, Matrix.single_apply, ite_and] using ha (.single j i x)
 
 end New
 

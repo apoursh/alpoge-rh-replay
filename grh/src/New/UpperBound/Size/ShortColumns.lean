@@ -1,7 +1,9 @@
-import Lib.CM.FormalGroup.PrimeNotation
-import Lib.GLn.Dual
-import New.UpperBound.Kernels.JetConjugatesAndBounds
-import New.UpperBound.Objects.Columns
+module
+
+public import Lib.CM.FormalGroup.PrimeNotation
+public import Lib.GLn.Dual
+public import New.UpperBound.Kernels.JetConjugatesAndBounds
+public import New.UpperBound.Objects.Columns
 
 /-!
 # Prime-by-prime divisibility measures; short forms span the ramified source forms
@@ -43,6 +45,8 @@ Notions from other files:
 The exponents are used in `New.UpperBound.Divisibility.LocalDivisibility`, the short forms in
 `New.Reduction.ShortAndEnough` and `New.Determinant.AuxiliaryForms.SpanningForms`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -252,7 +256,7 @@ lemma norm_weylRep_mulVec_det_smul_weylEval_le_one {p : ℕ} [Fact p.Prime] [Pad
     exact norm_adeleExtension_le_one _ (hY τ).det_mem
   have h_entry (τ : InfinitePlace E) (i j : n) : ‖((gInv τ).val * (Y₀p τ).val) i j‖ ≤ 1 := by
     -- Without `map_inv` the inverse of `g` stays inside the image under the embedding.
-    simpa [gInv, Y₀p, mul_apply, -map_inv] using
+    simpa [gInv, Y₀p, Matrix.mul_apply, -map_inv] using
       norm_adeleExtension_le_one (weightEmbedding ιₚ τ) (hY₀ i j)
   have h_prod : ∏ τ, ‖(d τ).val‖ ≤ 1 :=
     Finset.prod_le_one₀ (fun τ _ ↦ norm_nonneg _) fun τ _ ↦ h_det τ
@@ -913,7 +917,13 @@ lemma ramifyingOp_empty {P : Parameters} (D : Data P) : D.ramifyingOp ∅ = 1 :=
 lemma ramifyingOp_cons {P : Parameters} (D : Data P) (w : D.piNPlaces) {s : Finset D.piNPlaces}
     (hw : w ∉ s) :
     D.ramifyingOp (cons w s hw) = (1 - D.centralRep (D.scalingGenerator w)) * D.ramifyingOp s := by
-  simp [ramifyingOp]
+  -- The ring map lemmas are applied through `toRingHom`: the instance search behind `map_mul`
+  -- for `D.centralRep.asAlgebraHom` times out.
+  let φ := D.centralRep.asAlgebraHom
+  rw [ramifyingOp, ramifyingOp, Finset.prod_cons,
+    show ∀ x y, φ (x * y) = φ x * φ y from φ.toRingHom.map_mul,
+    show ∀ x y, φ (x - y) = φ x - φ y from φ.toRingHom.map_sub,
+    show φ 1 = 1 from φ.toRingHom.map_one, Representation.asAlgebraHom_of]
 
 /-- For admissible data `D`, let `s` be a finite set of primes of `E` dividing `π = D.piN`, where
 `π π̄ = N` is the prime `D.N`. For `w ∈ s` the chosen scaling `z_w = D.scalingGenerator w` acts on

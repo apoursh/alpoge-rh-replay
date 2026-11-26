@@ -1,5 +1,7 @@
-import Lib.General.Analysis.MeanValueAndTaylor
-import Lib.Weil.Fock.WeightedNorms
+module
+
+public import Lib.General.Analysis.MeanValueAndTaylor
+public import Lib.Weil.Fock.WeightedNorms
 
 /-!
 # Mixed Schrödinger–Fock models and rapid sections with prescribed values
@@ -38,6 +40,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.MixedModel.ZeroTerm` for sources.
 -/
+
+@[expose] public section
 
 namespace New.Fock
 

@@ -1,4 +1,6 @@
-import New.UpperBound.Size.ClassCount
+module
+
+public import New.UpperBound.Size.ClassCount
 
 /-!
 # Numerical inequalities between the parameters of the data
@@ -33,6 +35,8 @@ Notions from other files:
 See `Lib.Adelic.Reduction.FiniteVolume` for sources. See
 `New.UpperBound.Divisibility.LocalDivisibility` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,7 @@
-import Lib.DiscreteSeries.Bessel.SchurBound
-import New.Spanning.Bessel.MeanValue
+module
+
+public import Lib.DiscreteSeries.Bessel.SchurBound
+public import New.Spanning.Bessel.MeanValue
 
 /-!
 # Unfolding bounds over G₁ and the L² bound at the section γ_Z via Sobolev
@@ -39,6 +41,8 @@ Notions from other files:
 
 See `New.Spanning.Bessel.FillingData` for related work.
 -/
+
+@[expose] public section
 
 /-!
 ## An unfolding bound over G₁ for suitable weights
@@ -555,8 +559,8 @@ lemma New.RealPlace.hasDerivWords_integral {𝔰 : Shape} {I : Type} [Fintype I]
     -- The entries of `Y = y⁻¹ * X t * y` bring the new factors of the weights.
     have Y_apply (a b : 𝔰.BesselIndex) :
         ψ i y * Y a b = ∑ c, ∑ d, coeff t ((a, b), c, d) * ψ (((a, b), c, d) :: i) y := by
-      simp only [Y, coeff, ψ_cons, InvMemClass.coe_inv, coe_units_inv, mul_apply, Finset.sum_mul,
-        Finset.mul_sum, Matrix.smul_apply, real_smul, ofReal_pow]
+      simp only [Y, coeff, ψ_cons, InvMemClass.coe_inv, coe_units_inv, Matrix.mul_apply,
+        Finset.sum_mul, Finset.mul_sum, Matrix.smul_apply, real_smul, ofReal_pow]
       congr! 2
       field
     have F'_eq : ψ i y • ∑ a, ∑ b, Y a b • V ((a, b) :: i.map Prod.fst) (γ t * y) = F' t y := by

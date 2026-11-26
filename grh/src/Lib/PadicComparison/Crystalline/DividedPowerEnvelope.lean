@@ -1,5 +1,7 @@
-import Lib.PadicComparison.Completion
-import Lib.PadicComparison.ToricTower
+module
+
+public import Lib.PadicComparison.Completion
+public import Lib.PadicComparison.ToricTower
 
 /-!
 # Divided power envelopes, lifts modulo divided powers, and one divided power variable
@@ -39,6 +41,8 @@ Notions from other files:
 Known; see `Lib.PadicComparison.Crystalline.ComparisonMap` for sources.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 /-! ## Lifts modulo divided powers and the divided power envelope -/
@@ -71,14 +75,14 @@ lemma IsCompleteTorsionFree.p_mem_pdIdeal (h : IsCompleteTorsionFree S) : ↑p �
   obtain ⟨a, b, hab⟩ := (coprime_ordCompl hp.out n.factorial_ne_zero).cast (R := S)
   have h_unit : IsUnit ((p : S) * -a + 1) :=
     mem_jacobson_bot.mp (h.complete.le_jacobson_bot _ (subset_span rfl)) (-a)
-  have h_fact : (n ! : S) ∣ p ^ padicValNat p n ! := by
+  have h_fact : (n ! : S) ∣ p ^ multiplicity p n ! := by
     refine h_unit.dvd_mul_right.mp ⟨b, ?_⟩
     -- multiply `a * p + b * m = 1` by `p ^ v` and use `p ^ v * m = n !`
     have h_split : ((p ^ (n !).factorization p * (n ! / p ^ (n !).factorization p) : ℕ) : S) =
         (n ! : S) :=
       congrArg (Nat.cast : ℕ → S) (ordProj_mul_ordCompl_eq_self n ! p)
     grind [factorization_def, hp.out]
-  exact h_fact.trans (pow_dvd_pow _ (padicValNat_factorial_le p n))
+  exact h_fact.trans (pow_dvd_pow _ (multiplicity_factorial_le p n))
 
 /-- If `S` is `p`-torsion-free and `p`-complete, the quotient map `S → S ⧸ pdIdeal S` is a local
 homomorphism: an element whose class is a unit is a unit. -/

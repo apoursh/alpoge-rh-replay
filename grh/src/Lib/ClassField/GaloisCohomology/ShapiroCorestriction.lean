@@ -1,4 +1,6 @@
-import Lib.General.Groups.ProfiniteCharacters
+module
+
+public import Lib.General.Groups.ProfiniteCharacters
 
 /-!
 # Shapiro's lemma, corestriction and reduction of H² statements to steps of prime index
@@ -38,6 +40,8 @@ Notions from other files:
 Known; see `Lib.ClassField.GaloisCohomology.KummerCyclicClasses` for sources.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 /-!
@@ -59,10 +63,6 @@ variable {R Γ : Type} {H : Type*} [CommRing R] [Group Γ] [TopologicalSpace Γ]
 /-- For a continuous homomorphism φ: H → Γ, the additive map from continuous ℚ/ℤ-valued
 characters of Γ to those of H, χ ↦ χ∘φ. -/
 def New.QZChar.comap : QZChar Γ →+ QZChar H := pairMapZ1 φ LinearMap.id
-
-omit [IsTopologicalGroup Γ] [CompactSpace Γ] in
-lemma New.QZChar.comap_val_apply (χ : ↥(QZChar Γ)) (h : H) :
-    (QZChar.comap φ χ).val h = χ.val (φ h) := rfl
 
 omit [IsTopologicalGroup Γ] [CompactSpace Γ] in
 /-- The character `χ ∘ φ`, as a homomorphism to `ℚ/ℤ`, takes the value `χ (φ h)` at `h`. -/
@@ -128,9 +128,26 @@ lemma exists_coset_section :
   -- Correct the chosen representatives by the inverse of the representative of `U`. Membership in
   -- `U` is tested as fixing the coset `U`.
   -- (`stabilizer_quotient` is removed from the simp set so that it does not undo the rewrite.)
-  refine ⟨fun x ↦ x.out * (mk 1 : Γ ⧸ U.toSubgroup).out⁻¹, ?_⟩
-  simp +contextual [← eq_inv_smul_iff, ← SetLike.ext_iff.mp (stabilizer_quotient U.toSubgroup),
-    mul_smul, -stabilizer_quotient]
+  have hq : (mk 1 : Γ ⧸ U.toSubgroup).out ∈ U.toSubgroup := by
+    have h := QuotientGroup.eq.mp (QuotientGroup.out_eq' (mk 1 : Γ ⧸ U.toSubgroup)).symm
+    rwa [inv_one, one_mul] at h
+  refine ⟨fun x ↦ x.out * (mk 1 : Γ ⧸ U.toSubgroup).out⁻¹, ?_, ?_, ?_⟩
+  · intro g hg
+    have hg' : (g : Γ ⧸ U.toSubgroup) = mk 1 := QuotientGroup.eq.mpr (by simpa using hg)
+    simp only [hg', mul_inv_cancel]
+  · intro x
+    rw [← MulAction.Quotient.mk_smul_out]
+    refine QuotientGroup.eq.mpr ?_
+    convert inv_mem hq using 1
+    simp only [smul_eq_mul]
+    group
+  · intro x g
+    have hx : (x.out⁻¹ * g) * (g⁻¹ • x).out ∈ U.toSubgroup := by
+      have h := QuotientGroup.out_eq' (g⁻¹ • x)
+      conv_rhs at h => rw [← QuotientGroup.out_eq' x]
+      simpa [mul_assoc] using QuotientGroup.eq.mp h.symm
+    convert mul_mem (mul_mem hq hx) (inv_mem hq) using 1
+    group
 
 /-- Shapiro's lemma in degree zero. A `Γ`-invariant element `F` of the module of functions
 `Γ ⧸ U → M` (an equivariant function) is `x ↦ x.out y` for some `U`-invariant `y` in `M`, where
@@ -321,6 +338,7 @@ lemma resH2_subgroupOf_eq_zero_symm {U V : Subgroup Γ} {α : M.H2} :
   -- Pull the vanishing class back along the identification of the two copies of `U ⊓ V`.
   let swap : V.subgroupOf U →ₜ* U.subgroupOf V :=
     .mk (.mk' (fun g ↦ ⟨⟨g, Subgroup.mem_subgroupOf.mp g.prop⟩, g.val.prop⟩) (by tauto))
+      ((continuous_subtype_val.comp continuous_subtype_val).subtype_mk _ |>.subtype_mk _)
   intro h_zero
   -- By definition, restricting to `U` and then to `U ⊓ V` is the pull-back along `swap` of
   -- restricting to `V` and then to `U ⊓ V`.

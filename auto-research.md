@@ -17,7 +17,9 @@ Baseline build times, with the Mathlib cache, both editions at once on 128 cores
 
 ## What to work on
 
-**Focus: optimize the 300k readable edition in `grh/` (Lean v4.35.0).** Verification and the v4.37 port are secondary.
+**Focus: build speed of the 300k readable edition.** `grh/` is now synced to upstream `main` (Lean **v4.37.0-rc1**, every file a `module`). Measure and optimize on this version: speedups measured on v4.35 often vanish on v4.37.
+
+**Where the time goes (current `main`):** a from-scratch build is about 590s on 128 cores, and about 573s of that is one critical path of 35 modules. Only files on that path change wall time. The next-longest path is about 458s, so gains flatten out past that point.
 
 1. **Verify.** Build either edition yourself (`lake exe cache get && LEAN_ABORT_ON_PANIC=1 lake build && lake env lean scripts/PrintAxioms.lean`) and run `lake comparator` against its `Challenge.lean` + `comparator.json`. Post the result (toolchain, machine, time, axioms) as a comment on the pinned issue. Independent confirmations matter most.
 2. **Port to Lean v4.37.0-rc1** (Mathlib tag `v4.37.0-rc1`, commit `31ce06ea`). Breakages found so far:
@@ -37,7 +39,7 @@ Baseline build times, with the Mathlib cache, both editions at once on 128 cores
 
 ## How to contribute
 
-- Fork-and-PR against this repository, changing files under [`grh/`](grh/) (Lean v4.35.0). `cd grh && lake exe cache get && lake build`; the shared build cache is configured. Open a **draft PR early** titled `Port: <File>`, `Opt: <File>` or `Verify: <what>`; that's your claim. One file or one family of files per PR.
+- Fork-and-PR against this repository, changing files under [`grh/`](grh/) (Lean v4.37.0-rc1), **or open the PR directly upstream** against `leanprover-community/riemann-hypothesis` `main`; verified PRs here get ported upstream with you as the commit author. `cd grh && lake exe cache get && lake build`; the shared build cache is configured. Open a **draft PR early** titled `Port: <File>`, `Opt: <File>` or `Verify: <what>`; that's your claim. One file or one family of files per PR.
 - In the PR, include the before/after build time (for optimizations) or the original error (for port fixes), and the result of `lake env lean scripts/PrintAxioms.lean`.
 
 ## Strict rules
@@ -45,6 +47,8 @@ Baseline build times, with the Mathlib cache, both editions at once on 128 cores
 - **Never modify** `Challenge.lean`, `src/Statements.lean` or `comparator.json`. The five headline statements must stay byte-for-byte identical.
 - **Never introduce** `sorry`, `admit`, new `axiom`s, `native_decide`, `implemented_by`, `unsafe`, `extern` or `opaque` tricks. Don't raise `maxHeartbeats` or `maxRecDepth` to hide a problem; fix the proof.
 - Builds must pass with `LEAN_ABORT_ON_PANIC=1`.
+- **Upstream PR text:** upstream's README says they do **not** want "claims about your own machine's builds / comparator run". In upstream PRs, explain what was slow and why the new proof avoids it; leave out local timing tables and build or comparator output. (Timing evidence is fine in PRs *here*.)
+- Check open PRs upstream and here for the same file before starting.
 - An optimization PR must keep `#print axioms` to exactly `propext`, `Classical.choice`, `Quot.sound`, and `lake comparator` must still pass.
 
 ## Archived: PR #120

@@ -1,53 +1,69 @@
 > **In this repository.** This `grh/` folder is a copy of `main` of
-> https://github.com/leanprover-community/riemann-hypothesis at commit `686902a`, which is the
-> readable edition of https://github.com/lsernau/grh-lean (commit `72fead1`) plus shared build-cache
-> configuration. It is the working copy for the community optimization effort: send PRs that change
-> files under `grh/` to this repository. See [../auto-research.md](../auto-research.md).
+> https://github.com/leanprover-community/riemann-hypothesis at commit `de0d3a3f06` (Lean v4.37.0-rc1,
+> `module` system), the readable edition of https://github.com/lsernau/grh-lean being optimized
+> upstream. Changes made here are ported upstream; you can also open PRs upstream directly.
+> See [../auto-research.md](../auto-research.md).
 
-> **About this repository.** The `main` branch of this repository is a copy of the readable
-> edition (`grh/`) of https://github.com/lsernau/grh-lean at commit
-> 72fead102f663d5c7a407964a13dc0cf9d977207, moved to the repository root, with build cache
-> configuration added (see `CACHE.md`). The text below is the authors' README for that edition;
-> its link to `../grh-compact` refers to the compact edition, which is on branch `grh-lean` of this
-> repository. The earlier work in this repository, based on Levent Alpöge's proof, is on branch
-> `alpoge`.
->
-> To use the shared build cache, run `lake exe cache get`, then `lake build`; the second command
-> should build nothing. The cached files come from a build of this third-party proof, which has
-> not been verified; the cache only provides build outputs and checks nothing about the proof.
+# riemann-hypothesis
 
-# The Generalized Riemann Hypothesis for Dirichlet L-functions, in Lean 4
+A community-led effort to clean up and maintain a Lean formalization of the 2026 proofs of the Riemann Hypothesis and of GRH for Dirichlet L-functions.
 
-Research artifact. Not maintained and not accepting contributions.
+> [!CAUTION]
+> This repo recently moved to a highly condensed version on November 25, 2026. Prior progress is preserved on the `alpoge` branch.
 
-The proof is Levent Alpöge's, with Claude.
-The Lean text and the documents in this project were written by Claude (AI).
+The purpose of this repo is to create an artifact that is:
 
-This project holds a Lean 4 proof of the Riemann Hypothesis. It also proves the Generalized Riemann Hypothesis for Dirichlet L-functions. The proof builds on Mathlib. It uses only the axioms `propext`, `Classical.choice` and `Quot.sound`.
+- **accessible**: we want to improve build performance and modularity to enable researchers to feasibly engage with the proof even without access to massive amounts of compute.
+- **readable**: we want to improve code quality, aspirationally to Mathlib levels. This includes lemma organization, formatting and idiomatic style, eliminating linter warnings, slop-free documentation, and more.
+- **integrated with the community**: we would like to add bibliographic references to prior work where appropriate, and rely on existing formalization projects when possible.
 
-This project is a shorter rewriting of Levent Alpöge's Lean proof (see <https://alpo.ge/remark.pdf>). It follows that proof's method; many steps are proved by other arguments, and parts of it, mostly background material, were ported from there and then rewritten.
+Please note: we are **not** looking for:
 
-This is the readable edition, about 300,000 lines of code. A compact edition, about 76,000 lines, is in [../grh-compact](../grh-compact/); some of its steps use other arguments.
+- claims about your own machine's builds / comparator run
+- adding files which are not necessary for the Riemann Hypothesis proof
 
-## Theorems
-`src/Statements.lean` states the theorems in Mathlib's terms. `src/Main.lean` proves five theorems:
-- `riemannHypothesis`: Mathlib's `RiemannHypothesis`.
-- `riemannZeta_eq_zero_re`: every zero s ≠ 1 of ζ other than −2, −4, … has real part 1/2 (s = 1 is the pole).
-- `LFunction_ne_zero_of_half_lt_re`: L(s, χ) ≠ 0 for re s > 1/2, except at s = 1 for the principal character of each modulus (the pole).
-- `LFunction_eq_zero_re`: every zero of L(s, χ) with 0 < re s < 1 has real part 1/2.
-- `LFunction_eq_zero_re_of_isPrimitive`: the special case of primitive χ.
+This work is taking place on the `main` branch, which is based on a copy of the readable
+edition (`grh/`) of https://github.com/lsernau/grh-lean at commit 72fead102f663d5c7a407964a13dc0cf9d977207.
 
-All moduli N ≥ 1 and all characters are covered, primitive or not. The last three theorems say nothing about zeros with re s ≤ 0. To trust the result, read `src/Statements.lean`, which imports only Mathlib, the five statements in `src/Main.lean`, and the list of axioms, and build or replay the files. All other definitions occur only inside the proof.
+The `alpoge` branch retains the progress the community made towards cleaning up the original version of the proof released by Levent Alpöge in the first few days before the aforementioned readable edition was released.
 
-## Build
-The build needs Lean v4.35.0, set in `lean-toolchain`. It needs Mathlib at commit 56a005855ea17e0b0958f73ec801ae140b0a1679, set in `lake-manifest.json`. Run `lake exe cache get`, then `lake build`. If the cache is missing, Lake builds Mathlib from source (about 85 minutes on 12 cores). A build takes one to two hours on 12 cores; allow 24 GB of memory. The build prints some linter and deprecation warnings. To list the axioms, run `lake env lean scripts/PrintAxioms.lean`. The first of its five results is `'riemannHypothesis' depends on axioms: [propext, Classical.choice, Quot.sound]`. To replay a compiled module through the kernel, run `lake env leanchecker <module>`.
+The `original` branch preserves the first publicly-released version of the proof retrieved on 2026-11-20 from <https://alpo.ge/remark.pdf>.
 
-## Checks
-Every file in `src` compiles with the pinned Lean and Mathlib, without errors or `sorry`. The first theorem has Mathlib's type `RiemannHypothesis`, the other four have the types fixed in `src/Statements.lean`, and all five depend only on the three axioms above. An export of the five theorems with all they depend on, Mathlib included (`lake env leanexport Main -- riemannHypothesis riemannZeta_eq_zero_re LFunction_ne_zero_of_half_lt_re LFunction_eq_zero_re LFunction_eq_zero_re_of_isPrimitive`), is accepted by the independent checkers nanoda, con-leche and con-ron. These checks show that Lean accepts the proof of the stated theorems. Several hundred of the more than 20,000 declarations are not used by the five theorems: they state results for their own sake, or serve automation.
+If you want to open the original proof without compiling it, see the repo
+[riemann-hypothesis-original](https://github.com/homeowmorphism/riemann-hypothesis-original).
+It keeps the published Lean source unchanged and provides a prebuilt cache for it.
 
-`Challenge.lean` states the five theorems with `sorry` in place of proofs, and `comparator.json` sets up the tool [Comparator](https://github.com/leanprover/comparator), which compares them with `src/Main.lean` and checks the proofs again. Nothing imports `Challenge.lean`, and `lake build` does not build it. We ran Comparator v4.35.0 on this folder (Linux, with a stand-in for its sandbox and `ulimit -s unlimited`), and it accepted the proofs; allow 64 GB of memory and a few hours.
+## Theorem Statements
+
+`src/Main.lean` proves the following theorems:
+
+| Theorem | Statement |
+|---|---|
+| `riemannHypothesis` | Mathlib's `RiemannHypothesis` |
+| `riemannZeta_eq_zero_re` | the same statement as `riemannHypothesis` but spelled out without Mathlib's definition of the statement |
+| `LFunction_ne_zero_of_half_lt_re` | L(χ, s) ≠ 0 for Re s > 1/2, for every modulus and every Dirichlet character, except the trivial character at s = 1 |
+| `LFunction_eq_zero_re` | every zero of L(χ, s) with 0 < Re s < 1 has Re s = 1/2 |
+| `LFunction_eq_zero_re_of_isPrimitive` | the special case of `LFunction_eq_zero_re` for primitive characters |
+
+[`Challenge.lean`](Challenge.lean) states the same five with `sorry` in place of the
+proofs, in a file that imports only Mathlib. Comparator checks that `Main.lean` proves exactly those statements, that it uses no axioms other than `propext`, `Quot.sound` and
+`Classical.choice`, and that Lean's kernel and nanoda both accept the proof.
+
+## Cache
+
+```
+lake exe cache get
+lake build
+```
+
+This needs Python 3.11 or newer and curl 7.71 or newer. (No credentials are necessary.) It fetches Mathlib's cache, then this project's, and unpacks it. `lake exe mathlib/cache get` fetches Mathlib alone.
+
+See [`CACHE.md`](CACHE.md) for details.
 
 ## Layout
+
+*For now, this section is copied from https://github.com/lsernau/grh-lean. It may be out of date and is subject to change.*
+
 About 300,000 lines of code; 433,000 non-blank lines with comments; 477,000 lines in all.
 - `src/Lib` (495 files): background results, classed as known in the literature, that Mathlib lacks, with the steps of their proofs. It imports nothing from `src/New`.
 - `src/New` (306 files): the set-up and the steps of the argument, in folders that follow its order. The main inequality is in `src/New/Reduction/MainInequality.lean`, the theorem in half-plane form in `src/New/Reduction/OneSidedBound.lean`.
@@ -55,8 +71,13 @@ About 300,000 lines of code; 433,000 non-blank lines with comments; 477,000 line
 - `GUIDE.md`: start here. It gives the reading order, a glossary, sizes and conventions. `CONTENTS.md`: every file with its title. `INDEX.md`: the results, with sources or related work and files.
 - `REFERENCES.md` lists the citations and says which were compared with their sources.
 
-## Acknowledgements
-We thank the colleagues at Anthropic whose direction and suggestions shaped this rewriting.
-
 ## License
-Apache 2.0; see `LICENSE`, `NOTICE` and `ATTRIBUTION.md`. The project depends on Mathlib (Apache 2.0), which it does not include; some declarations are adapted from it.
+
+The proof belongs to its author Levent Alpöge with Claude and was originally published without a license. The repo https://github.com/lsernau/grh-lean uses Apache 2.0, and so does this repo; see [`LICENSE`](LICENSE), [`NOTICE`](NOTICE) and [`ATTRIBUTION.md`](ATTRIBUTION.md).
+
+*Soon, we will re-integrate Formal Conjectures. This is out of date.*
+
+The declarations in `comparator/` that will be copied from
+[formal-conjectures](https://github.com/google-deepmind/formal-conjectures) are copyright The Formal
+Conjectures Authors, under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+The files that hold them carry the notice.

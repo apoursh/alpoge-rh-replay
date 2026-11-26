@@ -1,4 +1,6 @@
-import Lib.General.LinearAlgebra.MatricesNearIdentity
+module
+
+public import Lib.General.LinearAlgebra.MatricesNearIdentity
 
 /-!
 # One minor of a product of three exponentials, to second order
@@ -23,6 +25,8 @@ Notions from other files:
 
 See `New.Appendix.DiscreteSeries.Periods` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 

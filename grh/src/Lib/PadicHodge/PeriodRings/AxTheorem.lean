@@ -1,6 +1,9 @@
-import Lib.ClassField.Places.ProfiniteGalois
-import Lib.General.Algebra.AbsIntegrallyClosed
-import Lib.General.Algebra.AdicCompletion
+module
+
+public import Lib.ClassField.Places.ProfiniteGalois
+public import Lib.General.Algebra.AbsIntegrallyClosed
+public import Lib.General.Algebra.AdicCompletion
+public import TauCeti.Topology.Algebra.Valued.NormedValued
 
 /-!
 # Tilting, Fontaine's θ, the ring O_C and Ax's theorem on Galois invariants in ℂ_p
@@ -36,6 +39,8 @@ Notions from other files:
 
 Known; see `Lib.PadicHodge.PeriodRings.DeRhamPeriods` and `Lib.PadicHodge.TateSen` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -293,22 +298,14 @@ instance : Away (p : OC) ℂ_[p] := by
   have hp_one_lt : 1 < (p : ℝ) := by simp [Fact.out]
   refine .mk _ (by simp [NeZero.ne])
     (fun z ↦ (pow_unbounded_of_one_lt ‖z‖ hp_one_lt).imp fun n hz_lt ↦ ?_) (by simp)
-  have h_norm_le : ‖z‖ * ((p : ℝ) ^ n)⁻¹ ≤ 1 := (div_le_one (by positivity)).mpr hz_lt.le
+  have h_norm_le : ‖z‖ * ((p : ℝ) ^ n)⁻¹ ≤ 1 :=
+    (div_le_one (pow_pos (zero_lt_one.trans hp_one_lt) n)).mpr hz_lt.le
   simpa [norm_p_eq_inv] using h_norm_le
 
 /-- `O_C` is `p`-adically complete. -/
-instance : IsAdicComplete (span {(p : OC)}) OC := by
-  -- The topology of `OC` is `p`-adic: the closed ball of radius `‖p‖ ^ n` is the ideal `(p ^ n)`.
-  have h_ball (n : ℕ) : closedBall (0 : OC) (‖(p : ℂ_[p])‖ ^ n) =
-      ((span {(p : OC)} ^ n : Ideal OC) : Set OC) := by
-    ext z
-    simp [span_singleton_pow, mem_span_singleton, valRingCp.dvd_iff_norm_le]
-  have h_adic : IsAdic (span {(p : OC)}) := by
-    refine IsTopologicalAddGroup.ext ⟨⟩ inferInstance ((nhds_basis_closedBall_pow
-      (by simp [NeZero.ne]) (norm_p_lt_one (F := ℂ_[p]))).eq_of_same_basis ?_)
-    simpa only [h_ball] using hasBasis_nhds_zero_adic (span {(p : OC)})
-  -- `OC` is closed in the complete field `ℂ_p`.
-  exact h_adic.isAdicComplete_iff.mpr ⟨valRingCp.isClosed.completeSpace_coe, inferInstance⟩
+instance : IsAdicComplete (span {(p : OC)}) OC :=
+  (Valuation.integer.integers (NormedField.valuation (K := ℂ_[p]))).isAdicComplete_span_singleton
+    (by change ‖(p : ℂ_[p])‖ < 1; exact norm_p_lt_one)
 
 /-- `O_C` is absolutely integrally closed: every monic polynomial of positive degree over `O_C`
 has a root in `O_C`. -/
@@ -406,8 +403,8 @@ private lemma axRadius_nonneg {ε : ℝ} (hε : 0 < ε) (k : ℕ) : 0 ≤ axRadi
 private lemma inv_le_norm_natCast_padic {n m : ℕ} (hn_pos : 0 < n) (h_le : n ≤ m) :
     (m : ℝ)⁻¹ ≤ ‖(n : ℚ_[p])‖ := by
   -- `‖n‖ = p ^ (-v_p(n))`, and `p ^ v_p(n)` divides `n`
-  have h_pow_le : (p : ℝ) ^ padicValNat p n ≤ m :=
-    mod_cast (le_of_dvd hn_pos pow_padicValNat_dvd).trans h_le
+  have h_pow_le : (p : ℝ) ^ multiplicity p n ≤ m :=
+    mod_cast (le_of_dvd hn_pos (pow_multiplicity_dvd p n)).trans h_le
   simpa [norm_eq_zpow_neg_valuation, hn_pos.ne'] using
     inv_anti₀ (pow_pos (Nat.cast_pos.mpr (NeZero.pos p)) _) h_pow_le
 

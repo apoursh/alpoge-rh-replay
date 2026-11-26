@@ -1,5 +1,7 @@
-import Lib.Weil.Construction.ProductsAndTransport
-import Lib.Weil.MixedModel.IsotropicSplitting
+module
+
+public import Lib.Weil.Construction.ProductsAndTransport
+public import Lib.Weil.MixedModel.IsotropicSplitting
 
 /-!
 # Real data, the entire theta function, and the real vacuum in the mixed model
@@ -40,6 +42,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.Fock.OscillatorPair` and `Lib.Weil.MixedModel.ZeroTerm` for sources.
 -/
+
+@[expose] public section
 
 namespace New.Space
 
@@ -123,7 +127,9 @@ variable {E : Type _} [Field E] [CMType E] [WeilData E] {n : Type _} [Fintype n]
 omit [Fintype n] [DecidableEq n] in
 @[fun_prop]
 lemma continuous_realVec :
-    Continuous (realVec : (NumberField.InfinitePlace E × n → ℂ) → n → 𝔸 E) := by continuity
+    Continuous (realVec : (NumberField.InfinitePlace E × n → ℂ) → n → 𝔸 E) := by
+  simp only [realVec, AddMonoidHom.mk'_apply]
+  fun_prop
 
 /-- For f in 𝒮(V), the function Θ_f(y) = θ(ϱ(y)f)·exp(|y|²/2) of a real vector y in Fock
 coordinates, placed in the adelic vectors with finite part zero. -/
@@ -384,7 +390,7 @@ lemma IsAdapted.omega_projReal_of_isMixedLaw (hT : D.IsMixedLaw T) {g : G E s}
   have h_frame : MeasurePreserving (realMatrix (D.frameAt g t) *ᵥ ·) (normalizedVolume _)
       (normalizedVolume _) :=
     measurePreserving_equiv (realHeisenberg 1) (realHeisenberg 1)
-      (φ := {toLin'OfInv h_orth h_orth' with}) h_vac
+      (φ := (toLin'OfInv h_orth h_orth').toContinuousLinearEquiv.toContinuousAddEquiv) h_vac
   -- Splitting the coordinates as ((c, b), w), and then as (c, b), preserves the measure too.
   let outer : (realHeisenberg (realSigns E ((1 : p ⊕ p → ℤˣ) ⊕ᵥ s₀))).OrthogonalSum
       (realHeisenberg (realSigns E (1 : p ⊕ p → ℤˣ))) (realHeisenberg (realSigns E s₀)) realVac :=
@@ -413,8 +419,11 @@ lemma IsAdapted.omega_projReal_of_isMixedLaw (hT : D.IsMixedLaw T) {g : G E s}
   have h_law (x c b : InfinitePlace E × p → ℂ) (w : InfinitePlace E × n₀ → ℂ) :
       N x (V.ϱ (realVec (coord c b w)) f) =
         (realHeisenberg 1).β (x + (x + c)) b • V₀.ϱ (realVec w) (N (x + c) f) := by
+    have h_vec : realVec (outer.equiv (inner.equiv (c, b), w)) =
+        (realVec c ⊕ᵥ realVec b) ⊕ᵥ realVec w := by
+      simp only [outer, inner, realVec_realCoordSum]
     rw [← h_char]
-    simp [hT, N, coord, outer, inner, realVec_realMatrix_mulVec, frameAt, ← g.adeleMatrix.mul_assoc,
+    simp [hT, N, coord, h_vec, realVec_realMatrix_mulVec, frameAt, ← g.adeleMatrix.mul_assoc,
       adelicHeisenberg, ← G.adeleMatrix_mul, star_mulVec_dotProduct, ← conjTranspose_mul, mul_add,
       realVec_realCoordSum, omega_rho, mulVec_add, AddChar.map_add_eq_mul]
   have h_vac_coord (c b : InfinitePlace E × p → ℂ) (w : InfinitePlace E × n₀ → ℂ) :

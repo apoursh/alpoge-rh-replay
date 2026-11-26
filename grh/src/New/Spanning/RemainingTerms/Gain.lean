@@ -1,4 +1,6 @@
-import New.Spanning.RemainingTerms.Cut
+module
+
+public import New.Spanning.RemainingTerms.Cut
 
 /-!
 # The gain: a discriminant bound for the common lattice of two terms over one block
@@ -36,6 +38,8 @@ Notions from other files:
 * `S.HasCellRank j γ`: `γ` has cell rank `j ≤ ϱ + 1`, the top one exactly if `S.termDisc γ ≠ 0`.
 * `S.levelGauge j c c' γ`: the gauge `𝗀*` of the term, a positive real bound for discriminants.
 -/
+
+@[expose] public section
 
 namespace New.Filling
 
@@ -453,8 +457,8 @@ lemma frameImage_conjTranspose_mulVec {R : Type} [CommRing R] [StarRing R] {T : 
   rw [← mulVec_mulVec, ← mulVec_mulVec m, h_form]
   generalize T *ᵥ m = m'
   ext b
-  simp [mulVec, dotProduct, frameGram, splitGram, mul_apply, add_comm, fromBlocks_conjTranspose,
-    conjTranspose_fromCols_eq_fromRows_conjTranspose, Matrix.one_apply]
+  simp [mulVec, dotProduct, frameGram, splitGram, Matrix.mul_apply, add_comm,
+    fromBlocks_conjTranspose, conjTranspose_fromCols_eq_fromRows_conjTranspose, Matrix.one_apply]
 
 omit [HasPrimitiveRoot5040 E] in
 /-- Let `t` be a vector of `A ⊕ X₀` whose part `v` in `X₀` lies in `commonLink γ γ'`, the vectors of
@@ -665,7 +669,8 @@ lemma map_commonPart_le (h_over : γ ∈ S.termsOver c s c') (h_over' : γ' ∈ 
     rw [hy, hJ, frameImage_conjTranspose_mulVec, mulVec_mulVec, mulVec_neg, mulVec_smul,
       neg_add_eq_zero]
     exact h_products
-  have h_one : γ' * γ⁻¹ ∈ S.termsOver c 1 c := by simpa using termsOver.mul h_over' (.inv h_over)
+  have h_one : γ' * γ⁻¹ ∈ S.termsOver c 1 c := by
+    simpa using termsOver.mul h_over' (termsOver.inv h_over)
   have h_cong : IsIntMatrix (Ô E) (S.ideleM⁻¹ • (m - 1)) :=
     (S.principalLevel_eq_unitaryLevel.le h_one).2
   have h_span : (m - 1) *ᵥ y ∈ colSpan (isotropicFramePair (S.translateByClassReps c c' γ')) :=
@@ -725,7 +730,7 @@ lemma submoduleIndex_pairLattice_dvd_torsionIndex (h_over : γ ∈ S.termsOver c
         ((frameImage k)ᴴ * (S.latticeMiddle (𝔸f E)).splitGram) *ᵥ
           (isotropicFramePair (S.translateByClassReps c c' γ')).col (.inl a) := by
       funext b
-      simp [k, frameGram, splitGram, mulVec_eq_sum, Finset.sum_apply, ite_apply, mul_apply,
+      simp [k, frameGram, splitGram, mulVec_eq_sum, Finset.sum_apply, ite_apply, Matrix.mul_apply,
         fromBlocks_conjTranspose, conjTranspose_fromCols_eq_fromRows_conjTranspose,
         Matrix.one_apply]
     rw [Submodule.mem_comap, LinearMap.smul_apply, LinearMap.restrictScalars_apply, mulVecLin_apply,

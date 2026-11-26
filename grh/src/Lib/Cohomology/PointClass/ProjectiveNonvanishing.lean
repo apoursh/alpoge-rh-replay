@@ -1,7 +1,9 @@
-import Lib.Cohomology.Hodge.FixedPointFormula
-import Lib.Cohomology.PointClass.ProjectiveSpace
-import Lib.Cohomology.ProjectiveLine.TiltedLineFormula
-import Lib.PadicComparison.HodgeTate.Map
+module
+
+public import Lib.Cohomology.Hodge.FixedPointFormula
+public import Lib.Cohomology.PointClass.ProjectiveSpace
+public import Lib.Cohomology.ProjectiveLine.TiltedLineFormula
+public import Lib.PadicComparison.HodgeTate.Map
 
 /-!
 # The Hodge–Tate map does not kill point classes of the projective line and space
@@ -42,6 +44,8 @@ Notions from other files:
 
 Known; see `Lib.Cohomology.PointClass.LinearIndependence` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -131,7 +135,7 @@ private lemma pull_mk₀_comp_contractionPow_one_eq_pull_extClass_oneSubMu
     (hω : ∀ (c : HodgeTest k)
         (v : (unimodular (k := k) (d := 1)).toFunctor.obj (HodgeTest.sqZeroExt.obj c)),
       ∃ w : c.Index → c.baseAlg, (v.val.down 0).fst • w = (v.val.down 0).snd ∧
-        ω.app c (FreeAbelianGroup.of v) = ⟨ExteriorAlgebra.ι c.baseAlg w⟩) :
+        ω.app c (FreeAddCommGroup.of v) = ⟨ExteriorAlgebra.ι c.baseAlg w⟩) :
     comp
         ((Comparison.restrict HodgeTatePair.toHodgeTest hodgeCoeff).pull
           (Functor.whiskerRight HodgeTatePair.toSqZero
@@ -171,7 +175,7 @@ private lemma pull_mk₀_comp_contractionPow_one_eq_pull_extClass_oneSubMu
   refine Cocycle.cohomClass_comp_eq_extClass _
     (shortExact_oneSubMu.2.map_of_exact (restrictAlong _)) _ _
     (fun _ ↦ Gm.ofCoord _ ≫ Gm.map (CommRingCat.ofHom (.pullbackFst ..))) (fun X ↦ ?_)
-    fun X Y f ↦ hom_ext (FreeAbelianGroup.lift_ext _ _ fun ⟨⟨v⟩, hv⟩ ↦ ?_)
+    fun X Y f ↦ hom_ext (FreeAddCommGroup.lift_ext _ _ fun ⟨⟨v⟩, hv⟩ ↦ ?_)
   · -- On a point `(b, t)` of `B ×_T (T ⊕ M)`, `proj b` is the first component of `t`.
     simp [← Functor.map_comp]
     congr with ⟨⟨b, t⟩, h_pullback⟩
@@ -564,7 +568,7 @@ private lemma projSpace.exists_map_eq_map_of_isTodaCancellation
       rintro c ⟨⟨_ | _⟩, t⟩
       · simp
       simp [sub_eq_zero]
-      refine congrArg FreeAbelianGroup.of (mk_eq_mk_iff_cross_mul.2 ?_)
+      refine congrArg FreeAddCommGroup.of (mk_eq_mk_iff_cross_mul.2 ?_)
       simp
       -- The coordinates are `aeval` of `X` only after unfolding `T`, hence `erw`.
       erw [aeval_X, aeval_X, mul_comm, ← map_mul (proj c).1, hA_inv]
@@ -700,7 +704,7 @@ lemma projSpace.exists_hodgeTateMap_pointClass_line :
       rintro c ⟨⟨_ | _⟩, t⟩
       · simp
       · simp [sub_eq_zero, -Bool.cond_eq_ite]
-        exact congrArg FreeAbelianGroup.of (ha_twist _ ⟨true⟩ _).symm
+        exact congrArg FreeAddCommGroup.of (ha_twist _ ⟨true⟩ _).symm
     · -- With `μ = mulMu c 1`, which has square zero:
       -- `(1 - μ) * [ε * u] = (1 - μ) * (1 + μ) * [u] = [u]`.
       rintro c ⟨⟨_ | _⟩, t⟩

@@ -1,5 +1,7 @@
-import Lib.ClassField.Avatar.LocalGlobalCompatibility
-import Lib.GaloisRep.Main.ThetaLift
+module
+
+public import Lib.ClassField.Avatar.LocalGlobalCompatibility
+public import Lib.GaloisRep.Main.ThetaLift
 
 /-!
 # Isotypic spaces of eigenforms and attached Galois representations in every positive rank
@@ -79,6 +81,8 @@ Known; see `Lib.GaloisRep.Main.OddRank`, `Lib.ClassField.Global.CMSplittingChara
 `Lib.Adelic.AutomorphicForms.SmoothAlgebraicForms` for sources.
 -/
 
+@[expose] public section
+
 noncomputable section
 
 /-!
@@ -142,7 +146,7 @@ lemma New.AutChar.exists_pair_heckeCoeff_ne {E : Type} [Field E] [CMType E] [Wei
     rfl
   have h_val_u : ((μ 0).val u : ℂ) = (μ 1).val u := by
     simpa [h_base, heckeCoeff, HasWeight.toAlgebraic, HeckeChar.finPart, abs_of_nonneg,
-      Real.sqrt_eq_zero', Circle.norm_coe, zpow_ne_zero] using
+      Real.sqrt_eq_zero', Circle.norm_coe, zpow_ne_zero, (zero_lt_one.trans w.one_lt_q).ne'] using
       congrArg (fun a : ℂ ↦ a / ‖a‖) h_val
   have h_triv : (μ 0 * (μ 1)⁻¹).val u = 1 := mul_inv_eq_one.mpr (Circle.ext h_val_u)
   -- There are `n > 0` and `γ` with `u ^ n * γ` a unit at all finite places; the `n`-th power of the

@@ -1,8 +1,10 @@
-import Lib.Adelic.QuotientMeasure.MovingTheQuotient
-import Lib.Weil.Periods.RealAndFinitePoints
-import New.Spanning.Unfolding.BesselFormula
-import New.Spanning.Unfolding.FillingAdmissible
-import New.UpperBound.Objects.PoincareMap
+module
+
+public import Lib.Adelic.QuotientMeasure.MovingTheQuotient
+public import Lib.Weil.Periods.RealAndFinitePoints
+public import New.Spanning.Unfolding.BesselFormula
+public import New.Spanning.Unfolding.FillingAdmissible
+public import New.UpperBound.Objects.PoincareMap
 
 /-!
 # The Poincaré map as a Poincaré series of the Bessel function
@@ -43,6 +45,8 @@ Notions from other files:
 
 Unfolding a Poincaré series against an automorphic form is standard.
 -/
+
+@[expose] public section
 
 noncomputable section
 

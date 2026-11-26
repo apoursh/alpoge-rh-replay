@@ -1,7 +1,9 @@
-import Lib.Weil.Seesaw
-import New.UpperBound.Objects.AuxiliaryPair
-import New.UpperBound.Objects.Columns
-import New.UpperBound.Objects.Parameters
+module
+
+public import Lib.Weil.Seesaw
+public import New.UpperBound.Objects.AuxiliaryPair
+public import New.UpperBound.Objects.Columns
+public import New.UpperBound.Objects.Parameters
 
 /-!
 # Spaces Y_j and W_j, the forms on them, and the target parameter
@@ -35,6 +37,8 @@ Notions from other files:
 * `New.Data.liftWeight`: the weight w_j = κ(σ) + j·h + h₂ at the infinite place σ, with
   κ = `New.Data.weight`, h the gap and h₂ half the gap.
 -/
+
+@[expose] public section
 
 noncomputable section
 

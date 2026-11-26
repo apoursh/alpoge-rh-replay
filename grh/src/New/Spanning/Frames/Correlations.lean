@@ -1,5 +1,7 @@
-import New.Spanning.Frames.Levels
-import New.Spanning.Frames.TwoGauges
+module
+
+public import New.Spanning.Frames.Levels
+public import New.Spanning.Frames.TwoGauges
 
 /-!
 # The scale, near points and partial correlations
@@ -34,6 +36,8 @@ Notions from other files:
 
 See `New.Spanning.MainTerm.EnergyEstimate` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -279,7 +283,8 @@ lemma quotientMeasureFrom_isNear_le {V : ℝ≥0∞} (hV : ∀ a : Fin 𝔰.n, F
     let mass (σ : T.G) : ℝ≥0∞ :=
       F.quotientMeasureFrom (l + 1) {x : T.G | F.IsNear (𝔰.ϱ + 2) (x * (σ * c))}
     let N : Set T.G := {σ : T.G | F.IsNear (l + 1) (σ * c)}
-    have h_floor : F.floorMeasure l N ≤ V := by simpa using hV ⟨l, hl⟩ c
+    have h_floor : F.floorMeasure l N ≤ V := by
+      simpa [N, Set.univ_inter] using hV ⟨l, hl⟩ c
     -- if `σ * c` is not near at `l + 1`, no point `x * σ * c` with `x` on the higher floors is near
     have h_support : support mass ⊆ N := by
       have h_ae : ∀ᵐ x : T.G ∂F.quotientMeasureFrom (l + 1), x ∈ floorGroup (l + 1) :=
@@ -374,26 +379,21 @@ lemma measurableSet_vecsOfSize {n : Type} [Fintype n] : MeasurableSet (Γ.vecsOf
   .univ_pi' fun _ ↦ (Γ.isCompact_ofSize j).measurableSet
 
 /-- If the isometry g is near at j for the place datum `F`, each vector e_a (`a : Fin 𝔰.ϱ`) with
-a < j is balanced at g for the gauge `Γ` of `F` with exponent 5: some lift of e_a and some dual of
-e_a are moved by g⁻¹ to vectors of size 5. -/
+a < j is balanced at g for the gauge `Γ` of `F` with exponent 5: some lift of e_a is moved by g⁻¹
+to a vector of size 5. -/
 lemma isBalanced_of_isNear (h_near : F.IsNear j g) (ha : a < j) : Γ.IsBalanced g a 5 := by
-  -- If `ξ g` lies in the box, take the lift `ξ⁻¹ e_a` and the dual `ξ⁻¹ e*_a`; read at `g`, they
-  -- are columns of `(ξ g)⁻¹`.
+  -- If `ξ g` lies in the box, take the lift `ξ⁻¹ e_a`; read at `g`, it is a column of `(ξ g)⁻¹`.
   obtain ⟨ξ, hξ, h_box⟩ : ∃ ξ ∈ partialUnitriangularGroup j, ξ * g ∈ F.boxSet := h_near
   have h_size : Γ.HasMatrixSize 5 (ξ * g)⁻¹.val.val := (Γ.hasMatrixSize_boxSet h_box).inv
   have h_col (k : 𝔰.BesselIndex) : Γ.LengthLeAt g 5 (ξ⁻¹.val.val *ᵥ Pi.single k 1) := by
     intro i
     rw [mulVec_mulVec]
     simpa using h_size i k
-  have h_orth : IsOrthogonalBelow a (Pi.single (eStar a) (1 : A) : 𝔰.BesselIndex → A) :=
-    isOrthogonalBelow_single_eStar a
   have h_lift : CongrBelow a (Pi.single (inl a) 1) (ξ⁻¹.val.val *ᵥ Pi.single (inl a) 1) := by
     intro k hk
     simpa [Matrix.one_apply, Pi.single_apply] using
       mem_partialUnitriangularGroup.1 (inv_mem hξ) k (inl a) hk (.inl ⟨ha, ha⟩)
-  have h_dual : (ξ⁻¹.val.val *ᵥ Pi.single (eStar a) (1 : A)) (eStar a) = 1 := by
-    simpa using partialUnitriangularGroup_mulVec_eStar (inv_mem hξ) ha h_orth
-  exact ⟨⟨_, h_lift, h_col (inl a)⟩, _, h_orth.mulVec (inv_mem hξ) ha.le, h_dual, h_col (eStar a)⟩
+  exact ⟨⟨_, h_lift, h_col (inl a)⟩⟩
 
 /-- Coordinates of a frame vector. Let g have size i for the gauge `Γ` of the place datum `F`, let σ
 lie in G^(b) = `floorGroup b`, and let σ g be near at b + 1. Then `orbitPoint b σ`, the image under

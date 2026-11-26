@@ -1,6 +1,8 @@
-import New.Spanning.MainTerm.Frequencies
-import New.Spanning.RemainingTerms.Box
-import New.Spanning.Unfolding.BesselLevelStructure
+module
+
+public import New.Spanning.MainTerm.Frequencies
+public import New.Spanning.RemainingTerms.Box
+public import New.Spanning.Unfolding.BesselLevelStructure
 
 /-!
 # One-sided Poisson summation, sums over frequencies, and the sieve over all places
@@ -53,6 +55,8 @@ X^ε are known in the literature. Related work: Jacquet, Smooth transfer of Kloo
 decomposition of GL(3) Kloosterman sums and the spectral large sieve, 2015; Deshouillers–Iwaniec,
 Kloosterman sums and Fourier coefficients of cusp forms, 1982.
 -/
+
+@[expose] public section
 
 namespace New.Filling
 
@@ -128,7 +132,7 @@ lemma absNorm_denominator_le {y : E} (hy : y ∈ ratIntegralOff T) :
     rintro _ ⟨a, rfl⟩
     exact ((mem_Ô_iff T).1 (h_integral a)).left
   calc
-    _ = (denominator y).toAddSubgroup.index := rfl
+    _ = (denominator y).toAddSubgroup.index := Ideal.absNorm_eq_natCard _
     _ = D.relIndex f.range := by rw [h_comap, index_comap]
     _ ≤ _ := relIndex_le_of_le_right h_range (denomIndex_ne_zero T _)
 

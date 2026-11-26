@@ -1,6 +1,8 @@
-import Lib.ClassField.Places.DecompositionCyclotomic
-import Lib.ClassField.Places.ValuationSubrings
-import Lib.General.Groups.ProfiniteCharacters
+module
+
+public import Lib.ClassField.Places.DecompositionCyclotomic
+public import Lib.ClassField.Places.ValuationSubrings
+public import Lib.General.Groups.ProfiniteCharacters
 
 /-!
 # Local fields: Frobenius, uniformisers, normalised valuation, extensions, unramified characters
@@ -46,6 +48,8 @@ local fields are only henselian with finite residue field. Source: J. Neukirch, 
 Theory, 1999, I §9, II §§7–9, VI §1; J.-P. Serre, Local Fields, 1979, I §7, IV §2; Stacks Project,
 tag 09EE.
 -/
+
+@[expose] public section
 
 /-! ## Existence of Frobenius; Frobenius and inertia are topological generators -/
 
@@ -167,7 +171,7 @@ lemma New.IsLocalGalois.frobenius_spec {Γ K Ω : Type*} [Group Γ] [Topological
       -- `residue B a` is a root of `X ^ q - X`, which splits over the residue field `k`
       obtain ⟨⟨b⟩, hb⟩ : residue B a ∈ (algebraMap k R).range :=
         splits_X_pow_nat_card_sub_X.mem_range_of_isRoot
-          (X_pow_card_sub_X_ne_zero _ Finite.one_lt_card) (by simpa [sub_eq_zero] using h_pow)
+          (X_pow_sub_X_ne_zero Finite.one_lt_card) (by simpa [sub_eq_zero] using h_pow)
       rw [← hb]
       exact congrArg (residue B) (smul_algebraMap g b)
     -- Hence some `s ∈ G` acts on `R` as `g` does, and `s⁻¹ * g` is in the inertia group.

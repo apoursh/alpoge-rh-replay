@@ -1,5 +1,7 @@
-import Lib.DiscreteSeries.Character.MultiplicityOrbitalIntegral
-import Lib.DiscreteSeries.Character.OpenOrbitIntegral
+module
+
+public import Lib.DiscreteSeries.Character.MultiplicityOrbitalIntegral
+public import Lib.DiscreteSeries.Character.OpenOrbitIntegral
 
 /-!
 # Harish-Chandra's formula for formal degrees and stable orbital integrals
@@ -42,6 +44,8 @@ characters, Acta Math. 116 (1966), Thm 16 (with part I, Acta Math. 113 (1965), T
 Representation Theory of Semisimple Groups (1986), Thm 12.7.
 -/
 
+@[expose] public section
+
 namespace New.Orbital
 
 open Finset AddMonoidAlgebra Equiv Fintype Matrix HCParam
@@ -71,7 +75,7 @@ lemma sum_sign_mul_eval_alternant (ε : n → ℤˣ) (κ : n → ℤ) (x : n →
   have det_eq (w : Perm n) :
       ∑ τ : Perm n, (w.sign : ℂ) * (τ.sign * ∏ a, (x (τ a) : ℂ) ^ κ (w a)) =
         torusEval x (alternant 1 κ) := by
-    simpa [alternant, torusEval, det_apply', mul_sum] using
+    simpa [alternant, torusEval, det_apply', mul_sum, Function.swap] using
       (det_permute' w⁻¹ (of fun a b : n ↦ (x a : ℂ) ^ κ (w b))).symm.trans (det_transpose _).symm
   calc ∑ τ : Perm n, τ.sign * torusEval (x ∘ τ) (alternant ε κ)
       = ∑ w ∈ {w : Perm n | ε ∘ w = ε},

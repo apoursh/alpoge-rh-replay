@@ -1,4 +1,6 @@
-import New.OneLift.FalseLifts.HyperbolicPlaneStep
+module
+
+public import New.OneLift.FalseLifts.HyperbolicPlaneStep
 
 /-!
 # The tower of descents and the periods of false lifts
@@ -29,9 +31,7 @@ periods assume `2 r + 2 N + 3 < n`.
   `New.SiegelWeil.integral_blockEmb_eq_zero_of_descentsVanish`, which takes a Fourier coefficient
   and varies the datum.
 * The theorem `New.Rows.stdClassSum_gramForm_eq_zero` writes the periods over the block `I_l` as
-  class sums `New.stdClassSum`. `New.Rows.stdClassSum_gramForm_eq_zero_of_rank_one` is the case of
-  false lifts from a line; that of false lifts on `V_j` is in
-  `New.OneLift.ComparisonOperator.GluingMaps`.
+  class sums `New.stdClassSum`.
 * Two uses: `New.Rows.stdClassSum_period_eq_zero` for point forms, and
   `New.Rows.DividedSplitting.stdClassSum_inner_productForm_eq_zero` for the product forms
   `New.Rows.DividedSplitting.productForm` of the kernel vectors.
@@ -61,6 +61,8 @@ lifts for unitary groups, arXiv 2104.11954, 2021; Ginzburg–Jiang–Soudry, Pol
 theta liftings for orthogonal groups, 2009; Jiang–Wu, On (χ,b)-factors of cuspidal automorphic
 representations of unitary groups I, 2016; Rallis, On the Howe duality conjecture, 1984.
 -/
+
+@[expose] public section
 
 section MemberOrthogonality
 
@@ -203,7 +205,7 @@ lemma exists_projOn_eq_pairTheta_ne_zero {s : r → ℤˣ} {t : n → ℤˣ} (W 
   let x' : n × r → 𝔸 E := matrixToVec (p.2⁻¹.adeleMatrix * vecToMatrix (realVec x) *
     p.1.adeleMatrix)
   have hx' (i : n × r) (v : FinPlace E) : (x' i).2 v = 0 := by
-    simp [x', matrixToVec, vecToMatrix, realVec, mul_apply, snd_sum]
+    simp [x', matrixToVec, vecToMatrix, realVec, Matrix.mul_apply, snd_sum]
   refine ⟨(W.hom V).ϱ x' (vacElem _), ?_, ?_⟩
   · rw [projOn_rho _ fun i v _ ↦ hx' i v, projOn_vacElem]
   · rwa [pairTheta, ← rho_pairWeil, theta_rho]
@@ -505,48 +507,6 @@ lemma hyperplaneSum_apply_eq_zero_of_rank_one {O : DescentPair E Unit n}
     piTensorElem_mul_eq_zero i (hyperplaneSum_mul_labelIdem_X_sub_one (h_chosen i) hv)
   rw [← Module.End.mul_apply, ← map_mul, h_zero, map_zero, LinearMap.zero_apply]
 
-open scoped Classical in
-/-- Periods of false lifts from a line vanish. Let the archimedean parameter `l₀` on `W` correspond
-to that on `I_n` (`O.FitsParams`), and let the residue characters `O.tamePart` be nontrivial at all
-places of the level. Let the form `Ξ` on `U(I_n)` be a false lift (`O.falseLiftsAt`): it lies in the
-image of the mean over the product of the groups `GL_1(k_v)` at the chosen places `v`, and it is
-killed by the theta descent `O.normalizedDescent` to `W` and by the Hecke polynomial at the number
-`O.liftHeckeRoot w` for a split place `w` off the level. Let `ε` split `I_n = I_N ⊕ I_l` with
-`2 #N + 5 < #n`, and let `x` be supported on `O.places`. Let each coordinate of `ϑ`, moved by the
-real points of `U(I_l)`, be a multiple of a conjugate theta kernel (`pairTheta`) of the pair
-`O.W, I_l` whose datum is the vacuum off `O.places` and their conjugates. Let `C` be
-conjugate-linear and equivariant for the real points of `U(I_l)`, which act by the representation
-`conjWeylRep` of the given weight. Then the invariant inner product `gramForm` of `C (ϑ h)` with
-`Ξ ((h₁, h) x)` is left invariant under the rational points, and its class sum is zero at every
-level `K` that fixes it. -/
-theorem stdClassSum_gramForm_eq_zero_of_rank_one {O : DescentPair E Unit n}
-    {l₀ : InfinitePlace E → Unit → ℤ} (hO_fits : O.FitsParams l₀)
-    (h_chosen : ∀ i : O.ChosenIndex, O.tamePart (O.chosenPlace i) ≠ 1)
-    (h_twist : ∀ i : O.TwistIndex, O.tamePart (O.twistPlace i) ≠ 1)
-    {w : FinPlace E} {hw : star w ≠ w} {hw_off : w ∉ O.places.conjClosure} {Ξ : O.FormV}
-    (hΞ : Ξ ∈ O.falseLiftsAt hw hw_off (tupleIdem Unit fun _ : O.ChosenIndex ↦ Polynomial.X - 1)
-      O.normalizedDescent.ker)
-    (ε : N ⊕ l ≃ n) (h_rank : 2 * card N + 5 < card n) {κ : InfinitePlace E → ℕ → ℕ}
-    (C : (WeylIndex l κ → ℂ) →ₗ⋆[ℂ] WeylIndex n O.columnCount → ℂ)
-    (hC : ∀ (g : GInf E (1 : n → ℤˣ)) (y : GInf E (1 : l → ℤˣ)) (ζ : WeylIndex l κ → ℂ),
-      (∀ τ : InfinitePlace E, (g τ : GL n ℂ) = reindexGL ε (blockGL (1, y τ))) →
-        conjWeylRep O.columnCount O.detExp g (C ζ) = C (conjWeylRep κ 0 y ζ))
-    (ϑ : Gf E l → WeylIndex l κ → ℂ)
-    (h_kernels : ∀ j : WeylIndex l κ, ∃ (c : ℂ) (g : G E O.signs) (b : AutChar E)
-      (φ : 𝒮 (O.W.hom (stdSpace E l))),
-      projOn (O.W.hom (stdSpace E l)) O.places.conjClosureᶜ φ = φ ∧
-        ∀ (u : GInf E (1 : l → ℤˣ)) (h : Gf E l), conjWeylRep κ 0 u⁻¹ (ϑ h) j =
-          c * conj (pairTheta O.W (stdSpace E l) O.charW b φ (g, u, h)))
-    (h₁ : Gf E N) {x : Gf E n} (hx : x ∈ supportedOn n O.places) :
-    let f (h : Gf E l) : ℂ := gramForm (C (ϑ h)) (Ξ (U.block ε (h₁, h) * x))
-    (∀ δ ∈ (stdSpace E l).Γ, ∀ h : Gf E l, f (δ.2 * h) = f h) ∧
-      ∀ (K : Subgroup (Gf E l)) [IsLevel K], K ≤ rightStabilizer f → stdClassSum K f = 0 := by
-  obtain ⟨⟨hΞ_range, hΞ_hecke⟩, hΞ_descent⟩ := hΞ
-  exact stdClassSum_gramForm_eq_zero hO_fits h_twist
-    (hyperplaneSum_apply_eq_zero_of_rank_one h_chosen hΞ_range) hΞ_descent hΞ_hecke
-    (by grind [card_unit]) ε C hC ϑ h_kernels h₁ hx
-
-set_option backward.isDefEq.respectTransparency false in -- for rewriting products in `Gf`
 omit [WeilData E] [Nonempty r] in
 /-- Conjugates of the second block fix forms. Let `ε` split `I_n = I_N ⊕ I_l`, with `U.block ε` the
 block diagonal embedding; `reduceAt` is reduction to the residue field and `inclMatrix e` the matrix
@@ -572,12 +532,16 @@ lemma algFormRep_conj_block_apply_eq_self (Ξ : O.FormV) (ε : N ⊕ l ≃ n) {x
   let c : stdLevel E n := A⁻¹ * ⟨_, h_mem⟩ * A
   -- At the chosen places the columns `O.incl` of `c` are those of `1`, as `x⁻¹ (1, k) x` fixes `Y`.
   have h_col (i : O.ChosenIndex) :
-      (stdLevel.reduceAt (O.placeAt (inl i)) c).1 * inclMatrix _ O.incl = inclMatrix _ O.incl := by
+      (stdLevel.reduceAt (O.placeAt (inl i)) c).1 *
+          inclMatrix (ResField (O.placeAt (inl i))) O.incl =
+        inclMatrix (ResField (O.placeAt (inl i))) O.incl := by
     simp [c, hA_col, h_fixY, inv_mul_eq_iff_eq_mul_of_invertible, -elim_inl, Matrix.mul_assoc]
   -- At the twist places the point `x` is trivial, so `x⁻¹ (1, k) x` reduces to the block matrix
   -- `(1, k)`; it fixes the rows `e'`. So the rows `O.incl` of `c` are those of `1`.
   have h_row (i : O.TwistIndex) :
-      (stdLevel.reduceAt (O.placeAt (inr i)) c).1ᵀ * inclMatrix _ O.incl = inclMatrix _ O.incl := by
+      (stdLevel.reduceAt (O.placeAt (inr i)) c).1ᵀ *
+          inclMatrix (ResField (O.placeAt (inr i))) O.incl =
+        inclMatrix (ResField (O.placeAt (inr i))) O.incl := by
     obtain ⟨h_blk, h_red⟩ : ∃ h : U.block ε (1, k.1) ∈ stdLevel E n,
       stdLevel.reduceAt (O.twistPlace i) ⟨_, h⟩ =
         reindexGL ε (blockGL (1, stdLevel.reduceAt (O.twistPlace i) k)) := by
@@ -586,16 +550,23 @@ lemma algFormRep_conj_block_apply_eq_self (Ξ : O.FormV) (ε : N ⊕ l ≃ n) {x
       ⟨_, h_blk⟩ :=
       (MonoidHom.eq_iff _).2
         (stdLevel.reduceAt_eq_one_of_atPlace (by simp [atPlace_twistPlace_eq_one hx]))
-    have h_fix_rows : (stdLevel.reduceAt (O.twistPlace i) ⟨_, h_mem⟩).1ᵀ * inclMatrix _ e' =
-        inclMatrix _ e' := by
+    have h_fix_rows : (stdLevel.reduceAt (O.twistPlace i) ⟨_, h_mem⟩).1ᵀ *
+          inclMatrix (ResField (O.twistPlace i)) e' =
+        inclMatrix (ResField (O.twistPlace i)) e' := by
       rw [h_eq.trans h_red, mul_inclMatrix]
       simp [← ext_iff, reindex_equiv ε, inclMatrix, he', eq_comm (α := N), Matrix.one_apply]
     -- Cancel `A` on both sides; `O.placeAt (inr i)` is `O.twistPlace i` by definition.
     simpa [c, ← hA_row, transpose_nonsing_inv, Matrix.mul_right_inj_of_invertible, -elim_inr,
       Matrix.mul_assoc] using! h_fix_rows
   -- By `smul_chosenGLRep_eq_apply_of_triangular`, `c` then acts on `Ξ` as the block `1`.
-  simpa [c, mul_assoc, ← Pi.one_def] using (O.smul_chosenGLRep_eq_apply_of_triangular Ξ c 1
-    (fun i ↦ by simpa using h_col i) (fun i ↦ by simpa using h_row i)).symm
+  have h_act := (O.smul_chosenGLRep_eq_apply_of_triangular Ξ c 1
+    (fun i ↦ by simpa [-elim_inl] using h_col i)
+    (fun i ↦ by simpa [-elim_inr] using h_row i)).symm
+  have h_one : (fun i : O.ChosenIndex ↦ (1 : ∀ j, GL r (ResField (O.placeAt j))) (.inl i)) =
+      (1 : ∀ i : O.ChosenIndex, GL r (ResField (O.chosenPlace i))) := rfl
+  rw [h_one, map_one] at h_act
+  change _ = _ • Ξ.val at h_act
+  simpa [c, mul_assoc] using h_act
 
 open scoped Classical in
 /-- Periods against point forms vanish. Let `O` be a descent pair `(W, I_n)`; its level `O.places`

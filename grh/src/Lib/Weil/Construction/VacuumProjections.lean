@@ -1,6 +1,8 @@
-import Lib.Weil.Construction.AdelicRepresentation
-import Lib.Weil.Fock.PolynomialVectors
-import Lib.Weil.MixedModel.SchwartzBruhat
+module
+
+public import Lib.Weil.Construction.AdelicRepresentation
+public import Lib.Weil.Fock.PolynomialVectors
+public import Lib.Weil.MixedModel.SchwartzBruhat
 
 /-!
 # Vacuum projections and the finite part of the Weil representation
@@ -48,6 +50,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.MixedModel.ZeroTerm` and `Lib.Weil.Fock.OscillatorPair` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -345,7 +349,7 @@ lemma dataInner_vacElem_smul_vacElem :
   -- By definition, the finite vacuum is `semichar` on the lattice and `0` off it.
   have h_finVac (y) : finVac y = (stdLattice E n : Set (n → 𝔸f E)).indicator semichar y := rfl
   simp [← integral_indicator, indicator_smul_left, ← heisenbergRep_right_rho, finHeisenbergOp,
-    isOpen_stdLattice, IsOpen.measurableSet, h_finVac]
+    isOpen_stdLattice, IsOpen.measurableSet, h_finVac, Set.conjClosure]
   -- What remains is the definition of `projReal`: integrating the real vacuum against the real
   -- Heisenberg operators; a rewrite lemma for it does not match the implicit arguments here.
   rfl
@@ -386,7 +390,7 @@ lattice, then `L (projOn S f) = c`, as the standard lattice has measure `1` for
 lemma map_projOn_eq_const {f : 𝒮 V} {c : Y}
     (hc : ∀ y ∈ stdLattice E n, L (V.finHeisenbergOp (idem S.conjClosure • y) f) = c) :
     L (V.projOn S f) = c := by
-  simp [V.map_projOn L hc, Measure.real]
+  simp [V.map_projOn L hc, Measure.real, Set.univ_inter]
 
 /-- For `y` in the standard lattice, `finHeisenbergOp (idem S.conjClosure • y)` fixes
 `projOn S f`. -/
@@ -769,7 +773,7 @@ lemma omega_vacElem_sum {g : Gf E n} :
   have h_mean : V.ω g (V.projOn univ (V.ω ↑g⁻¹ V.vacElem)) =
       ∫ y in stdLattice E n, F y ∂latticeMeasure E n := by
     refine V.map_projOn _ fun y _ ↦ ?_
-    simp [F, rep_apply_apply, mk_one_one]
+    simp [F, rep_apply_apply, mk_one_one, Set.conjClosure]
   have h_const (x y : stdLattice E n) (hxy : -x.val + y ∈ Λ') : F y = F x := by
     simpa only [add_neg_cancel_left] using
       V.finHeisenbergOp_mulVec_add_vacElem x.property (add_mem (neg_mem x.property) y.property) hxy
@@ -933,6 +937,7 @@ lemma exists_eq_smul_omega_vacElem {g : Gf E n} (hf : f ∈ V.finitePart)
   let f' : 𝒮 V := V.ω (1, g⁻¹) f
   have h_fin : V.projOn univ f' = f' := by
     refine V.map_projOn_eq_const (ContinuousLinearMap.id ℂ (𝒮 V)) fun y hy ↦ ?_
+    rw [show (univ : Set (FinPlace E)).conjClosure = univ from Set.univ_union _, idem_univ, one_smul]
     simpa using congrArg (V.ω (1, g⁻¹)) (h_fix y hy)
   have h_real : V.projReal f' = f' := projReal_eq_self_of_mem_finitePart (omega_mem_finitePart _ hf)
   have h_vac : V.dataInner V.vacElem f' • V.vacElem = f' := by

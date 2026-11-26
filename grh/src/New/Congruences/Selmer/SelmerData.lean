@@ -1,7 +1,9 @@
-import Lib.ClassField.GaloisCohomology.TameSelmerCocycles
-import Lib.ClassField.GreenbergWiles.SelmerLevels
-import Lib.General.NumberTheory.CoefficientRings
-import New.Congruences.Selmer.AuxiliaryPrimes
+module
+
+public import Lib.ClassField.GaloisCohomology.TameSelmerCocycles
+public import Lib.ClassField.GreenbergWiles.SelmerLevels
+public import Lib.General.NumberTheory.CoefficientRings
+public import New.Congruences.Selmer.AuxiliaryPrimes
 
 /-!
 # Selmer data, tied Selmer groups and classes as functions
@@ -38,6 +40,8 @@ Known result: Sah's lemma, by which cocycles vanishing at an element that acts b
 
 See `New.Congruences.Selmer.Descent` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -99,7 +103,7 @@ end Terms
 
 /-- A Selmer datum for the set `S₀` of places and the element `g₀`: an action `ρ` on the lattice
 `T = O ^ n`, a set `S = places` of places outside which `T` is unramified, a module `Z_w` of local
-cocycles for each `w ∣ ℓ`, and an element `γ_*` that acts by a scalar. The set `S` lies in `S₀`, and
+maps for each `w ∣ ℓ`, and an element `γ_*` that acts by a scalar. The set `S` lies in `S₀`, and
 `g₀` enters only through the local terms `v(det(ρ g - 1))` for `g = g₀, g₀^{-c}`, which are
 finite. -/
 structure SelmerDatum (S₀ : Finset (FinPlace E)) (g₀ : Gal(Ω/E)) (O : Type) [CommRing O]
@@ -122,9 +126,6 @@ structure SelmerDatum (S₀ : Finset (FinPlace E)) (g₀ : Gal(Ω/E)) (O : Type)
   Z (w : placesDividing E ℓ) : Submodule O (decompGroup Gal(Ω/E) (placeOver w.1) → n → O)
   /-- `Z_w` is finitely generated. -/
   finite_Z (w : placesDividing E ℓ) : Module.Finite O (Z w)
-  /-- The members of `Z_w` are cocycles. -/
-  apply_mul_of_mem_Z (w : placesDividing E ℓ) : ∀ z ∈ Z w,
-    ∀ g h : decompGroup Gal(Ω/E) (placeOver w.1), z (g * h) = z g + ρ g • z h
   /-- `Z_w` contains the coboundaries. -/
   coboundary_mem_Z (w : placesDividing E ℓ) (b : n → O) :
     (fun g : decompGroup Gal(Ω/E) (placeOver w.1) ↦ ρ g • b - b) ∈ Z w
@@ -609,7 +610,7 @@ lemma span_image_sahGroup_eq_top {T : SelmerDatum ℓ S₀ g₀ O n} {a : O}
     refine fun _ ↦ smul_mem_span_of_forall_smul_mem (T.ρ g) ?_
     rintro _ ⟨h, hh, rfl⟩
     rw [← cocycle_conj_of_fixed hz g (by simp [ρ_eq_one_of_mem_sahGroup hh])]
-    exact h_mem (Normal.conj_mem inferInstance h hh g)
+    exact h_mem (Normal.conj_mem h hh g)
   -- It contains a vector with a unit coordinate.
   obtain ⟨h, hh, j, h_unit⟩ := exists_mem_sahGroup_isUnit_apply hz hγ hz_unit
   exact eq_top_of_stable_of_isUnit T.span_range_eq_top (Set.forall_mem_range.2 h_stable)

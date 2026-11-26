@@ -1,8 +1,10 @@
-import Lib.ClassField.Places.DecompositionCompletion
-import Lib.General.LinearAlgebra.Eigenvalues
-import Lib.General.LinearAlgebra.MatrixNormBounds
-import Lib.General.NumberTheory.CoefficientRings
-import Lib.PadicComparison.Descent.TestCategory
+module
+
+public import Lib.ClassField.Places.DecompositionCompletion
+public import Lib.General.LinearAlgebra.Eigenvalues
+public import Lib.General.LinearAlgebra.MatrixNormBounds
+public import Lib.General.NumberTheory.CoefficientRings
+public import Lib.PadicComparison.Descent.TestCategory
 
 /-!
 # Semisimple representations: conjugacy, continuity, cancellation and stable lattices
@@ -35,6 +37,8 @@ Notions from other files:
 
 Known; see `Lib.GaloisRep.Pseudocharacter.Pseudorepresentations` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -97,7 +101,8 @@ lemma exists_mul_mul_eq_of_rank_le {A : Matrix N N k} {A' : Matrix n n k} (h : A
   -- and a left inverse of `J` gives `U'`.
   let R : Submodule k (N → k) := range A.mulVecLin
   let R' : Submodule k (n → k) := range A'.mulVecLin
-  obtain ⟨J, J_inj⟩ : ∃ J : R' →ₗ[k] R, Function.Injective J := finrank_le_iff_exists_linearMap.1 h
+  obtain ⟨J, J_inj⟩ : ∃ J : R' →ₗ[k] R, Function.Injective J :=
+    finrank_le_iff_exists_linearMap.1 (by simpa only [R, R', finrank_range_mulVecLin] using h)
   obtain ⟨lift, h_lift⟩ : ∃ lift : R' →ₗ[k] N → k, A.mulVecLin.rangeRestrict ∘ₗ lift = J :=
     Module.projective_lifting_property _ J A.mulVecLin.surjective_rangeRestrict
   obtain ⟨L, hL⟩ : ∃ L : (N → k) →ₗ[k] R', L ∘ₗ R.subtype ∘ₗ J = .id :=
@@ -118,7 +123,7 @@ lemma eq_zero_iff_trace_eq_zero_of_isIdempotentElem [CharZero k] [IsAlgClosed k]
     (hp : IsIdempotentElem p) :
     p = 0 ↔ p.trace = 0 := by
   have h_rank : p.rank = 0 ↔ p = 0 := by
-    rw [Matrix.rank, finrank_eq_zero, range_eq_bot, ← toLin'_apply', toLin'.map_eq_zero_iff]
+    rw [← finrank_range_mulVecLin, finrank_eq_zero, range_eq_bot, ← toLin'_apply', toLin'.map_eq_zero_iff]
   rw [trace_eq_rank_of_isIdempotentElem hp, Nat.cast_eq_zero, h_rank]
 
 /-- The trace of an idempotent matrix is its rank. In characteristic zero, the matrix is zero
@@ -643,8 +648,8 @@ lemma eventually_exists_isLatticeIn [TopologicalSpace G] [IsTopologicalGroup G] 
   -- The entries of `s` as a representation with values in matrices over `O'`.
   let u : G →* Matrix n n O' :=
     { toFun := fun x ↦ of fun i j ↦ ⟨s x i j, h_mem x i j⟩
-      map_one' := by simp [← ext_iff, Subtype.ext_iff, one_apply, apply_ite]
-      map_mul' x y := by simp [← ext_iff, Subtype.ext_iff, mul_apply] }
+      map_one' := by simp [← ext_iff, Subtype.ext_iff, Matrix.one_apply, apply_ite]
+      map_mul' x y := by simp [← ext_iff, Subtype.ext_iff, Matrix.mul_apply] }
   -- `(P⁻¹)⁻¹ * r g * P⁻¹ = s g`, whose entries are those of `u g`
   exact ⟨u, P⁻¹, fun g ↦ by ext i j; simp [u, s]⟩
 

@@ -1,5 +1,7 @@
-import Lib.General.Analysis.MeanValueAndTaylor
-import Lib.General.LinearAlgebra.PolarDecomposition
+module
+
+public import Lib.General.Analysis.MeanValueAndTaylor
+public import Lib.General.LinearAlgebra.PolarDecomposition
 
 /-!
 # Exponentials in U(diag ε) and holomorphic extension of coefficients of highest vectors
@@ -48,6 +50,8 @@ Source: Harish-Chandra, Representations of semisimple Lie groups IV-VI, Amer. J.
 (1956); A. Knapp (1986); A. Koranyi, A simplified approach to the holomorphic discrete series, arXiv
 2312.16350.
 -/
+
+@[expose] public section
 
 /-! ## Exponentials in U(diag ε) and its maximal compact subgroup -/
 
@@ -670,7 +674,7 @@ theorem circle_mean_of_isCircleFactorization (ho : o.Injective) {u : Φ → n �
         rw [on_circle]
         field_simp
     _ = q 0 * β * F' fun τ ↦ A τ 0 := integral_comp_toCircle_eq_apply_zero
-      holomorphic.differentiableOn
+      (f := fun s ↦ q s * β * F' fun τ ↦ A τ s) holomorphic.differentiableOn
     _ = _ := by simp [β, at_centre, (h_factor _).weightMinors_eq, diagChar]
 
 /-- The mean over the circle `diag (s ^ o)` of a function of weight `u`. Let `o` be injective and

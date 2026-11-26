@@ -1,5 +1,7 @@
-import Lib.GaloisRep.BaseChange.PrimeDegreeTransfer
-import Lib.GaloisRep.Main.SplitCase
+module
+
+public import Lib.GaloisRep.BaseChange.PrimeDegreeTransfer
+public import Lib.GaloisRep.Main.SplitCase
 
 /-!
 # Attached Galois representations in odd rank and their descent along weak base change
@@ -52,6 +54,8 @@ representations II, Camb. J. Math. 1 (2013), Thm 3.2.3; with Labesse, Changement
 séries discrètes (2011), Cor. 5.3, and Barnet-Lamb, Gee, Geraghty, Taylor, Potential automorphy and
 change of weight (2014), Thm 2.1.1.
 -/
+
+@[expose] public section
 
 /-!
 ## Descent along a step of weak base change
@@ -281,6 +285,7 @@ lemma New.GaloisRep.exists_weak_baseChange {E E' n : Type} [Field E] [CMType E] 
   let π : Representation ℂ Unit ((stdSpace E n).forms κ) :=
     localFormTranslation κ (1 : Unit →* Gf E n)
   have h_id : heckeFun π ⊤ 1 = 1 := by
+    have := QuotientGroup.subsingleton_quotient_top (G := Unit)
     have : Unique (Unit ⧸ (⊤ : Subgroup Unit)) := .mk' _
     simp [heckeFun, finsum_unique, π]
   have h_trace : HasNonzeroTraceAround π (heckeFun π ⊤ 1)

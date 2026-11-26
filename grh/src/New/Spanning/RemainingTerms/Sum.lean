@@ -1,6 +1,7 @@
-import New.Spanning.RemainingTerms.Count
-import New.Spanning.RemainingTerms.Denominators
-import New.Spanning.RemainingTerms.Size
+module
+
+public import New.Spanning.RemainingTerms.Count
+public import New.Spanning.RemainingTerms.Size
 
 /-!
 # The remaining terms: a bound for their sum
@@ -48,6 +49,8 @@ relative trace formulas by congruences and counts is known in the literature. Re
 Michel–Ramakrishnan–Yang, Bessel periods on U(2,1)×U(1,1), 2023; Kowalski–Saha–Tsimerman, Local
 spectral equidistribution for Siegel modular forms, 2012; Blomer, Density theorems for GL(n), 2023.
 -/
+
+@[expose] public section
 
 open ENNReal Fin Finset Module
 
@@ -401,7 +404,9 @@ theorem sum_termSize_mul_not_inSameLinkClass_le {E : Type} [Field E] [CMType E]
         grw [pow_le_pow_right₀ hτ (by norm_num : 4 ≤ 9)]
       _ = _ := by rw [tailScale_pow_four]
   have hB : 0 ≤ S.identitySecondMoment / S.tailScale ^ 10 := by positivity
-  refine (sum_termSize_mul_le _ (fun c c' q hq ↦ hq.left) hB ?_).trans (ofReal_le_ofReal h_const)
+  refine (sum_termSize_mul_le (fun c c' ↦ {q : S.G E × S.G E |
+      S.IsNearPairOverAgreeingBlock c c' q ∧ ¬S.InSameLinkClass q.1 q.2})
+    (fun c c' q hq ↦ hq.left) hB ?_).trans (ofReal_le_ofReal h_const)
   rintro c c' γ γ' ⟨hq, h_class : ¬S.InSameLinkClass γ γ'⟩
   set j : Fin (𝔰.ϱ + 2) := S.cellRank γ
   set j' : Fin (𝔰.ϱ + 2) := S.cellRank γ'
@@ -466,7 +471,9 @@ theorem sum_termSize_mul_inSameLinkClass_le {E : Type} [Field E] [CMType E]
     rw [div_pow, ← pow_mul, mul_assoc, mul_comm _ 𝔰.k, pow_mul', ← tailScale_pow_four]
     ring
   rw [← h_const]
-  refine sum_termSize_mul_le _ (fun c c' q hq ↦ hq.left) (by positivity) ?_
+  refine sum_termSize_mul_le (fun c c' ↦ {q : S.G E × S.G E | S.IsNearPairOverAgreeingBlock c c' q ∧
+      S.InSameLinkClass q.1 q.2 ∧ ∃ s : S.ResidueGL, z ≤ S.meetNorm s ∧ q.1 ∈ S.termsOver c s c'})
+    (fun c c' q hq ↦ hq.left) (by positivity) ?_
   rintro c c' γ γ' ⟨⟨⟨-, h_cell⟩, ⟨-, h_cell'⟩, s, h_agrees, h_over, h_over'⟩,
     ⟨h_disc, -, h_link⟩, s', h_meet, h_over_s'⟩
   obtain rfl : s' = s := eq_of_mem_termsOver h_over_s' h_over
@@ -811,12 +818,13 @@ theorem linkSecondMoment_le_of_le_meetNorm {E : Type} [Field E] [CMType E]
         ENNReal.tsum_prod.symm
       _ ≤ ∑' (p : Ω × Link) (q : nearRepsInLink c c' p × nearRepsInLink c c' p),
           .ofReal (S.unipotentCovolume ^ 2) * size c c' (q.1, q.2) :=
-        ENNReal.tsum_le_tsum fun p ↦ (sq _).trans_le
-          (enorm_amplitudeSum_mul_le (h_stable p.2) (h_stable p.2) (h_sub p.2) (h_sub p.2))
+        ENNReal.tsum_le_tsum fun p ↦ by
+          rw [sq]
+          exact enorm_amplitudeSum_mul_le (h_stable p.2) (h_stable p.2) (h_sub p.2) (h_sub p.2)
       _ = ∑' x, .ofReal (S.unipotentCovolume ^ 2) * size c c' (pair x) :=
-        (ENNReal.tsum_sigma' fun x ↦ .ofReal (S.unipotentCovolume ^ 2) * size c c' (pair x)).symm
+        by rw [ENNReal.tsum_sigma']
       _ ≤ ∑' q : sameLinkPairs c c', .ofReal (S.unipotentCovolume ^ 2) * size c c' q :=
-        tsum_comp_le_tsum_of_injective h_injective fun q ↦
+        ENNReal.tsum_comp_le_tsum_of_injective h_injective fun q ↦
           .ofReal (S.unipotentCovolume ^ 2) * size c c' q
       _ = _ := ENNReal.tsum_mul_left
   calc

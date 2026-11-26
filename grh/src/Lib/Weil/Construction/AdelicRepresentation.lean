@@ -1,6 +1,8 @@
-import Lib.Adelic.Unitary.RationalPoints
-import Lib.Weil.Construction.FiniteCocycle
-import Lib.Weil.Fock.Basic
+module
+
+public import Lib.Adelic.Unitary.RationalPoints
+public import Lib.Weil.Construction.FiniteCocycle
+public import Lib.Weil.Fock.Basic
 
 /-!
 # The adelic Weil representation on 𝒮(V) and its theta functional
@@ -53,6 +55,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.MixedModel.ZeroTerm` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -337,7 +341,6 @@ variable {E : Type _} [Field E] [CMType E] [WeilData E]
   {n : Type _} [Fintype n] [DecidableEq n]
   {s : n → ℤˣ} (V : Space E n s) (g : G E s) (x y : n → 𝔸 E) (f f' : 𝒮 V)
 
-lemma dataInner_apply : V.dataInner f f' = modelInner f f' := rfl
 
 /-- Superposition: a bounded linear map `T` from `𝒮 V` to a complex Banach space is determined by
 its values on the translates ϱ(y) vac of the vacuum `vacElem`. Specifically, `T f` = ∫ ⟨ϱ(y) vac, f⟩

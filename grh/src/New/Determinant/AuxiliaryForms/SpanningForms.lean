@@ -1,7 +1,9 @@
-import New.Determinant.AuxiliaryForms.DiagonalTurns
-import New.Determinant.AuxiliaryForms.FirstPath
-import New.Determinant.AuxiliaryForms.LastPath
-import New.OneLift.ComparisonOperator.FirstFactors
+module
+
+public import New.Determinant.AuxiliaryForms.DiagonalTurns
+public import New.Determinant.AuxiliaryForms.FirstPath
+public import New.Determinant.AuxiliaryForms.LastPath
+public import New.OneLift.ComparisonOperator.FirstFactors
 
 /-!
 # Denominators and sizes on the last path, and the auxiliary forms
@@ -46,6 +48,8 @@ Notions from other files:
   `Y₀` to `Y_m`, with values in algebraic forms. `New.Data.lowerChainAtLevel ϑ` is the same map with
   values in the forms of the last level and its character; `levelY ϑ m` fixes these forms.
 -/
+
+@[expose] public section
 
 noncomputable section
 

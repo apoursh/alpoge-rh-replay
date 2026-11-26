@@ -1,6 +1,8 @@
-import Lib.SiegelWeil.SingularForms.UnimodularCoefficients
-import Lib.SiegelWeil.Tower.PrincipalIdeles
-import Lib.Weil.MixedModel.Slices
+module
+
+public import Lib.SiegelWeil.SingularForms.UnimodularCoefficients
+public import Lib.SiegelWeil.Tower.PrincipalIdeles
+public import Lib.Weil.MixedModel.Slices
 
 /-!
 # The real cone integral
@@ -22,6 +24,8 @@ Throughout, `A` and `X` split a hyperbolic plane off `W'` and `V'`, with complem
 
 Known; see `Lib.SiegelWeil.Tower.LargeSideConstantTerm` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -192,7 +196,7 @@ lemma exists_integrable_fockMoment_coneIntegrand_le (β : Bool) {z : ℝ} (hz : 
     simp [K, m₀, mul_eq_top, hC, hv (N + M), isSchwartzVector_vacVector (N + M)]
   have hK_cont : Continuous fun k : maxCompact E t' ↦ (K k).toReal := by
     -- In terms of the matrix entries of `k`, the multiplier is a product of minors.
-    simp [K, u, toReal_add, pairHomInf, realMultiplier]
+    simp [K, u, toReal_add, pairHomInf, realMultiplier, New.Fock.coe_pairHom]
     fun_prop [kroneckerMap]
   refine ⟨fun p ↦ (K p.1).toReal * L p.2,
     .mul_prod (DiscreteSeries.integrable_of_compactSpace hK_cont) hL, fun ⟨k, a⟩ ↦ ?_⟩

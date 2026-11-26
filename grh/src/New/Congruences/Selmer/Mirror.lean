@@ -1,4 +1,6 @@
-import New.Congruences.Selmer.Count
+module
+
+public import New.Congruences.Selmer.Count
 
 /-!
 # Reciprocity at conjugate primes
@@ -32,6 +34,8 @@ Notions from other files:
   Frobenius element, tame generator, character, slopes). It has a first prime `P₀`, whose Frobenius
   element lies in `W` and whose slopes are `0`, so that tied classes are unramified there.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -569,7 +573,7 @@ lemma mirrorForm_eq_zero {hp : IsTiedPrimes ℓ S₀ V W N P₀ J x}
     simpa [mirrorForm_conj_γ_left hy hz_coc _ hU hU_conj,
       mirrorForm_conj_γ_right hy hz_coc s hU hU_conj] using
       mirrorForm_add_swap_eq_zero hy hz hz_frobInTameImage (T.ζ * s)
-        (Normal.conj_mem inferInstance h hh T.γ) hh'
+        (Normal.conj_mem h hh T.γ) hh'
   calc mirrorForm z y ((T.ζ ^ 2 - 1) * s) h h'
       = mirrorForm z y (T.ζ * (T.ζ * s)) h h' - mirrorForm z y s h h' := by
         simp only [mirrorForm, sub_mul, one_mul, sub_smul, map_sub, sq, mul_assoc]
@@ -645,7 +649,7 @@ lemma mem_conjDualHom_of_apply_eq {hp : IsTiedPrimes ℓ S₀ V W N P₀ J x}
     have h_fix (b : n → QuotSpan a) : T.ρ h • b = b := by simp [ρ_eq_one_of_mem_sahGroup hh]
     calc η (T.ρ g • z h) m = η (z (g * h * g⁻¹)) m := by rw [cocycle_conj_of_fixed hz g h_fix]
       _ = y (conjGal g * conjGal h * (conjGal g)⁻¹) m := by
-        rw [hη _ (Normal.conj_mem inferInstance h hh g), map_mul, map_mul, map_inv]
+        rw [hη _ (Normal.conj_mem h hh g), map_mul, map_mul, map_inv]
       _ = η (z h) ((cyclotomicCharIn O Ω ℓ (conjGal g) : O) • T.ρ (conjGal g)⁻¹ • m) := by
         rw [apply_conj_of_mem_dualSelmer hy _
           (T.mem_reductionKer_of_mem_sahGroup (conjGal_mem_sahGroup hh)),

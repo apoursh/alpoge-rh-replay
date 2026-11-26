@@ -1,6 +1,8 @@
-import New.Spanning.MainTerm.FiniteSieveSystem
-import New.Spanning.RemainingTerms.Size
-import New.UpperBound.Objects.LabelsAndIndexTypes
+module
+
+public import New.Spanning.MainTerm.FiniteSieveSystem
+public import New.Spanning.RemainingTerms.Size
+public import New.UpperBound.Objects.LabelsAndIndexTypes
 
 /-!
 # Main-term bound for the second moment over open reductions fixing given vectors
@@ -42,6 +44,8 @@ literature. Related work: Jacquet–Ye, Germs of Kloosterman integrals for GL(3)
 Relative trace formulae toward Bessel and Fourier–Jacobi periods, 2014; Siegel, Über die analytische
 Theorie der quadratischen Formen, 1935.
 -/
+
+@[expose] public section
 
 section MainTermEstimate
 

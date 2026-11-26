@@ -1,6 +1,8 @@
-import Lib.DiscreteSeries.Theta.FockDualPair
-import Lib.General.LinearAlgebra.MatricesNearIdentity
-import Lib.Weil.Fock.WeightedNorms
+module
+
+public import Lib.DiscreteSeries.Theta.FockDualPair
+public import Lib.General.LinearAlgebra.MatricesNearIdentity
+public import Lib.Weil.Fock.WeightedNorms
 
 /-!
 # Polynomial vectors in Fock space: inner product, density and Weil derivative
@@ -30,6 +32,8 @@ Notions from other files:
 
 Known; see `Lib.Weil.Fock.OscillatorPair` for sources.
 -/
+
+@[expose] public section
 
 /-- A sesquilinear form B on complex polynomials vanishes if B(1, 1) = 0 and multiplication by each
 variable X_j on either side moves to the derivative ∂_j on the other side:
@@ -306,7 +310,7 @@ X_b by the signs) takes at 0 the value −1 if a = b has sign −1, and 0 otherw
 entry of 1 − `New.Fock.posProj` ε. -/
 private lemma valueAt_zero_polyVector_glOp_one [DecidableEq ι] (a b : ι) :
     valueAt 0 (polyVector ε (glOp ε a b 1)) = -(1 - posProj ε) b a := by
-  aesop (add simp [glOp, raiseOp, lowerOp, realVac, posProj, one_apply, diagonal])
+  aesop (add simp [glOp, raiseOp, lowerOp, realVac, posProj, Matrix.one_apply, diagonal])
 
 /-- The relation `New.Fock.fockMatrixCoeff_raiseOp`, differentiated along a
 curve γ in U(ε) with γ(0) = 1 whose matrix has derivative Y at 0. Here `hD` says that ⟨v_Q, D P⟩
@@ -334,7 +338,7 @@ private lemma fockInner_raiseOp_eq_of_hasDerivAt [DecidableEq ι] {γ : ℝ → 
     .fun_sum fun i _ ↦ ((entry i j).mul_const _).fun_mul (hD _ P)
   -- `fockMatrixCoeff_raiseOp` at each `γ t` says that the two curves agree, so their derivatives
   -- do; at `γ 0 = 1` only the term `i = j` of the second sum remains.
-  simpa [one_apply, hγ_zero, sum_add_distrib] using (hD Q (raiseOp ε j P)).unique
+  simpa [Matrix.one_apply, hγ_zero, sum_add_distrib] using (hD Q (raiseOp ε j P)).unique
     (sum_deriv.congr_of_eventuallyEq
       (.of_forall fun t : ℝ ↦ fockMatrixCoeff_raiseOp (γ t) P Q j))
 
@@ -363,7 +367,7 @@ private lemma fockInner_lowerOp_eq_of_hasDerivAt [DecidableEq ι] {γ : ℝ → 
     .fun_sum fun i _ ↦ (entry i j).star.fun_mul (hD _ P)
   -- `fockMatrixCoeff_lowerOp` at each `γ t` says that the two curves agree, so their derivatives
   -- do; at `γ 0 = 1` only the term `i = j` of the second sum remains.
-  simpa [one_apply, hγ_zero, sum_add_distrib] using
+  simpa [Matrix.one_apply, hγ_zero, sum_add_distrib] using
     ((hD Q (lowerOp ε j P)).const_mul (ε j : ℂ)).unique (sum_deriv.congr_of_eventuallyEq
       (.of_forall fun t : ℝ ↦ fockMatrixCoeff_lowerOp (γ t) P Q j))
 
@@ -408,18 +412,18 @@ theorem hasDerivAt_realWeil [DecidableEq ι] {γ : ℝ → USign ε} {Y : Matrix
         (hasDerivAt_det_posProj_add_mul hγ_zero hγ).inv
     -- Pairing with the vacuum evaluates at `0` (`valueAt_zero_polyVector_glOp_one`).
     rw [B_apply, (pair_deriv 1 1).unique vacuum_coeff, trace_mul_comm]
-    simp [weilDeriv, trace, mul_apply, ← valueAt_apply, valueAt_zero_polyVector_glOp_one, mul_sub,
-      sum_sub_distrib, one_apply]
+    simp [weilDeriv, trace, Matrix.mul_apply, ← valueAt_apply, valueAt_zero_polyVector_glOp_one, mul_sub,
+      sum_sub_distrib, Matrix.one_apply]
   -- At `u = 1` the relations `fockMatrixCoeff_raiseOp` and `fockMatrixCoeff_lowerOp` say that
   -- `raiseOp ε i` and `ε i * lowerOp ε i` are adjoint.
   have raise_adjoint (P Q : MvPolynomial ι ℂ) (i : ι) :
       fockInner (polyVector ε Q) (polyVector ε (raiseOp ε i P)) =
         ε i * fockInner (polyVector ε (lowerOp ε i Q)) (polyVector ε P) := by
-    simpa [one_apply] using fockMatrixCoeff_raiseOp (ε := ε) 1 P Q i
+    simpa [Matrix.one_apply] using fockMatrixCoeff_raiseOp (ε := ε) 1 P Q i
   have lower_adjoint (P Q : MvPolynomial ι ℂ) (i : ι) :
       ε i * fockInner (polyVector ε Q) (polyVector ε (lowerOp ε i P)) =
         fockInner (polyVector ε (raiseOp ε i Q)) (polyVector ε P) := by
-    simpa [one_apply] using fockMatrixCoeff_lowerOp (ε := ε) 1 P Q i
+    simpa [Matrix.one_apply] using fockMatrixCoeff_lowerOp (ε := ε) 1 P Q i
   -- The commutators of `weilDeriv ε Y = ∑ Y a b • raiseOp ε a * lowerOp ε b` with `raiseOp ε j`
   -- and `lowerOp ε j`, by `canonical_commutation`.
   have comm_raise (j : ι) (P : MvPolynomial ι ℂ) : weilDeriv ε Y (raiseOp ε j P) =

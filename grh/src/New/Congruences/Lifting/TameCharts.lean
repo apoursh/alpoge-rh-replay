@@ -1,4 +1,6 @@
-import New.Congruences.Lifting.CupProductBound
+module
+
+public import New.Congruences.Lifting.CupProductBound
 
 /-!
 # Tame Kummer charts and the power of p that kills cokernels of Kisin modules
@@ -32,6 +34,8 @@ Notions from other files:
 
 See `New.Congruences.Lifting.CupOrthogonalityBounds` for related work.
 -/
+
+@[expose] public section
 
 namespace New.Lift
 
@@ -416,7 +420,7 @@ lemma killsCokernel_of_isKilledBy {p : ℕ} [ThePrime p] [Γ : GroupOverGp p]
     · -- Costly step: going down from `z ^ (k + 1)` to `z ^ k` costs `v_p(k + 1) + 1` factors `p`,
       -- at most `m` since `k + 1 < p ^ m`.
       have h_val : padicValNat p (k + 1) < m :=
-        (padicValNat_le_nat_log (k + 1)).trans_lt
+        Nat.padicValNat_def (p := p) ▸ (multiplicity_le_nat_log (k + 1)).trans_lt
           (Nat.log_lt_of_lt_pow (by simp) (hk.trans_le he_le))
       have h_down : p ^ (t + padicValNat p (k + 1) + 1) * d.z.val ^ k ∈
           S.liftIdeal (p ^ (κ + 1)) 0 i :=

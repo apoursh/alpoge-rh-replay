@@ -1,5 +1,7 @@
-import New.Determinant.AuxiliaryForms.PathData
-import New.Determinant.Exchange.RemovingPlanes
+module
+
+public import New.Determinant.AuxiliaryForms.PathData
+public import New.Determinant.Exchange.RemovingPlanes
 
 /-!
 # Theta lifts as a triangle of arrows: spaces, lifts, descents and the first lift
@@ -38,6 +40,8 @@ Notions from other files:
 
 See `New.Determinant.Chain.ChainNorms` for related work.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -531,7 +535,7 @@ lemma exists_flipPoly_map_conj_eq (s : N → ℤˣ) (t : N' → ℤˣ)
     have h_var : flipPoly s t (.map conj (flipPoly t s (.map conj (.X v)))) = .X v := by
       -- `zsmul_eq_mul` is excluded so that the two signs meet in one scalar
       simp [flipPoly, Int.cast_smul_eq_zsmul, pairSign, -zsmul_eq_mul, smul_smul, ← Units.val_mul,
-        mul_comm (t _)]
+        mul_comm (t _), MvPolynomial.bind₁_X_right]
     simp only [map_mul, hp, h_var]
 
 /-! ### Left and reversed pairs, descents and ascents -/

@@ -1,5 +1,7 @@
-import Lib.General.LinearAlgebra.Eigenvalues
-import Lib.Weil.Construction.AdelicRepresentation
+module
+
+public import Lib.General.LinearAlgebra.Eigenvalues
+public import Lib.Weil.Construction.AdelicRepresentation
 
 /-!
 # Hyperbolic space and splittings of a hermitian space along isotropic subspaces
@@ -46,6 +48,8 @@ Notions from other files:
 
 Known; see `Lib.Adelic.Witt.IwasawaDecomposition` and `Lib.Weil.MixedModel.ZeroTerm` for sources.
 -/
+
+@[expose] public section
 
 noncomputable section
 

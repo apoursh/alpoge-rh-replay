@@ -1,11 +1,13 @@
-import Lib.ClassField.Avatar.HeckeBaseChange
-import Lib.GaloisRep.KillingPolynomials
-import Lib.GaloisRep.Main.CuspidalTypes
-import Lib.Shimura.Eigenspace
-import Lib.Shimura.IntegralModel.PELDataExistence
-import Lib.Shimura.IntegralModel.TowerExistence
-import Lib.Shimura.ThetaModuli.UniversalFamily
-import Lib.Shimura.Transfer.WeightOccurs
+module
+
+public import Lib.ClassField.Avatar.HeckeBaseChange
+public import Lib.GaloisRep.KillingPolynomials
+public import Lib.GaloisRep.Main.CuspidalTypes
+public import Lib.Shimura.Eigenspace
+public import Lib.Shimura.IntegralModel.PELDataExistence
+public import Lib.Shimura.IntegralModel.TowerExistence
+public import Lib.Shimura.ThetaModuli.UniversalFamily
+public import Lib.Shimura.Transfer.WeightOccurs
 
 /-!
 # Seed representations: odd rank, a cuspidal type and free jumps
@@ -41,6 +43,8 @@ Notions from other files:
 
 Known; see `Lib.GaloisRep.Main.OddRank` for sources.
 -/
+
+@[expose] public section
 
 open NumberField Matrix New Variety Period IsLocalization RingHom Subgroup Gf
 
@@ -225,7 +229,7 @@ lemma New.GaloisRep.isSplitPrimeToDisc_below_of_prime_norm {E : Type} [Field E] 
   obtain ⟨c, hc⟩ :
       Ideal.Quotient.mk w.asIdeal (algebraMap (𝓞 (QuadField d)) (𝓞 E) (QuadField.betaK d)) ∈
         AddSubgroup.zmultiples (Ideal.Quotient.mk w.asIdeal (d : 𝓞 E)) :=
-    mem_zmultiples_of_prime_card (hp := ⟨hq_prime⟩) rfl
+    mem_zmultiples_of_prime_card (hp := ⟨hq_prime⟩) (Ideal.absNorm_eq_natCard _).symm
       (mt Ideal.Quotient.eq_zero_iff_mem.mp hd_notMem)
   have hx_mem :
       QuadField.betaK d - ((c * d : ℤ) : 𝓞 (QuadField d)) ∈ (w.below (QuadField d)).asIdeal :=

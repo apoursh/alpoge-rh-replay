@@ -1,7 +1,9 @@
-import Lib.GaloisRep.Pseudocharacter.SemisimpleRepresentations
-import Lib.General.NumberTheory.PadicLimitsValuation
-import Lib.PadicHodge.Kisin.PeriodMatrixFrame
-import Lib.PadicHodge.RadiusLemma
+module
+
+public import Lib.GaloisRep.Pseudocharacter.SemisimpleRepresentations
+public import Lib.General.NumberTheory.PadicLimitsValuation
+public import Lib.PadicHodge.Kisin.PeriodMatrixFrame
+public import Lib.PadicHodge.RadiusLemma
 
 /-!
 # Uniform period bounds and limits of crystalline lattices with bounded jumps
@@ -45,6 +47,8 @@ Notions from other files:
 
 Known; see `Lib.PadicHodge.Limit.TraceLimit` and `Lib.PadicHodge.RadiusLemma` for sources.
 -/
+
+@[expose] public section
 
 /-! ## Crystalline modules with Hodge–Tate jumps in [0, h] -/
 
@@ -293,7 +297,7 @@ lemma exists_finite_groupRing_quotient [IsTopologicalGroup G] [Finite κ] {τ : 
       finite := h_finite
       surjective := Φ.rangeRestrict_surjective
       factors := fun s y ↦ by simp [u, Φ] -- the maps `u s` recover the `τ s`
-      apply_eq_zero_iff := fun y ↦ by simp [Φ, Subtype.ext_iff, funext_iff]
+      apply_eq_zero_iff := fun y ↦ Subtype.ext_iff.trans (by simp [Φ, funext_iff])
       isCrystallineUpTo := fun {h w} h_crys ↦ ?_ }⟩
   -- The columns of the `u s` are jointly injective equivariant maps from `T` to the `τ s`.
   let f (s : Σ s, (τ s).Index) : Φ.range →ₗ[ℤ_[p]] (τ s.fst).Index → PadicAlgCl p :=

@@ -1,5 +1,7 @@
-import Lib.ClassField.Global.Chebotarev
-import Lib.ClassField.GreenbergWiles.SplitPrimeReciprocity
+module
+
+public import Lib.ClassField.Global.Chebotarev
+public import Lib.ClassField.GreenbergWiles.SplitPrimeReciprocity
 
 /-!
 # Relations at split primes and their number (Greenberg–Wiles)
@@ -35,6 +37,8 @@ Notions from other files:
 
 Known; see `Lib.ClassField.GreenbergWiles.CocycleCounts` for sources.
 -/
+
+@[expose] public section
 
 namespace New.selmerZ1
 
@@ -216,7 +220,7 @@ lemma exists_dvd_coprime_sup_idelesUnitOff_eq_top (U : OpenNormalSubgroup Gal(Ω
     obtain ⟨T, hT, -, h_off, h_top⟩ :=
       exists_sup_idelesUnitOff_eq_top (K := F) finite_empty _ (finite_natCast_mem p)
     filter_upwards [mem_large hT fun v hv hp ↦ h_off v hp hv] with k hk
-    exact eq_top_mono (sup_le_sup_left (idelesUnitOff_mono hk) _) h_top
+    exact eq_top_mono (sup_le_sup_left (idelesUnitOff_mono fun v hv ↦ hk v hv) _) h_top
   -- The finitely many primes with an inertia group outside `U` do not divide `p`.
   let bad : Set (FinPlace K) :=
     {v | ¬ ∀ B : ClosurePlace, IsPlaceOver B v → inertiaGroup Gal(Ω/K) B ≤ U}

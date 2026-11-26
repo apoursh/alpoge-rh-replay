@@ -1,4 +1,6 @@
-import Lib.Adelic.QuotientMeasure.Basic
+module
+
+public import Lib.Adelic.QuotientMeasure.Basic
 
 /-!
 # Unfolding over orbits and integration in Iwasawa coordinates
@@ -30,6 +32,8 @@ Known result: The unfolding trick and the integration formula in Iwasawa coordin
 by a discrete subgroup. Weil's formula for invariant integration on a quotient is in
 `Lib.Adelic.QuotientMeasure.Basic`.
 -/
+
+@[expose] public section
 
 /-!
 ## Unfolding a sum over an orbit
