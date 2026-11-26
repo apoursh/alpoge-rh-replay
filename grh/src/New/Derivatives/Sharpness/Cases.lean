@@ -106,18 +106,6 @@ lemma piMBar_mul_conj (D : Data P) : D.piMBar * conj (D.piMBar : ℂ) = D.M := b
 lemma coe_piMBar_ne_zero (D : Data P) : (D.piMBar : ℂ) ≠ 0 :=
   left_ne_zero_of_mul (D.piMBar_mul_conj.trans_ne (cast_ne_zero.2 (NeZero.ne D.M)))
 
-/-- The period scale `π_M * jetScale` has the squared modulus `M / Ω`. Here `π_M` is the complex
-conjugate of `D.piMBar`, `jetScale = periodFactor * √(2π / √d) / Ω₀` is the scale of the Taylor
-series of theta functions, `M = D.M` is the level, and
-`Ω = P.bigOmega D.towerExp = exp (γ - Re L′/L(1, χ_K)) * 2π / rd_E`, with `γ` Euler's constant and
-`rd_E` the root discriminant of `E`. -/
-lemma norm_conj_piMBar_mul_jetScale_sq (D : Data P) :
-    ‖conj (D.piMBar : ℂ) * P.jetScale D.towerExp‖ ^ 2 = D.M / P.bigOmega D.towerExp := by
-  have h_norm : ‖conj (D.piMBar : ℂ)‖ ^ 2 = D.M := by
-    rw [Complex.norm_conj, ← Complex.normSq_eq_norm_sq]
-    exact_mod_cast (Complex.mul_conj _).symm.trans D.piMBar_mul_conj
-  rw [norm_mul, mul_pow, h_norm, P.norm_jetScale_sq, div_eq_mul_inv]
-
 omit [Fintype J] in
 lemma phi_resolutionVectors (D : Data P) {w : J → D.E} (τ : D.Φ) (i : J) :
     New.Φ τ (D.resolutionVectors w i ()) = New.Φ τ (w i) / D.piMBar := by

@@ -372,7 +372,7 @@ N²))^(𝔰.k - 1). By the product formula the powers of `p` cancel; the constan
 lemma gramScalar_mul_headDensity [WeilData E]
     [S.IsAdmissible] {T : Finset (FinPlace E)} [T.StarStable] {P : Floors.IntegralPlace (LocProd T)}
     {G : Floors.PlaceData (Fin (𝔰.k - (6 * 𝔰.ϱ + 13))) (S.latticeMiddle (LocProd T))
-      (𝔰.ϱ + 1 + 2 * 𝔰.ϱ + 5)} (_hG : S.IsFillingData T G) {kPred : ℕ} (hk : 𝔰.k = kPred + 1)
+      (𝔰.ϱ + 1 + 2 * 𝔰.ϱ + 5)} {kPred : ℕ} (hk : 𝔰.k = kPred + 1)
     {T₀ : Finset Eˣ} (hT₀ : ∀ x ∈ T₀, x.val ∈ ratIntegralOff T ∧ x⁻¹.val ∈ ratIntegralOff T)
     {t : Eˣ} (h_large : ∀ v : NumberField.InfinitePlace E, S.N ^ 2 < ‖Φ v t.val‖ ^ 2)
     (p : Fin 𝔰.ϱ → T₀) :
@@ -523,7 +523,7 @@ lemma IsFillingData.mul_sum_norm_sum_cosetAmplitude_sq_le [S.IsAdmissible] {T : 
   have h_weight (i : ι) (p : Fin 𝔰.ϱ → T₀) :
       ρ (t i) p * (G.headDensity 𝔰.ϱ (y p (t i)) 1).toReal =
         r * √((∏ v, (‖Φ v (t i).1‖ ^ 2 - S.N ^ 2)) ^ (𝔰.k - 1)) :=
-    gramScalar_mul_headDensity hG hk hT₀ (h_large i) p
+    gramScalar_mul_headDensity hk hT₀ (h_large i) p
   -- the classes with the last entry of `i`
   have h_top (i : ι) :
       ∑ j : {j // t j = t i}, r ^ 2 * ‖∑ p : Fin 𝔰.ϱ → T₀, S.cosetAmplitude .cut (c j)

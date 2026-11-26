@@ -733,14 +733,6 @@ lemma HasCellRank.abs_norm_subframeMinor {S : Filling E 𝔰} {j : Fin (𝔰.ϱ 
   rw [subframeMinor, ← det_piecewise_one_eq_submatrix_det, h_rows,
     hγ.abs_norm_det_updateRow_paddedLeading]
 
-/-- If `γ` has the cell rank `j`, then the minor `δ_*(γ) = S.subframeMinor j γ` of the products of
-the first `j` vectors of the frame `(e₁, …, e_ϱ, z)` and its last vector `z` with their images under
-`γ` is not zero. -/
-theorem HasCellRank.subframeMinor_ne_zero {S : Filling E 𝔰} {j : Fin (𝔰.ϱ + 2)} {γ : S.G E}
-    [HasPrimitiveRoot5040 E] (hγ : S.HasCellRank j γ) : S.subframeMinor j γ ≠ 0 := by
-  intro h_zero
-  simpa [h_zero, S.N_prime.ne_zero, hγ.minorNorm_pos.ne'] using hγ.abs_norm_subframeMinor
-
 /-- Let the CM field `E` have `r` infinite places and contain a primitive `5040`-th root of unity,
 let `N = S.N` be the prime of the data `S`, and let `γ` have the cell rank `j`. Put
 `k = S.translateByClassReps c c' γ = h_c⁻¹ γ h_c'`. Take the rows `a = 1, …, ϱ` of the matrix of

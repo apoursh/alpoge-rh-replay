@@ -492,25 +492,6 @@ theorem card_mul_card_classes_mul_prod_le :
       rw [← D.prod_unitSphereMass_mul_div_eq]
       exact D.card_sq_mul_mass_mul_prod_le
 
-/-- **Mean values.** For the filling data of admissible data `D`, let `H̄` be the reduced image of
-`besselH`, `n_X` the number of classes, `d_v` and `deg_v` the dimension and the degree of the Bessel
-system at `v`, `fr_v` the frame mass, `sph_k` the mass of the unit sphere in rank `k`, `mass_l` the
-mass `New.mass` in rank `l` and `c_v = fr_v N ^ k d_v ^ 2 / (sph_k deg_v)`. The numbers
-`|H̄| n_X ∏ fr_v d_v ^ 2 / deg_v` and `|H̄| ^ 2 mass_k ∏ sph_k c_v`, which bound mean values, are at
-most `(1 + b⁻⁹)` times the main second moment `(n_X ∏ d_v) ^ 2 / (mass_r ∏ deg_v)`. Here `N` is the
-prime level, `k`, `r` are the ranks of `X₀`, `Y₀`, and `b = D.b` is the weight at the `b`-places. -/
-theorem card_mul_prod_frameMass_le :
-    Nat.card (D.filling.reducedImage besselH) * Fintype.card D.filling.Classes *
-        ∏ v : D.Φ, D.frameMass v * Fintype.card (D.filling.besselSystem v).Index ^ 2 /
-          (D.filling.besselSystem v).deg ≤
-      (1 + D.b⁻¹ ^ 9) * D.filling.mainSecondMoment ∧
-    Nat.card (D.filling.reducedImage besselH) ^ 2 * mass D.E D.k *
-        ∏ v : D.Φ, D.unitSphereMass D.k v * (D.frameMass v * D.N ^ D.k *
-          Fintype.card (D.filling.besselSystem v).Index ^ 2 /
-            (D.unitSphereMass D.k v * (D.filling.besselSystem v).deg)) ≤
-      (1 + D.b⁻¹ ^ 9) * D.filling.mainSecondMoment :=
-  ⟨D.card_mul_card_classes_mul_prod_le, D.card_sq_mul_mass_mul_prod_le⟩
-
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.univ in
 /-- For the filling data of admissible data `D`, the scaled Siegel constant `|S̄| |Ū| n_X c_S` is at
@@ -696,7 +677,6 @@ theorem mainSecondMoment_div_identitySecondMoment_mem_Icc :
     gcongr
     simpa using log_le_log (by positivity) (D.le_of_hasLogBound : D.b ^ 19 ≤ D.M)
   have one_le_logB : 1 ≤ D.logB := D.le_of_hasLogBound
-  have f_k_logB_nonneg : (0 : ℝ) ≤ D.f * D.k * D.logB := by positivity
   obtain ⟨h_lower, h_upper⟩ := abs_le.1 D.abs_log_mainSecondMoment_div_identitySecondMoment_sub_le
   constructor
   · rw [← log_le_log_iff (by positivity) ratio_pos, log_pow, log_exp]

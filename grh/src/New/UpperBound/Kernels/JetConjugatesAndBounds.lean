@@ -613,13 +613,13 @@ lemma Parameters.map_jet_eq_integral {V : Space (P.E s) (n' × n) (homSigns 1 1)
 
 /-- Cauchy's estimate for the jets of one finite translate `ϱ(x) ω(g) (intVacuum V)` of the integral
 vacuum `intVacuum V` of a standard space `V` (all signs `+1`, the point the identity matrix), at
-scale `c * P.jetScale s`. If `0 ≤ A`, `‖σ c‖ ^ 2 / P.bigOmega s ≤ T`, and
+scale `c * P.jetScale s`. If `‖σ c‖ ^ 2 / P.bigOmega s ≤ T` and
 `‖σ Q(z)‖ ≤ A * exp (w + L R)` whenever `∑ ‖σ z_i‖ ^ 2 ≤ T (2 L + 2) R`, then the conjugate by `σ`
 of the jet along `Q` has norm at most `exp (P.constantBound * (P.q₁ s * card (n' × n) + 1) ^ 2 +
 w) * (2 L + 2) ^ card (P.Φ s × n' × n)` times `A`. -/
 lemma Parameters.norm_jet_translate_le (V : Space (P.E s) (n' × n) (homSigns 1 1)) [V.IsStd]
     (σ : Gal(ℂ/P.K)) {c : ℂ} {Q : MvPolynomial (P.Φ s × n' × n) ℂ} {L : ℕ} {w A T : ℝ}
-    (_hA : 0 ≤ A) (hT : ‖σ c‖ ^ 2 / P.bigOmega s ≤ T) (hQ : HasConjugateGrowth σ Q T L w A)
+    (hT : ‖σ c‖ ^ 2 / P.bigOmega s ≤ T) (hQ : HasConjugateGrowth σ Q T L w A)
     (x : n' × n → 𝔸f (P.E s)) (g : Gf (P.E s) (n' × n)) :
     ‖σ (jet ℂ Q (V.jetSeries (c * P.jetScale s) (V.ϱ (finVec x) (V.ω (1, g) (intVacuum V)))))‖ ≤
       exp (P.constantBound * (P.q₁ s * card (n' × n) + 1) ^ 2 + w) *
@@ -771,7 +771,7 @@ lemma Parameters.norm_jet_le_of_isVacuumCombination
       rw [map_mul, norm_mul, P.norm_map_pairChar σ' g h, one_mul]
       exact (MonoidHom.isOfFinOrder (σ' : ℂ →* ℂ) hζ).norm_eq_one
     rw [hσ', h_move, map_smul, map_smul, smul_eq_mul, map_mul, norm_mul, h_unit, one_mul]
-    exact P.norm_jet_translate_le V σ' hA hT' hQ' _ k
+    exact P.norm_jet_translate_le V σ' hT' hQ' _ k
   calc _ = ‖∑ x ∈ r.support, σ (r x) *
           σ (jet ℂ Q (V.jetSeries (c * P.jetScale s)
             (W (V.finHeisenbergOp x (intVacuum V)))))‖ := by

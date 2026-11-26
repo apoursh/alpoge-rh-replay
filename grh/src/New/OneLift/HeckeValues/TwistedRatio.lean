@@ -311,38 +311,6 @@ namespace Data.CriticalPair
 
 variable {P : Parameters} {D : Data P} {p : D.CriticalPair} {n : Type} [Fintype n] [DecidableEq n]
 
-/-- Let `p = (ν, z)` be a critical pair with `z ≥ 2` and `ϑ` a tame character. Let `O` be the
-descent pair `(lValueData H ϑ).descentPair` of the lift from U(1) to `U(2 z)`, with weight
-`O.columnCount`. The function on the adelic group `U(2 z)(𝔸)` attached by `ofAlgForm` to the
-algebraic form `trivialLift H ϑ` (its matrix coefficient against the highest vector for the
-parameter `O.paramV`, all signs being `1`) is a nonzero multiple of the theta lift, by the theta
-kernel `O.pairThetaKernel`, of the constant function `1` on the adelic group `New.G` of U(1), taken
-at the Schwartz function `O.fockDatum` made from that highest vector. -/
-theorem exists_ofAlgForm_trivialLift_eq_smul_lift (H : p.HasLiftRank n) (ϑ : D.TameChar) :
-    ∃ c : ℂ, c ≠ 0 ∧
-      ofAlgForm (lValueData H ϑ).descentPair.paramV 1 (trivialLift H ϑ).val =
-        c • lift (lValueData H ϑ).descentPair.pairThetaKernel
-          ((lValueData H ϑ).descentPair.fockDatum
-            (highestVector (lValueData H ϑ).descentPair.columnCount
-              (lValueData H ϑ).descentPair.paramV))
-          fun _ : New.G D.E (lValueData H ϑ).descentPair.signs ↦ 1 := by
-  let scale : ℂ := P.vacuumScale D.towerExp ^ card n * (star (D.piMBar : ℂ) * P.jetScale D.towerExp)
-    ^ p.rowLengthSum
-  have h_scale : scale ≠ 0 := p.vacuumScale_pow_mul_pow_rowLengthSum_ne_zero (card n)
-  have h_index : (stdLevelIndex (lValueData H ϑ).chosenLevel : ℂ) ≠ 0 := by simp
-  refine ⟨scale * stdLevelIndex (lValueData H ϑ).chosenLevel, mul_ne_zero h_scale h_index, ?_⟩
-  rw [mul_smul, (lValueData H ϑ).lift_fockDatum_const_one, smul_inv_smul₀ h_index, trivialLift]
-  exact map_smul _ scale _
-
-/-- Let `p = (ν, z)` be a critical pair, with `H` saying that `n` has `2 z` elements and `z ≥ 2`,
-and let `ϑ` be a tame character. The product of the groups `GL₁` over the residue fields at the
-chosen places of `lValueData H ϑ` acts by `formAction`, and it fixes the lift `trivialLift H ϑ` of
-`ν ϑ`. -/
-theorem formAction_trivialLift (H : p.HasLiftRank n) (ϑ : D.TameChar)
-    (s : (lValueData H ϑ).descentPair.ChosenGL Unit) :
-    (lValueData H ϑ).descentPair.formAction s (trivialLift H ϑ) = trivialLift H ϑ := by
-  rw [trivialLift, map_smul, LValueData.formAction_trivialLift]
-
 end Data.CriticalPair
 
 end New

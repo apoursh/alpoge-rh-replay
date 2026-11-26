@@ -760,15 +760,6 @@ lemma CharsAgree.mul_star_eq_of_pairOccursAt (h_agree : S.CharsAgree γ) {μ μ'
     h_agree.pairOccursAt_mono h_occurs j.le_last
   rw [mul_comm, star_mul_last_eq_of_frameImage_eq hxy, mul_comm]
 
-/-- Let the characters of `γ` agree. If `μ`, `μ'` are the coefficients at `j` of a common vector of
-the flags of the frame `f` and of `γ f`, then `μ μ̄ = μ' μ̄'`, and `μ`, `μ'` are the coefficients of
-a common vector at every index `l ≥ j`. -/
-lemma mul_star_eq_and_pairOccursAt_of_le (h_agree : S.CharsAgree γ) (j : Fin (𝔰.ϱ + 1)) (μ μ' : E)
-    (h_occurs : PairOccursAt γ μ μ' j) :
-    μ * star μ = μ' * star μ' ∧ ∀ l ≥ j, PairOccursAt γ μ μ' l :=
-  ⟨h_agree.mul_star_eq_of_pairOccursAt h_occurs,
-    fun _ hl ↦ h_agree.pairOccursAt_mono h_occurs hl⟩
-
 /-- Let the characters of `γ` agree, and let a common vector, with coordinates `x` in the frame `f`
 and `y` in `γ f`, have the top index `j` (the least index above which `x` and `y` vanish). Then
 `x j` and `y j` have the same norm. -/

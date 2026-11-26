@@ -34,8 +34,7 @@ The basic facts on the field `E` are proved in `Lib` or in
 * the ring of integers: `New.Parameters.adjoin_betaKInE_zetaInt_eq_top`, in the latter file;
 * the different of `E` over its real subfield and the places fixed by conjugation:
   `New.differentIdeal_eq_top_of_add_star_eq_one`, `New.two_notMem_of_star_eq` and
-  `New.exists_sq_eq_q_of_star_eq` in `Lib`, `New.Parameters.natCast_eq_neg_one_of_star_eq` in the
-  latter file.
+  `New.exists_sq_eq_q_of_star_eq` in `Lib`.
 
 Notions from other files:
 * `New.chiK d` is the Legendre symbol `(· / d)`, the character of `ℚ(√-d)` for `d ≡ 3 mod 4`.

@@ -1,6 +1,7 @@
 module
 
 public import Lib.Base
+public import TauCeti.RingTheory.DedekindDomain.FiniteAdeleRing.Basic
 
 /-!
 # Finite adeles of number fields: topology, idempotents, functoriality and base change
@@ -603,17 +604,19 @@ instance : Fact (∀ w : FinPlace E, IsOpen (LocInt w).carrier) :=
 
 deriving instance T0Space, LocallyCompactSpace for 𝔸f E
 
+variable (E) in
+/-- `New.Ô E` has the same elements as Tau Ceti's integral finite adeles. -/
+lemma coe_Ô_eq_integralAdeles : (Ô E : Set (𝔸f E)) = FiniteAdeleRing.integralAdeles (𝓞 E) E :=
+  ext fun _ ↦ by
+    simp [mem_Ô, FiniteAdeleRing.mem_integralAdeles, HeightOneSpectrum.mem_adicCompletionIntegers]
+
 lemma isCompact_Ô : IsCompact (Ô E : Set (𝔸f E)) := by
-  -- `Ô E` is the image of the compact product of the local rings of integers.
-  have h_range : SetLike.coe (Ô E) = range (structureMap LocField (fun w ↦ LocInt w) .cofinite) :=
-    (ext fun _ ↦ mem_Ô).trans (range_structureMap ..).symm
-  rw [h_range]
-  exact isCompact_range (X := ∀ w : FinPlace E, LocInt w) isEmbedding_structureMap.continuous
+  rw [coe_Ô_eq_integralAdeles]
+  exact FiniteAdeleRing.isCompact_integralAdeles (R := 𝓞 E) (K := E)
 
 lemma isOpen_Ô : IsOpen (Ô E : Set (𝔸f E)) := by
-  have h_set : ↑(Ô E) = {x : 𝔸f E | ∀ w : FinPlace E, x w ∈ LocInt w} := ext fun _ ↦ mem_Ô
-  rw [h_set]
-  exact isOpen_forall_mem out
+  rw [coe_Ô_eq_integralAdeles]
+  exact FiniteAdeleRing.isOpen_integralAdeles (𝓞 E) E
 
 @[fun_prop]
 lemma continuous_evalAt : Continuous (evalAt w) := continuous_eval w
@@ -759,30 +762,16 @@ lemma exists_dvd_algebraMap_sub {a : 𝓞 E} (ha : a ≠ 0) (x : Ô E) :
 /-- The algebraic integers of `E` are dense in `Ô E`, the ring of finite adeles that are integral at
 every finite place. -/
 lemma denseRange_algebraMap_Ô : DenseRange (algebraMap (𝓞 E) (Ô E)) := by
-  intro x
-  -- Take the closure in the finite adeles, where a neighbourhood `U` of `0` contains some
-  -- `N * Ô E`; and `x` is congruent to an algebraic integer `b` modulo `N`.
-  refine closure_subtype.2 (mem_closure_iff_nhds_zero.2 fun U hU ↦ ?_)
-  obtain ⟨N, hN, h_sub⟩ := mem_nhds_zero_finAdele_iff.1 hU
-  obtain ⟨b, y, hy⟩ : ∃ (b : 𝓞 E) (y : Ô E),
-      algebraMap (𝓞 E) (Ô E) b - x = algebraMap (𝓞 E) (Ô E) N * y :=
-    exists_dvd_algebraMap_sub (cast_ne_zero.2 hN) x
-  have h_mem : (algebraMap (𝓞 E) (Ô E) b - x).val ∈ U := by simpa [hy] using h_sub y y.property
-  exact ⟨algebraMap (𝓞 E) (Ô E) b, mem_image_of_mem _ (mem_range_self b), h_mem⟩
+  -- Both subrings carry the restriction of `algebraMap (𝓞 E) (𝔸f E)`.
+  have h := FiniteAdeleRing.denseRange_algebraMap_integralAdeles (𝓞 E) E
+  rw [DenseRange, Subtype.dense_iff, ← range_comp] at h ⊢
+  intro x hx
+  exact closure_mono (by rintro _ ⟨y, rfl⟩; exact ⟨y, rfl⟩)
+    (h ((Set.ext_iff.1 (coe_Ô_eq_integralAdeles E) x).1 hx))
 
 /-- The number field `E` is dense in its ring `𝔸f E` of finite adeles (strong approximation). -/
-lemma denseRange_algebraMap_finAdele : DenseRange ((↑) : E → 𝔸f E) := by
-  -- The closure `C` of `E` is an `E`-subspace containing `Ô E`, and `N * x ∈ Ô E` for some `N ≠ 0`.
-  intro x
-  let C : Submodule E (𝔸f E) := (Algebra.linearMap E (𝔸f E)).range.topologicalClosure
-  change x ∈ C
-  have h_int : (Ô E : Set (𝔸f E)) ⊆ C := by
-    refine (Subtype.dense_iff.1 denseRange_algebraMap_Ô).trans (closure_mono ?_)
-    rintro _ ⟨_, ⟨b, rfl⟩, rfl⟩
-    exact ⟨b, rfl⟩
-  obtain ⟨N, hN, hx⟩ := exists_forall_mul_mem_Ô fun _ : Unit ↦ x
-  exact (C.smul_mem_iff (cast_ne_zero.2 hN : (N : E) ≠ 0)).1
-    (by simpa [cast_smul_eq_nsmul] using h_int (hx ()))
+lemma denseRange_algebraMap_finAdele : DenseRange ((↑) : E → 𝔸f E) :=
+  FiniteAdeleRing.denseRange_algebraMap (𝓞 E) E
 
 /-- Every finite adele is the sum of an element of `E` and an integral finite adele. -/
 lemma exists_sub_mem_Ô (x : 𝔸f E) : ∃ a : E, x - a ∈ Ô E :=

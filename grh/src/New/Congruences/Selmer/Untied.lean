@@ -58,9 +58,6 @@ open Matrix.Module
 variable {E O n B : Type} [Field E] [EmbeddedNumberField E] [CommRing O] [Fintype n] [DecidableEq n]
   [AddCommGroup B] [Module O B] {ρ : Gal(Ω/E) →* Matrix n n O} {c : Gal(Ω/E) → n → B}
 
-lemma affineAction_apply (hc : ∀ g h : Gal(Ω/E), c (g * h) = c g + ρ g • c h) (g : Gal(Ω/E))
-    (u : n → B) : affineAction hc g u = c g + ρ g • u := rfl
-
 /-- If `g` acts through `ρ` by the scalar `α`, then the affine action `u ↦ c(g) + g u` of the
 cocycle `c` has `k`-th iterate `u ↦ α ^ k u + ∑ i < k, α ^ i c(g)` at `g`. At `u = 0` this says
 `c(g ^ k) = ∑ i < k, α ^ i c(g)`. -/

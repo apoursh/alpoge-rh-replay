@@ -106,7 +106,6 @@ lemma orbitBound_top [S.IsAdmissible] (x : ℝ) : S.orbitBound ⊤ x = S.tailSca
 /-- For admissible data, `pairCountScale` is at most the main second moment. -/
 lemma pairCountScale_le_mainSecondMoment [S.IsAdmissible] :
     S.pairCountScale ≤ S.mainSecondMoment := by
-  have : Nonempty 𝔰.κ := ⟨𝔰.k₀⟩
   -- `pairCountScale ≤ identitySecondMoment ≤ τ⁻⁴⁴ mainSecondMoment`, and `τ = tailScale ≥ 1`
   grw [pairCountScale, ← tailScale_pow_mul_identitySecondMoment_le, identitySecondMoment, sourceDim,
     ← S.N_prime.one_le, ← one_le_tailScale, ← NeZero.one_le (n := card S.BesselCoord)]
@@ -379,7 +378,6 @@ lemma prod_pairingBoundSq_le [S.IsAdmissible] (h_one_le : 1 ≤ S.termDiscNorm �
   have h_const : 0 ≤ S.mainSecondMoment /
     (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k)) :=
     div_nonneg mainSecondMoment_nonneg (mul_nonneg pairCountScale_pos.le (by positivity))
-  have h_norm : 0 < S.termDiscNorm γ := one_pos.trans_le h_one_le
   have h_exponent : 𝔰.k ≤ 10 ^ 5 * 𝔰.n ^ 4 + (𝔰.k - 1) := by
     grind [Nat.pow_pos (n := 4) 𝔰.ϱ.succ_pos]
   calc

@@ -162,15 +162,6 @@ meaningful when `a` has no constant term. -/
 noncomputable abbrev expSubst (a : MvPowerSeries σ ℂ_[p]) : MvPowerSeries σ ℂ_[p] :=
   (exp ℂ_[p]).subst a
 
-/-- Substituting a series `a` without constant term into `f` keeps the constant term of `f`. -/
-@[simp]
-lemma constantCoeff_subst_of_constantCoeff_eq_zero (a : MvPowerSeries σ ℂ_[p])
-    (ha : a.constantCoeff = 0) (f : ℂ_[p]⟦X⟧) :
-    (subst a f).constantCoeff = constantCoeff f := by
-  rw [constantCoeff_subst (.of_constantCoeff_zero ha),
-    finsum_eq_single _ 0 fun d hd ↦ by simp [ha, hd]]
-  simp
-
 /-- The functional equation `exp (a + b) = exp a * exp b` for series `a`, `b` without constant
 term. -/
 lemma expSubst_add (a : MvPowerSeries σ ℂ_[p]) {b : MvPowerSeries σ ℂ_[p]}

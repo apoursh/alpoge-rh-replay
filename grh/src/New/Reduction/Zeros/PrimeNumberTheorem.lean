@@ -231,13 +231,4 @@ theorem eventually_abs_primeRemainder_le (hd : d ≠ 2) (h_cop : q.Coprime d) (B
   filter_upwards [tendsto_log_atTop.eventually h_bound, eventually_gt_atTop 0] with y hy hy_pos
   rwa [Real.exp_log hy_pos] at hy
 
-/-- For an odd prime `d` and `q` prime to `d` the remainder `primeRemainder d q` tends to `0` at
-infinity. Thus the constant `c_q = re (logDerivMean d q 1)` subtracted in it is the limit of
-`∑_{n ≤ y, n ≡ 1 mod q} Λ(n) (1 - (n/d)) (1/n - 1/y) - log y / φ(q)`. -/
-theorem tendsto_primeRemainder (hd : d ≠ 2) (h_cop : q.Coprime d) :
-    Tendsto (primeRemainder d q) atTop (𝓝 0) := by
-  have h_le : ∀ᶠ y : ℝ in atTop, ‖primeRemainder d q y‖ ≤ 1 / y.log := by
-    simpa only [pow_one, Real.norm_eq_abs] using eventually_abs_primeRemainder_le hd h_cop 1
-  exact squeeze_zero_norm' h_le (tendsto_log_atTop.const_div_atTop 1)
-
 end New

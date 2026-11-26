@@ -365,11 +365,8 @@ lemma projSpace.exists_relative_point_class :
 `thickeningOver.map f` sends `[x]` to `[tilt.map f x]`. -/
 private lemma thickeningOver.teichmullerLift_map {c d : PadicTest} (f : c ⟶ d) (x : tilt.obj c) :
     teichmullerLift d (tilt.map f x) = thickeningOver.map f (teichmullerLift c x) := by
-  -- `with_unfolding_all`: only then is `thickeningOver.map f` seen as a map of localizations,
-  -- which sends `[x]` to `[tilt.map f x]` by `WittVector.map_teichmuller`.
-  with_unfolding_all
-    exact congr(.mk _ $(.symm ((IsLocalization.map_eq (powers_le_comap_powers ..) _).trans
-      (congrArg _ (map_teichmuller ..)))))
+  exact congr(.mk _ $(.symm ((IsLocalization.map_eq (powers_le_comap_powers ..) _).trans
+    (congrArg _ (map_teichmuller ..)))))
 
 /-- The Teichmüller coordinate. For a `p`-adic test with ring `R`, a point `t` of the perfect disc
 over the tilt is an `O♭`-algebra map `O♭[ℚ≥0] → R♭` with coordinate `u = t (T ^ 1)`; it goes to the

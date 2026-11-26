@@ -335,11 +335,6 @@ namespace IntegralPlace.IsLargeLatticeData
 
 variable [h : IsLargeLatticeData F]
 
-/-- The compact set `F.boxSet` of a large lattice datum is the integral unitary group. -/
-theorem box_eq : F.boxSet = unitaryLevel integers 1 T.splitGram := by
-  obtain ⟨-, h_box, -⟩ := h.volume_le_and_boxSet_closePairs_positions_eq
-  exact h_box
-
 /-- For a large lattice datum `F` (hypothesis `IsLargeLatticeData F`), a subgroup `S` of the
 integral unitary group `unitaryLevel integers 1 T.splitGram` has finite measure `F.groupMeasure S`,
 for the convolution measure `F.groupMeasure` on the unitary group. -/
@@ -400,7 +395,7 @@ theorem isCut_besselVector : F.IsCut Z.besselVector := by
     obtain ⟨u, hu, -, -, hux, -⟩ : ∃ u ∈ T.besselU, ∃ v ∈ T.besselU,
         u * x ∈ unitaryLevel integers 1 T.splitGram ∧ (u * x)⁻¹ * (v * x) ∈ F.congruenceSubgroup :=
       exists_mem_congruenceSubgroup_of_inner_ne_zero Z (inner_self_ne_zero.2 hx)
-    exact ⟨u, hu, box_eq.ge hux⟩
+    exact ⟨u, hu, boxSet_eq.ge hux⟩
   exact { toIsBoundedMeasurable := ⟨h_meas, _,
     h_bdd⟩, map_unipotent_mul := h_law, exists_mul_mem_box := h_supp }
 
@@ -476,21 +471,6 @@ theorem unipotentMass_mul_inner_besselVector (y x : T.G) :
   rw [integral_indicator_const _ (hS_meas c), Measure.real, h_mass, dirac_apply_of_mem h_one,
     mul_one]
   simp [a, Complex.real_smul]
-
-/-- For a large lattice datum `F` and a group `Z` with K(g) ≤ Z ≤ K, the Haar measure of `Z` is the
-number of cosets of K(g) = `F.congruenceSubgroup` in `Z` times the measure of K(g). -/
-theorem card_cosets_mul_groupMeasure :
-    card Z.Cosets * F.groupMeasure F.congruenceSubgroup = F.groupMeasure Z := by
-  obtain ⟨h_lower, h_upper⟩ : F.congruenceSubgroup ≤ Z.val ∧ Z.val ≤ unitaryLevel integers 1
-    T.splitGram :=
-    Z.prop
-  have h_compact : IsCompact (Z.val : Set T.G) :=
-    unitaryLevel_open_compact.2.of_isClosed_subset (Z.val.isClosed_of_isOpen Z.isOpen) h_upper
-  have h_card : card Z.Cosets = F.congruenceSubgroup.relIndex Z.val := by
-    rw [← Nat.card_eq_fintype_card]
-    exact Nat.card_congr (quotientRightRelEquivQuotientLeftRel _)
-  rw [h_card, ← relIndex_mul_measure_inf h_compact unitaryLevel_open_compact.1,
-    inf_of_le_left h_lower]
 
 /-- For a large lattice datum `F` and a group `Z` with K(g) ≤ Z ≤ K, the set of `u` with `u y ∈ Z`
 has mass at most one for the convolution of the measures `heisenbergMeasure`, which is carried by
@@ -599,7 +579,7 @@ theorem lintegral_inner_besselVector_sq_mul_le (x : T.G) :
         v * x ∈ unitaryLevel integers 1 T.splitGram ∧ (v * x)⁻¹ * (w * y) ∈ F.congruenceSubgroup :=
       exists_mem_congruenceSubgroup_of_inner_ne_zero Z hy
     refine ⟨u * v⁻¹ * w, mul_mem (mul_mem hu (inv_mem hv)) hw, ?_⟩
-    simpa [mul_assoc] using conj_mem_unitaryLevel (box_eq.le hux) h_close
+    simpa [mul_assoc] using conj_mem_unitaryLevel (boxSet_eq.le hux) h_close
   have h_bound (y : T.G) :
       ‖⟪Z.besselVector x, Z.besselVector y⟫_ℂ‖ₑ ^ 2 * F.unipotentMass ≤
         S.indicator (fun _ ↦ ‖Z.besselVector x‖ₑ ^ 2) y := by

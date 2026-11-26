@@ -754,7 +754,6 @@ def gauge (α : Aˣ := 1) (hα : α.1 ∈ integers := by simp)
                      (h.idealZeta_mul_inv_modulus_pow_le hα (by simp only [blockRank]; nlinarith))⟩
   exists_commonBound _ hx _ hz := h.exists_isCommonBound hα (fun _ ↦ rfl) hx hz
 
-
 include h in
 /-- At a large lattice datum `F`, let `g` be an integral self-conjugate unit of `A`, `a < 𝔰.ϱ`, and
 `S` a subgroup of the unipotent group `unipotentBelow a` of the floors below `a`. Some `u ∈ S` moves

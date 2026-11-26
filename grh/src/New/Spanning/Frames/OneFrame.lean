@@ -570,7 +570,6 @@ lemma Gauge.exists_factor_cutSquare_le (Γ : Gauge F) [F.groupMeasure.IsHaarMeas
         (∏ a ∈ range 𝔰.ϱ, Γ.floorConst a) *
           ∫⁻ g : T.G, ∫⁻ y : T.G, ‖k g y‖ₑ ^ 2 ∂F.quotientMeasureFrom 0 ∂F.quotientMeasureFrom
             0 := by
-  have h_meas (l : ℕ) : Measurable ↿(Γ.cutSquare k l) := Γ.measurable_cutSquare hK l
   induction hl using Nat.decreasingInduction with
   | self =>
     refine ⟨F.quotientMeasureFrom 0, inferInstance, by
@@ -629,7 +628,6 @@ theorem Gauge.lintegral_weightedSquare_le (Γ : Gauge F) [F.groupMeasure.IsHaarM
   -- Put `x = g⁻¹ ν y` with `ν` in the unipotent group of the first `l` floors. The modulus of the
   -- correlation does not depend on `ν`, and the weight has bounded integral over `ν`.
   have h_positions : MeasurableSet Γ.positionsOfSize := Γ.measurableSet_positionsOfSize
-  have h_meas : Measurable ↿(Γ.cutSquare k l) := Γ.measurable_cutSquare hK l
   obtain ⟨ρ, hρ, h_factor, h_mass⟩ := Γ.exists_factor_cutSquare_le hK hjl hl.step
   grw [← h_mass, lintegral_lintegral_swap (by fun_prop), ← lintegral_const_mul _ (by fun_prop)]
   gcongr with g

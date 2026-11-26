@@ -81,7 +81,6 @@ lemma abs_descentPair_weight_add_liftWeight_le (j : ℕ) (σ : D.E →+* ℂ) {q
     |cmSign σ * u + D.liftWeight j (InfinitePlace.mk σ)| ≤ D.t := by
   -- The left side is `|± t / 2 - targetParameter q|`, with `|targetParameter q| ≤ k / 2` and
   -- `k ≤ t`.
-  have hk_le : D.k ≤ D.t := D.k_le_r.trans (Nat.le_of_add_right_le D.r_add_six_le_t)
   have hσ : (cmSign σ : ℤ) = 1 ∨ (cmSign σ : ℤ) = -1 := Int.isUnit_iff.1 (cmSign σ).isUnit
   rw [targetParameter_eq, ite_eq_left hq] at hu
   grind

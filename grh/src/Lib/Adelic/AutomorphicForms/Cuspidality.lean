@@ -739,8 +739,7 @@ lemma exists_norm_sub_le_half (he : IsCuspKernel B e) (j : ℕ) : ∃ δ₀ : �
     · exact ⟨1, Metric.mem_closedBall_self zero_le_one, v, subset_closure h_right, one_mul v⟩
   calc ‖f (g * (u, 1)) - f g‖ = ‖realConv α f (g * (u, 1)) - realConv α f g‖ := by rw [h_fix_α]
     _ ≤ (∫ x : GInf E s, ‖α (u⁻¹ * x) - α x‖) * (C * c ^ j) :=
-        norm_realConv_mul_sub_le (.of_continuous ⟨T, h_bound⟩ h_cont) α.integrable g u
-          (by positivity) h_le
+        norm_realConv_mul_sub_le (.of_continuous ⟨T, h_bound⟩ h_cont) α.integrable g u h_le
     _ ≤ (c ^ j)⁻¹ / 2 * (C * c ^ j) := by grw [h_translate (h_near.trans inf_le_left)]
     _ = C / 2 := by field_simp
 

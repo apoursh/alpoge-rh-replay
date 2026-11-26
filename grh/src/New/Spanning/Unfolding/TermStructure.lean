@@ -375,13 +375,6 @@ lemma HasCellRank.linkedX₀_eq_top {j : Fin (𝔰.ϱ + 2)} (h_rank : S.HasCellR
   rw [mem_linkedX₀, h_link]
   exact (mul_eq_zero_iff_left (right_ne_zero_of_mul_eq_one hζ)).1 hγy_z
 
-/-- Let `E` contain a primitive root of unity of order `5040`. If `γ` agrees and
-`gr(γ) = S.termDisc γ` vanishes, then the link of `γ` maps all of `X₀` into `X₀`, that is,
-`X₀^γ = X₀`. -/
-theorem CharsAgree.linkedX₀_eq_top [HasPrimitiveRoot5040 E] (h_agree : S.CharsAgree γ)
-    (h_disc : S.termDisc γ = 0) : linkedX₀ γ = ⊤ :=
-  h_agree.exists_hasCellRank h_disc |>.elim fun _ h_rank ↦ h_rank.linkedX₀_eq_top h_disc
-
 /-- If `gr(γ) = S.termDisc γ` is not zero, then the span `A⁺` of the frame `e_1, …, e_ϱ, z_N` and
 the span `γ A⁺` of its image have the intersection `0`. -/
 theorem disjoint_colSpan_frameImage (h_disc : S.termDisc γ ≠ 0) :
@@ -617,14 +610,6 @@ lemma CharsAgree.disjoint_flagSpan_coe {j : Fin (𝔰.ϱ + 2)} [HasPrimitiveRoot
   obtain ⟨l, hl, -, hx'l : x' l ≠ 0⟩ := h_agree.exists_coords_ne_zero_of_common_vector h_least hx
     hx_ne
   exact hx'l (hx' l hl)
-
-/-- Let `gr(γ) = S.termDisc γ` vanish and let `γ` have the cell rank `j`. Then `A = A_{≤j} + I_γ`,
-where `A = ⟨e_1, …, e_ϱ⟩`, `A_{≤j} = ⟨e_1, …, e_j⟩` and `I_γ = A ∩ γ A`. -/
-theorem HasCellRank.flagSpan_one_sup_commonIsotropic {j : Fin (𝔰.ϱ + 2)}
-    (h_rank : S.HasCellRank j γ) (h_disc : S.termDisc γ = 0) :
-    flagSpan 1 j ⊔ commonIsotropic γ = isotropicSpan 1 :=
-  h_rank.normOnePairOccursFrom.flagSpan_one_sup_commonIsotropic
-    (h_rank.le_of_termDisc_eq_zero h_disc)
 
 /-- Let `gr(γ) = S.termDisc γ` vanish and let `γ` have the cell rank `j`. Then
 `γ A = γ A_{≤j} + I_γ`, where `A = ⟨e_1, …, e_ϱ⟩`, `A_{≤j} = ⟨e_1, …, e_j⟩` and `I_γ = A ∩ γ A`. -/

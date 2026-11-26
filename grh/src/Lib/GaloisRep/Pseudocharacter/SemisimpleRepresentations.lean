@@ -5,6 +5,7 @@ public import Lib.General.LinearAlgebra.Eigenvalues
 public import Lib.General.LinearAlgebra.MatrixNormBounds
 public import Lib.General.NumberTheory.CoefficientRings
 public import Lib.PadicComparison.Descent.TestCategory
+public import TauCeti.LinearAlgebra.Trace.Idempotent
 
 /-!
 # Semisimple representations: conjugacy, continuity, cancellation and stable lattices
@@ -119,18 +120,12 @@ variable {p : Matrix n n k} (f : PiMatrix k d →ₐ[k] Matrix N N k)
   (f' : PiMatrix k d →ₐ[k] Matrix n n k) [Ring B] [Group H] [Algebra k B] [Module.Finite k B]
   (ρ : G →* B)
 
-lemma eq_zero_iff_trace_eq_zero_of_isIdempotentElem [CharZero k] [IsAlgClosed k]
-    (hp : IsIdempotentElem p) :
-    p = 0 ↔ p.trace = 0 := by
-  have h_rank : p.rank = 0 ↔ p = 0 := by
-    rw [← finrank_range_mulVecLin, finrank_eq_zero, range_eq_bot, ← toLin'_apply', toLin'.map_eq_zero_iff]
-  rw [trace_eq_rank_of_isIdempotentElem hp, Nat.cast_eq_zero, h_rank]
-
 /-- The trace of an idempotent matrix is its rank. In characteristic zero, the matrix is zero
 exactly when its trace is zero. -/
 lemma trace_of_idempotent [CharZero k] [IsAlgClosed k] (hp : IsIdempotentElem p) :
     p.trace = p.rank ∧ (p = 0 ↔ p.trace = 0) :=
-  ⟨trace_eq_rank_of_isIdempotentElem hp, eq_zero_iff_trace_eq_zero_of_isIdempotentElem hp⟩
+  ⟨trace_eq_rank_of_isIdempotentElem hp, fun h ↦ by simp [h],
+    Matrix.IsIdempotentElem.eq_zero_of_trace_eq_zero hp⟩
 
 attribute [local ext] ext_linearMap
 
@@ -161,7 +156,7 @@ lemma IsTraceNondeg.of_span_piMatrix [CharZero k] [IsAlgClosed k]
       LinearMap.ext_on_range s_span fun g ↦ by simp [hr, Matrix.trace_mul_comm _ (f' a), h_trace]
     simpa using LinearMap.congr_fun h_lin y
   have idem_zero : f' (c * a) = 0 :=
-    (eq_zero_iff_trace_eq_zero_of_isIdempotentElem (idem.map f')).2 (trace_zero c)
+    Matrix.IsIdempotentElem.eq_zero_of_trace_eq_zero (idem.map f') (trace_zero c)
   rw [← hb, map_mul, idem_zero, mul_zero]
 
 /-- Let `k` be an algebraically closed field of characteristic zero, and let `s : G →* PiMatrix k d`

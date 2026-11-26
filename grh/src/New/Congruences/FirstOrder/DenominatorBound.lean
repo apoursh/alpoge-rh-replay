@@ -602,7 +602,8 @@ lemma exists_ellVal_le_and_diagOp_mem_ellIntegralForms {P : Parameters} {D : Dat
   -- `N x` is the twist of `x.galRep` by `normalizingAvatar O`, which is continuous, so integral.
   let a : AbsGal D →* EllAdicIntegers :=
     ((coeHom (PadicAlgCl ℓ)).comp (normalizingAvatar O)).codRestrict (intQpBar ℓ)
-      fun g ↦ (norm_eq_one_of_continuous (by fun_prop) g).le
+      fun g ↦ (ContinuousMonoidHom.norm_apply_eq_one_of_compactSpace
+        ⟨normalizingAvatar O, (by fun_prop : Continuous (normalizingAvatar O))⟩ g).le
   have h_twist : BaseLevel.IsGalRepTwist N a := fun _ _ ↦ rfl
   have h_tame (j : J) : a (Q.frobData j).isPlaceOver.tameGenerator = 1 := by
     obtain ⟨h_notMem, -⟩ := h_tri.isTameGeneratorFamily j

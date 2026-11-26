@@ -269,7 +269,7 @@ def LeastValLE (C : CMLattice d) (μ : J → X → ℂ_[p]) (m : J → ℕ) (n :
 /-- The series `Θ = ∏ θ(μ_j z) ^ m j` has constant term `1`, because `θ(0) = 1`. -/
 lemma constantCoeff_thetaProd {C : CMLattice d} {μ : J → X → ℂ_[p]} {m : J → ℕ} :
     constantCoeff (C.thetaProd μ m) = 1 := by
-  simp [thetaProd]
+  simp [thetaProd, PowerSeries.constantCoeff_subst_of_constantCoeff_zero]
 
 /-- The series `Θ = ∏ θ(μ_j z) ^ m j` has lowest term `1` for the total degree. -/
 lemma isLowestTerm_thetaProd (C : CMLattice d) (μ : J → X → ℂ_[p]) (m : J → ℕ) :
@@ -602,13 +602,15 @@ lemma rescale_mem_range_seriesToCp_of_mem_multiSeriesRing (C : CMLattice d) {μ 
     rw [rescale_subst_linearSeries, ← hy₀, PowerSeries.map_subst (hasSubst_linearSeries _)]
     simp [linearSeries, smul_eq_C_mul, PowerSeries.map]
   have hY₀ (i : J) : constantCoeff (Y i) = 0 := Subtype.ext <|
-    show constantCoeff (seriesToCp (Y i)) = 0 by simp [hY, rescale_subst_linearSeries]
+    show constantCoeff (seriesToCp (Y i)) = 0 by
+      simp [hY, rescale_subst_linearSeries, PowerSeries.constantCoeff_subst_of_constantCoeff_zero]
   refine ⟨g.subst Y, ?_⟩
   -- both sides substitute the series `y(μ_i ϖ z)` into `g`
   rw [map_subst (hasSubst_of_constantCoeff_zero hY₀), RingHom.comp_apply]
   simp only [hY, rescale_eq_subst, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, coe_substAlgHom]
   -- the two substituted families agree by definition of composition
-  exact (subst_comp_subst_apply (hasSubst_of_constantCoeff_zero fun i ↦ by simp) (.smul_X _) _).symm
+  exact (subst_comp_subst_apply (hasSubst_of_constantCoeff_zero fun i ↦ by
+    simp [PowerSeries.constantCoeff_subst_of_constantCoeff_zero]) (.smul_X _) _).symm
 
 end CMLattice
 

@@ -1,5 +1,5 @@
 > **In this repository.** This `grh/` folder is a copy of `main` of
-> https://github.com/leanprover-community/riemann-hypothesis at commit `de0d3a3f06` (Lean v4.37.0-rc1,
+> https://github.com/leanprover-community/riemann-hypothesis at commit `a7231db2ec` (Lean v4.37.0-rc1,
 > `module` system), the readable edition of https://github.com/lsernau/grh-lean being optimized
 > upstream. Changes made here are ported upstream; you can also open PRs upstream directly.
 > See [../auto-research.md](../auto-research.md).

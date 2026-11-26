@@ -97,7 +97,7 @@ lemma rescale_smul {a c : ℂ_[p]} {f : ℂ_[p]⟦X⟧} : rescale a (c • f) = 
 @[simp]
 lemma constantCoeff_subst_eq {T : ℂ_[p]⟦X⟧} (hT₀ : T.constantCoeff = 0) {f : ℂ_[p]⟦X⟧} :
     constantCoeff (f.subst T) = f.constantCoeff :=
-  constantCoeff_subst_of_constantCoeff_eq_zero T hT₀ f
+  PowerSeries.constantCoeff_subst_of_constantCoeff_zero hT₀ f
 
 /-- The linear coefficient of `f(T)` is the product of those of `f` and `T`, if `T(0) = 0`. -/
 lemma coeff_one_subst {T : ℂ_[p]⟦X⟧} (hT₀ : T.constantCoeff = 0) {f : ℂ_[p]⟦X⟧} :
