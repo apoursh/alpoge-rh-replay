@@ -9,7 +9,7 @@
 | | v4.35.0 (as published, `72fead1`) | v4.37.0-rc1 port |
 |---|---|---|
 | `grh-compact/` (~76k lines, 794 files) | **builds**, panic-free, 0 `sorry`; `#print axioms` = `propext`, `Classical.choice`, `Quot.sound` | in progress: 47 errors in 15 files after the first fix |
-| `grh/` (~300k lines, 803 files) | **builds**, same axioms | in progress: 41 errors at first build, about half fixed |
+| `grh/` (~300k lines, 803 files) | **builds**, same axioms | **builds** on upstream `main` (port done upstream; synced here at `61d870d08d`) |
 | `lake comparator` | running | after the port is green |
 | `con-leche --olean` | running | `--compare` needs con-leche's compare branch ported to 4.37 (in progress) |
 
