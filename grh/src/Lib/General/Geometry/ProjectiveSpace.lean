@@ -1,5 +1,12 @@
 module
 
+public import TauCeti.RingTheory.MvPolynomial.Homogeneous
+public import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Proper
+public import Mathlib.AlgebraicGeometry.ZariskisMainTheorem
+public import Mathlib.RingTheory.Henselian
+public import Mathlib.RingTheory.RegularLocalRing.Defs
+public import Mathlib.RingTheory.SimpleRing.Principal
+public import Mathlib.RingTheory.TotallySplit
 public import Lib.General.Geometry.LineBundles
 
 /-!
@@ -61,18 +68,6 @@ variable {X Y S : Scheme} {ι κ : Type} {A : CommRingCat} {i j k l : ι} {L M :
   {N : LineBundle X κ} {t : Spec A ⟶ X} {v : ι → A} {p : Y ⟶ X} {s : X ⟶ S}
 
 attribute [local instance] gradedAlgebra
-
-/-- The value of a homogeneous polynomial `a` of degree `n`, with coefficients mapped by `f`, at the
-scaled point `c • v` is `c ^ n` times its value at `v`. -/
-lemma eval₂_mul_of_isHomogeneous {σ R S : Type*} [CommRing R] [CommRing S] {n : ℕ}
-    {a : MvPolynomial σ R} (ha : a.IsHomogeneous n) (f : R →+* S) (c : S) (v : σ → S) :
-    eval₂ f (fun i : σ ↦ c * v i) a = c ^ n * eval₂ f v a := by
-  rw [eval₂_eq, eval₂_eq, mul_sum]
-  refine sum_congr rfl fun d hd ↦ ?_
-  -- Each monomial `d` of `a` has degree `n`.
-  have h_scale : ∏ i ∈ d.support, (c * v i) ^ d i = c ^ n * ∏ i ∈ d.support, v i ^ d i := by
-    simp only [mul_pow, prod_mul_distrib, prod_pow_eq_pow_sum, ← ha.degree_eq_sum_deg_support hd]
-  rw [h_scale, mul_left_comm]
 
 /-! ### Projective space and its charts -/
 
@@ -259,7 +254,7 @@ lemma IsLinearSystem.pull (p : Y ⟶ X) (hL : L.IsLinearSystem) : (L.pull p).IsL
 
 /-- The products v_i w_k of homogeneous coordinates v and w of a point t for L and for N are
 homogeneous coordinates of t for the tensor product of L and N. -/
-lemma isHomogeneousCoords_mul_prod (hv : L.IsHomogeneousCoords t v) {w : κ → A}
+lemma IsHomogeneousCoords.mul (hv : L.IsHomogeneousCoords t v) {w : κ → A}
     (hw : N.IsHomogeneousCoords t w) :
     (L.mul N).IsHomogeneousCoords t fun i : ι × κ ↦ v i.1 * w i.2 := by
   refine .intro (fun a ↦ ?_) fun a k h_unit ↦ ?_
@@ -279,8 +274,7 @@ lemma IsLinearSystem.mul (hL : L.IsLinearSystem) (hN : N.IsLinearSystem) :
     · simp [hN.transition_eq_zero j.2 hNt]
   isHomogeneousCoords_transition {A i t} ht := by
     obtain ⟨hLt, hNt⟩ := landsIn_mul_opens_iff.1 ht
-    exact isHomogeneousCoords_mul_prod (hL.isHomogeneousCoords_transition hLt)
-      (hN.isHomogeneousCoords_transition hNt)
+    exact (hL.isHomogeneousCoords_transition hLt).mul (hN.isHomogeneousCoords_transition hNt)
 
 namespace IsHomogeneousCoords
 
@@ -310,12 +304,6 @@ lemma map (hv : L.IsHomogeneousCoords t v) {R : CommRingCat} (hL : L.IsLinearSys
     funext fun j ↦ by simp [hL.isRegularOn_transition i j φ t h_chart, h_scale j]
   rw [h_eq]
   exact (hL.isHomogeneousCoords_transition (h_chart.comp _)).smul (hi.map φ.hom)
-
-/-- The products of homogeneous coordinates of a point for L and for N are homogeneous coordinates
-of it for the tensor product of L and N. -/
-lemma mul (hv : L.IsHomogeneousCoords t v) {w : κ → A} (hw : N.IsHomogeneousCoords t w) :
-    (L.mul N).IsHomogeneousCoords t fun i : ι × κ ↦ v i.1 * w i.2 :=
-      isHomogeneousCoords_mul_prod hv hw
 
 lemma exists_ne_zero [IsLocalRing A] (hv : L.IsHomogeneousCoords t v) : ∃ i : ι, v i ≠ 0 := by
   obtain ⟨i, hi⟩ := L.exists_landsIn t
@@ -413,11 +401,11 @@ lemma _root_.New.ProjSpace.surjective_eval₂Hom_coordFraction (i : ι) :
   have h_frac (j : ι) : φ (X i) * (coordFraction i j).val = φ (X j) := by simp [φ, mk_eq_mk']
   have h_clear (f : ℤ →+* Localization.Away (X i : MvPolynomial ι ℤ)) :
       φ (X i) ^ n * eval₂ f (fun j : ι ↦ (coordFraction i j).val) a = φ a := by
-    simp only [← eval₂_mul_of_isHomogeneous (a := a) (n := n) (by simpa using ha), h_frac]
+    simp only [← IsHomogeneous.eval₂_const_mul (p := a) (n := n) (by simpa using ha), h_frac]
     exact eval₂Hom_X f φ a
   refine ⟨a, val_injective _ ?_⟩
   rw [← HomogeneousLocalization.algebraMap_apply, map_eval₂Hom]
-  simpa [φ, mk_eq_mk', eq_mk'_iff_mul_eq, mul_comm] using h_clear _
+  simpa [mk_eq_mk', eq_mk'_iff_mul_eq, mul_comm] using h_clear _
 
 /-- Two ring maps from the sections over the chart D₊(X_i) that agree on all X_j/X_i are equal. -/
 lemma _root_.New.ProjSpace.hom_ext_of_coordSection_eq

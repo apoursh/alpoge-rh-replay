@@ -67,7 +67,7 @@ lemma log_product_formula {M : ℕ} {q : ℚ} (h_num_lt : q.num.natAbs < M) (h_d
   have log_q : log q = log q.num.natAbs - log q.den := by simp [q.cast_def, log_div, hq]
   have log_norm (p : ℕ) :
       log (padicNorm p q) = (padicValNat p q.den - padicValNat p q.num.natAbs) * log p := by
-    simp [padicNorm.eq_zpow_of_nonzero hq, padicValRat, padicValInt, Nat.padicValNat_def]
+    simp [padicNorm.eq_zpow_of_ne_zero hq, padicValRat, padicValInt, Nat.padicValNat_def]
   rw [log_q, log_nat (by simpa using hq) h_num_lt, log_nat q.den_nz h_den_lt]
   simp [log_norm, sub_mul]
 
@@ -155,7 +155,7 @@ lemma mul (hy : HeightLe c y) (hy' : HeightLe c' y') : HeightLe (c + c') (y * y'
         mul_le_mul (he ι) (he' ι) (norm_nonneg _) (by positivity)
       _ = ((ι.prime : ℕ) : ℝ) ^ (e + e') ι.prime := (rpow_add (mod_cast ι.prime.prop.pos) _ _).symm
   · simp only [Pi.add_apply, add_mul, sum_add_distrib]
-    linarith [h_sum T hT, h_sum' T hT]
+    linarith only [h_sum T hT, h_sum' T hT]
 
 /-- Heights add in finite products: if each `y i`, a family indexed by the pairs `ι` of a prime `l`
 and an isomorphism `ι.iso : ℂ ≃+* ℚ̄_l`, has height at most `c i`, then the pointwise product of the
@@ -231,7 +231,7 @@ lemma neg_le_of_norm_map_le {z : ℂ} (h_height : HeightLe c fun _ : PrimePadicI
   -- The product of the constant families `z⁻¹` and `z` is the constant family `1`.
   have h_one : HeightLe (c' + c) 1 := by
     simpa [Pi.mul_def, Pi.one_def, hz] using (inv_const hz h_conj).mul h_height
-  linarith [h_one.nonneg_of_one]
+  linarith only [h_one.nonneg_of_one]
 
 end HeightLe
 

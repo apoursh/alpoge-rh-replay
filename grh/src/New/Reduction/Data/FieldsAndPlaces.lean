@@ -1,5 +1,8 @@
 module
 
+import TauCeti.NumberTheory.Cyclotomic.Irreducible
+public import Mathlib.Algebra.Polynomial.Eval.Irreducible
+public import Mathlib.NumberTheory.Cyclotomic.Gal
 public import Lib.ClassField.Places.DecompositionCyclotomic
 public import Lib.General.NumberTheory.ImaginaryQuadraticField
 
@@ -222,17 +225,11 @@ lemma irreducible_cyclotomic : Irreducible (cyclotomic (P.q₁ s) P.K) := by
       IsCyclotomicExtension.Rat.finrank P.d M]
     exact totient_mul_totient_le_finrank _ _ (P.coprime_q₁_d s) hζ
       ((zeta_spec P.d ℚ M).map_of_injective (algebraMap M L).injective)
-  have h_finrank : Module.finrank M L = (minpoly M (zeta (P.q₁ s) M L)).natDegree := by
-    simp [(hζ.powerBasis M).finrank]
-  -- Hence the cyclotomic polynomial is the minimal polynomial of `ζ_{q₁}` over `M`.
-  have h_assoc : Associated (minpoly M (zeta (P.q₁ s) M L)) (cyclotomic (P.q₁ s) M) := by
-    apply associated_of_dvd_of_natDegree_le (minpoly.dvd_iff.2 (aeval_zeta ..)) (monic ..).ne_zero
-    rw [natDegree_cyclotomic, ← h_finrank]
-    exact Nat.le_of_mul_le_mul_left h_deg (Nat.totient_pos.2 (NeZero.pos P.d))
   -- Irreducibility descends along the embedding of `K` in `M` given by the Gauss sum.
   refine (monic (P.q₁ s) P.K).irreducible_of_irreducible_map
     (QuadField.embOfPrimitiveRoot P.d (zeta_spec P.d ℚ M)).toRingHom (cyclotomic (P.q₁ s) P.K) ?_
-  simpa using h_assoc.irreducible (minpoly.irreducible (.of_finite M _))
+  simpa using IsCyclotomicExtension.irreducible_cyclotomic_of_totient_le_finrank M L
+    (Nat.le_of_mul_le_mul_left h_deg (Nat.totient_pos.2 (NeZero.pos P.d)))
 
 /-- A chosen ℚ-algebra embedding of E = K(ζ), ζ of order q₁, into the cyclotomic field
 ℚ(ζ_{q₁d}). -/
@@ -412,7 +409,7 @@ lemma placeMulEquiv_placeOfInt {ν : ℤ} (h_cop : IsCoprime ν P.q₀) :
   have h_two : IsCoprime 2 ν := h_cop.symm.mono (mod_cast P.two_dvd_q₀) dvd_rfl
   have h_three : IsCoprime 3 ν := h_cop.symm.mono (mod_cast P.three_dvd_q₀) dvd_rfl
   have h_unit : IsUnit (ν : ZMod (P.q₁ s)) := by
-    simp [towerDeg, coe_int_isUnit_iff_isCoprime, IsCoprime.mul_left_iff, IsCoprime.pow_left,
+    simp [towerDeg, isUnit_intCast_iff_isCoprime, IsCoprime.mul_left_iff, IsCoprime.pow_left,
       h_cop.symm, h_two, h_three]
   simp [placeOfInt, h_unit]
 
@@ -467,7 +464,7 @@ lemma placeClass_placeOfInt_eq_neg_one_iff {ν : ℤ} (h_dvd : P.q₀ ∣ P.q₁
     split_ifs at h_val
     · exact h_val
     · exact absurd h_val (by simpa using P.d_pow_ne_neg_one 0)
-  · have h_cop : IsCoprime ν P.q₀ := ((coe_int_isUnit_iff_isCoprime ..).1 (by simp [h])).symm
+  · have h_cop : IsCoprime ν P.q₀ := ((isUnit_intCast_iff_isCoprime ..).1 (by simp [h])).symm
     simp [Units.ext_iff, placeClass_placeOfInt h_cop, h]
 
 end New.Parameters

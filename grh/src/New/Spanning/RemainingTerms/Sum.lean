@@ -86,6 +86,18 @@ lemma IsNearPairOverAgreeingBlock.pairDiscriminant_sq_le {E : Type} [Field E] [C
   simpa only [ite_self, Nat.cast_one, mul_one] using
     Filling.pairDiscriminant_sq_le h_agrees (one_le_meetNorm s) h_over h_over' h_cell h_cell'
 
+-- Absorb the congruence gain into the discriminant before comparing the two gauges.
+private lemma IsNearPairOverAgreeingBlock.scaled_pairDiscriminant_sq_le
+    {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S : Filling E 𝔰} [HasPrimitiveRoot5040 E]
+    {c c' : S.Classes} {γ γ' : S.G E}
+    (hq : S.IsNearPairOverAgreeingBlock c c' (γ, γ')) :
+    (S.pairDiscriminant c c' γ γ' * ((S.M : ℝ) / 2) ^ (S.linkCorank γ γ' * numInfPlaces E)) ^ 2 ≤
+      S.levelGauge (S.cellRank γ) c c' γ * S.levelGauge (S.cellRank γ') c c' γ' := by
+  have hM : 2 ≤ S.M := two_le_M
+  rw [mul_pow, ← pow_mul, ← le_div_iff₀ (by positivity), div_eq_mul_inv, ← inv_pow, inv_div,
+    mul_comm, Nat.mul_comm (_ * _) 2, ← Nat.mul_assoc]
+  exact hq.pairDiscriminant_sq_le
+
 /-- Let `S` be data of the filling theorem that satisfy the standing hypotheses `S.IsAdmissible`.
 Let `(γ, γ')` be a near pair over the classes `c`, `c'`. Its common lattice has corank at most `n³`
 and discriminant at most `S.discriminantBound = b ^ (n³ f)`. -/
@@ -101,41 +113,30 @@ lemma IsNearPairOverAgreeingBlock.corank_le_and_pairDiscriminant_le {E : Type} [
   set i : ℕ := S.linkCorank γ γ'
   set d : ℝ := S.pairDiscriminant c c' γ γ'
   have h_one_le_d : 1 ≤ d := hq.one_le_pairDiscriminant
-  have h_gain : d ^ 2 ≤ (2 / S.M) ^ (2 * i * numInfPlaces E) *
-      (S.levelGauge j c c' γ * S.levelGauge j' c c' γ') := hq.pairDiscriminant_sq_le
+  have h_gain := hq.scaled_pairDiscriminant_sq_le
   obtain ⟨⟨⟨h_near, -⟩, h_cell⟩, ⟨⟨h_near', -⟩, h_cell'⟩, s, -, h_over, h_over'⟩ := hq
   have h_corank : 𝔰.k ≤ finrank E (commonLink γ γ') + i + (j - 𝔰.ϱ) :=
     le_finrank_commonLink_add h_cell γ'
-  have h_gauge_pos' : 0 < S.levelGauge j' c c' γ' := levelGauge_pos h_over' h_cell'
-  have h_bound : 0 ≤ S.discriminantBound :=
-    h_gauge_pos'.le.trans (h_near'.levelGauge_le h_over' h_cell')
-  have hM : 2 ≤ S.M := two_le_M
+  have h_bound := (levelGauge_pos h_over' h_cell').le.trans (h_near'.levelGauge_le h_over' h_cell')
   have hb₂ : 2 ≤ S.b := two_le_b
-  have h_ratio : (2 / S.M : ℝ) ≤ (S.b ^ 18)⁻¹ := by
-    rw [div_le_iff₀ (by positivity), inv_mul_eq_div, le_div_iff₀ (by positivity)]
+  have h_ratio : S.b ^ 18 ≤ (S.M : ℝ) / 2 := by
+    rw [le_div_iff₀ (by positivity)]
     calc
-      2 * S.b ^ 18 ≤ S.b ^ 19 := by grw [hb₂, ← pow_succ']
+      S.b ^ 18 * 2 ≤ S.b ^ 19 := by grw [hb₂, ← pow_succ]
       _ ≤ (S.M : ℝ) := S.le_M
   have h_pow_mul_disc_le : S.b ^ (18 * i * numInfPlaces E) * d ≤ S.discriminantBound := by
-    refine le_of_sq_le_sq ?_ h_bound
-    calc
-      _ = d ^ 2 * (S.b ^ 18) ^ (2 * i * numInfPlaces E) := by ring
-      _ ≤ (S.b ^ 18)⁻¹ ^ (2 * i * numInfPlaces E) * (S.discriminantBound * S.discriminantBound) *
-          (S.b ^ 18) ^ (2 * i * numInfPlaces E) := by
-        grw [h_gain, h_near.levelGauge_le h_over h_cell,
-          h_near'.levelGauge_le h_over' h_cell', h_ratio]
-      _ = S.discriminantBound ^ 2 := by
-        rw [inv_pow]
-        field_simp
+    rw [Nat.mul_assoc, pow_mul, mul_comm]
+    grw [h_ratio]
+    apply le_of_sq_le_sq _ h_bound
+    rw [sq S.discriminantBound]
+    exact h_gain.trans (mul_le_mul (h_near.levelGauge_le h_over h_cell)
+      (h_near'.levelGauge_le h_over' h_cell') (levelGauge_pos h_over' h_cell').le h_bound)
   refine ⟨?_,
     (le_mul_of_one_le_left (by positivity) (one_le_pow₀ S.one_le_b)).trans h_pow_mul_disc_le⟩
   have h_exp : 18 * i * numInfPlaces E ≤ 𝔰.n ^ 3 * numInfPlaces E :=
     (pow_le_pow_iff_right₀ (by linarith : 1 < S.b)).1
       ((le_mul_of_one_le_right (by positivity) h_one_le_d).trans h_pow_mul_disc_le)
   have h_codim : 18 * i ≤ 𝔰.n ^ 3 := Nat.le_of_mul_le_mul_right h_exp NeZero.one_le
-  have h_rank_excess_le : j.val - 𝔰.ϱ ≤ 1 := by lia
-  have h_cube : 𝔰.n ≤ 𝔰.n ^ 3 := Nat.le_self_pow three_ne_zero _
-  have h_ϱ_large : 10 ^ 5 ≤ 𝔰.ϱ := S.ten_pow_five_le_varrho
   lia
 
 /-- A near pair (two near representative terms over one block whose `s` agrees) lies in
@@ -149,12 +150,11 @@ lemma IsNearPairOverAgreeingBlock.mem_boundedDiscNearPairs {E : Type} [Field E] 
     (Submodule.finrank_le _).trans (by simp)
   ⟨hq, Nat.add_sub_cancel' h_rank, hq.corank_le_and_pairDiscriminant_le.right⟩
 
-/-- Let `S` be data of the filling theorem that satisfy the standing hypotheses `S.IsAdmissible`.
-Let `c`, `c'` be classes and `γ` a rational point of cell rank `j = S.cellRank γ` whose gauge
+/-- Let `S` be data of the filling theorem and let `c`, `c'` be classes and `γ` a rational point of cell rank `j = S.cellRank γ` whose gauge
 `G = S.levelGauge j c c' γ` is positive. If the constant `S.cellRankSecondMoment j` is at most `D`,
 then the square of the size `S.termSize c c' γ` is at most `τ⁴ D / (n_p G ^ k)`. -/
 lemma termSize_sq_le {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S : Filling E 𝔰}
-    [S.IsAdmissible] {c c' : S.Classes} {γ : S.G E} {D : ℝ}
+    {c c' : S.Classes} {γ : S.G E} {D : ℝ}
     (h_gauge_pos : 0 < S.levelGauge (S.cellRank γ) c c' γ)
     (hD : S.cellRankSecondMoment (S.cellRank γ) ≤ D) :
     S.termSize c c' γ ^ 2 ≤
@@ -168,13 +168,13 @@ lemma termSize_sq_le {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S : Filling
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.univ in
-/-- Let `S` be data of the filling theorem that satisfy the standing hypotheses `S.IsAdmissible`.
+/-- Let `S` be data of the filling theorem.
 Let `(γ, γ')` be a near pair over the classes `c`, `c'` and `d` the discriminant of its common
 lattice `S.pairLattice`. Let `η > 0`. If `(d η)²` is at most the product of the two gauges and the
 constants `S.cellRankSecondMoment` of both cell ranks are at most `D`, then the product of the sizes
 `S.termSize` is at most `τ⁴ D η ^ (-k) d ^ (-k) / n_p`. -/
 lemma IsNearPairOverAgreeingBlock.termSize_mul_le {E : Type} [Field E] [CMType E]
-    {𝔰 : Shape} {S : Filling E 𝔰} [HasPrimitiveRoot5040 E] [S.IsAdmissible] {c c' : S.Classes}
+    {𝔰 : Shape} {S : Filling E 𝔰} [HasPrimitiveRoot5040 E] {c c' : S.Classes}
     {γ γ' : S.G E} (hq : S.IsNearPairOverAgreeingBlock c c' (γ, γ')) {η D : ℝ} (hη : 0 < η)
     (h_gain : (S.pairDiscriminant c c' γ γ' * η) ^ 2 ≤
       S.levelGauge (S.cellRank γ) c c' γ * S.levelGauge (S.cellRank γ') c c' γ')
@@ -227,14 +227,13 @@ lemma IsNearPairOverAgreeingBlock.ofReal_termSize_mul_le {E : Type} [Field E] [C
       B / (S.tailScale ^ (l + 2) * S.pairCountScale) :=
     calc
       _ = S.tailScale ^ (l + 6) * D / η ^ 𝔰.k / (S.tailScale ^ (l + 2) * S.pairCountScale) := by
-        field_simp
-        ring
+        field
       _ ≤ _ := by gcongr
   grw [← ofReal_mul' (by positivity), hq.termSize_mul_le hη h_gain hD hD', h_const]
 
 /-- The number `n³ + 1` of possible coranks is at most `τ = S.tailScale`. -/
-lemma cube_add_one_le_tailScale {E : Type} [Field E] [CMType E] {𝔰 : Shape} (S : Filling E 𝔰)
-    [S.IsAdmissible] : ((𝔰.n ^ 3 + 1 : ℕ) : ℝ) ≤ S.tailScale := by
+lemma cube_add_one_le_tailScale {E : Type} [Field E] [CMType E] {𝔰 : Shape} (S : Filling E 𝔰) :
+    ((𝔰.n ^ 3 + 1 : ℕ) : ℝ) ≤ S.tailScale := by
   have hb : 2 ≤ S.b := two_le_b
   calc
     _ = (𝔰.n : ℝ) ^ 3 + 1 := by norm_cast
@@ -295,8 +294,8 @@ lemma sum_termSize_mul_le {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S : Fi
       gcongr with c _ c' _
       -- Bound each pair by its weights, then extend the sum from `P c c'` to all pairs.
       simp only [_root_.tsum_subtype]
-      rw [← Summable.tsum_finsetSum fun _ _ ↦ ENNReal.summable]
-      refine (ENNReal.tsum_le_tsum fun q : P c c' ↦ h_pair c c' q q.property).trans ?_
+      rw [← Summable.tsum_finsetSum fun _ _ ↦ CompleteLattice.summable]
+      refine (tsum_le_tsum fun q : P c c' ↦ h_pair c c' q q.property).trans ?_
       exact tsum_comp_le_tsum_of_injective Subtype.val_injective fun q ↦
         ∑ l ∈ range (𝔰.n ^ 3 + 1), (S.boundedDiscNearPairs l c c').indicator (weight l c c') q
     _ = ∑ l ∈ range (𝔰.n ^ 3 + 1), ∑ c, ∑ c',
@@ -374,8 +373,7 @@ lemma pow_mul_mainSecondMoment_div_le {E : Type} [Field E] [CMType E] {𝔰 : Sh
     _ ≤ (S.tailScale ^ 4) ^ 2 * (S.b / S.b ^ 6) ^ m * S.identitySecondMoment := by gcongr
     _ = S.identitySecondMoment / (S.tailScale ^ 4) ^ 3 := by
       rw [tailScale_pow_four, div_pow]
-      field_simp
-      ring
+      field
     _ ≤ S.identitySecondMoment / S.tailScale ^ 10 := by
       grw [← pow_mul, pow_le_pow_right₀ hτ (by norm_num : 10 ≤ 4 * 3)]
 
@@ -411,8 +409,7 @@ theorem sum_termSize_mul_not_inSameLinkClass_le {E : Type} [Field E] [CMType E]
   set j : Fin (𝔰.ϱ + 2) := S.cellRank γ
   set j' : Fin (𝔰.ϱ + 2) := S.cellRank γ'
   set i : ℕ := S.linkCorank γ γ'
-  have h_gain : S.pairDiscriminant c c' γ γ' ^ 2 ≤ (2 / S.M) ^ (2 * i * numInfPlaces E) *
-      (S.levelGauge j c c' γ * S.levelGauge j' c c' γ') := hq.pairDiscriminant_sq_le
+  have h_gain := hq.scaled_pairDiscriminant_sq_le
   obtain ⟨⟨-, h_cell : S.HasCellRank j γ⟩, ⟨-, h_cell' : S.HasCellRank j' γ'⟩, -⟩ := hq
   have h_corank : 𝔰.k ≤ finrank E (commonLink γ γ') + i + (j - 𝔰.ϱ) :=
     le_finrank_commonLink_add h_cell γ'
@@ -428,7 +425,7 @@ theorem sum_termSize_mul_not_inSameLinkClass_le {E : Type} [Field E] [CMType E]
       h_cell'.lt_iff_termDisc_ne_zero.1 h_top (h_both.1 h_disc)
     have h_full : 𝔰.k - finrank E (commonLink γ γ') = 0 := by lia
     have h_one : (S.pairDiscriminant c c' γ γ' * 1) ^ 2 ≤
-        S.levelGauge j c c' γ * S.levelGauge j' c c' γ' := by simpa [hi] using h_gain
+        S.levelGauge j c c' γ * S.levelGauge j' c c' γ' := by simpa [show S.linkCorank γ γ' = 0 from hi] using h_gain
     have h_moment : S.cellRankSecondMoment j = S.identitySecondMoment / S.tailScale ^ 16 :=
       ite_eq_right h_low
     have h_moment' : S.cellRankSecondMoment j' = S.identitySecondMoment / S.tailScale ^ 16 :=
@@ -439,16 +436,9 @@ theorem sum_termSize_mul_not_inSameLinkClass_le {E : Type} [Field E] [CMType E]
     field_simp
   · -- Different links: the gain is `(M / 2) ^ (i f)`, and the corank is at most `i + 1`.
     have h_corank_le : 𝔰.k - finrank E (commonLink γ γ') ≤ i + 1 := by lia
-    refine ⟨(S.M / 2) ^ (i * numInfPlaces E), S.mainSecondMoment, by positivity, ?_,
+    exact ⟨(S.M / 2) ^ (i * numInfPlaces E), S.mainSecondMoment, by positivity, h_gain,
       cellRankSecondMoment_le_mainSecondMoment j, cellRankSecondMoment_le_mainSecondMoment j',
-        pow_mul_mainSecondMoment_div_le hi h_corank_le⟩
-    calc
-      _ ≤ (2 / S.M) ^ (2 * i * numInfPlaces E) * (S.levelGauge j c c' γ * S.levelGauge j' c c' γ') *
-          ((S.M / 2) ^ (i * numInfPlaces E)) ^ 2 := by grw [mul_pow, h_gain]
-      _ = _ := by
-        rw [← inv_div 2 (S.M : ℝ), inv_pow]
-        field_simp
-        ring
+      pow_mul_mainSecondMoment_div_le hi h_corank_le⟩
 
 /-- **Remaining terms, pairs in the same link class.** Let `E` be a CM field with a primitive root
 of unity of order 5040, and let `S` be data of the filling theorem over `E` that satisfy the
@@ -505,13 +495,6 @@ further piece. -/
 noncomputable def piece {E : Type} [Field E] [CMType E] {𝔰 : Shape} (S : Filling E 𝔰)
     (γ : S.G E) : Piece E 𝔰 :=
   if S.termDisc γ = 0 then none else some (link γ)
-
-/-- The piece of `γ` is the submodule `Λ` if and only if `𝗀(γ) = S.termDisc γ` is not zero and the
-link of `γ` is `Λ`. -/
-lemma piece_eq_some_iff {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S : Filling E 𝔰}
-    {γ : S.G E} {Λ : Submodule E (𝔰.MiddleIndex ⊕ 𝔰.MiddleIndex → E)} :
-    S.piece γ = some Λ ↔ S.termDisc γ ≠ 0 ∧ link γ = Λ := by
-  by_cases h_disc : S.termDisc γ = 0 <;> simp [piece, h_disc]
 
 /-- The part `T ∩ S.piece ⁻¹' {κ}` of a stable set `T` in one piece `κ` is stable. A stable set is
 one invariant on both sides under the rational points of the Bessel unipotent group. This holds
@@ -580,8 +563,8 @@ lemma enorm_amplitudeSum_mul_le {E : Type} [Field E] [CMType E] {𝔰 : Shape} {
         .ofReal (S.termSize c c' q.1 * S.termSize c c' q.2) := by
   grw [enorm_amplitudeSum_le_tsum_termSize hT h_sub,
     enorm_amplitudeSum_le_tsum_termSize hT' h_sub']
-  simp_rw [← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_left, ← ENNReal.tsum_prod]
-  refine ENNReal.tsum_le_tsum fun ⟨p, p'⟩ ↦ le_of_eq ?_
+  simp_rw [← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_left, ← tsum_prod]
+  refine tsum_le_tsum fun ⟨p, p'⟩ ↦ le_of_eq ?_
   have h_size : 0 ≤ S.termSize c c' p := by
     unfold termSize orbitBound
     positivity
@@ -631,7 +614,7 @@ lemma enorm_amplitudeSum_sq_le {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S
       ∑' Λ, ‖S.amplitudeSum .cut (T ∩ {γ | S.termDisc γ ≠ 0} ∩ link ⁻¹' {Λ}) c s c'‖ₑ ^ 2 := by
     refine (tsum_range product fun Λ Λ' h ↦ by simpa using h).trans (tsum_congr fun Λ ↦ ?_)
     have h_set : T ∩ S.piece ⁻¹' {some Λ} = T ∩ {γ | S.termDisc γ ≠ 0} ∩ link ⁻¹' {Λ} :=
-      Set.ext fun γ ↦ by simp [piece_eq_some_iff, and_assoc]
+      Set.ext fun γ ↦ by by_cases h_disc : S.termDisc γ = 0 <;> simp [piece, h_disc, and_assoc]
     simp only [product, part, h_set, sq]
   let nearRepsOfPiece (κ : Piece E 𝔰) : Set (S.G E) :=
     S.nearRepresentativesOver (T ∩ S.piece ⁻¹' {κ}) c s c'
@@ -666,18 +649,18 @@ lemma enorm_amplitudeSum_sq_le {E : Type} [Field E] [CMType E] {𝔰 : Shape} {S
     calc
       _ ≤ ∑' (p : ↥diagonalᶜ) (q : nearRepsOfPiece p.val.1 × nearRepsOfPiece p.val.2),
           size (q.1, q.2) :=
-        ENNReal.tsum_le_tsum fun p ↦
+        tsum_le_tsum fun p ↦
           enorm_amplitudeSum_mul_le (hT.inter_piece p.val.1) (hT.inter_piece p.val.2)
             (Set.inter_subset_left.trans h_sub) (Set.inter_subset_left.trans h_sub)
-      _ = ∑' x, size (pair x) := (ENNReal.tsum_sigma' fun x ↦ size (pair x)).symm
+      _ = ∑' x, size (pair x) := (tsum_sigma' fun x ↦ size (pair x)).symm
       _ ≤ ∑' q : apart, size q := tsum_comp_le_tsum_of_injective h_injective fun q ↦ size q
       _ = _ := ENNReal.tsum_mul_left
   calc
     _ ≤ (∑' κ, part κ) ^ 2 := by grw [enorm_amplitudeSum_le_tsum_fibre S.piece]
     _ = ∑' p : Piece E 𝔰 × Piece E 𝔰, product p := by
-      simp_rw [product, sq, ← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_left, ← ENNReal.tsum_prod]
+      simp_rw [product, sq, ← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_left, ← tsum_prod]
     _ = ∑' p : diagonal, product p + ∑' p : ↥diagonalᶜ, product p :=
-      (ENNReal.summable.tsum_add_tsum_compl (s := diagonal) ENNReal.summable).symm
+      (CompleteLattice.summable.tsum_add_tsum_compl (s := diagonal) CompleteLattice.summable).symm
     _ ≤ _ := add_le_add h_diagonal.le h_others
 
 /-- **Remaining terms, reduction to one link.** Let `E` be a CM field with a primitive root of unity
@@ -721,7 +704,7 @@ theorem secondMoment_remainingTerms_le {E : Type} [Field E] [CMType E] {𝔰 : S
       obtain rfl : s = s' := eq_of_mem_termsOver (mem_termsOver_of_mem_nearRepresentativesOver hq)
         (mem_termsOver_of_mem_nearRepresentativesOver hq')
       rfl
-    exact (ENNReal.tsum_sigma' fun x ↦ size c c' (pair x)).symm.trans_le
+    exact (tsum_sigma' fun x ↦ size c c' (pair x)).symm.trans_le
       (tsum_comp_le_tsum_of_injective h_injective fun q ↦ size c c' q)
   have h_block (c c' : S.Classes) (s : Ω) : ‖S.amplitudeSum .cut T c s c'‖ₑ ^ 2 ≤
       ∑' Λ, ‖S.amplitudeSum .cut (T ∩ {γ | S.termDisc γ ≠ 0} ∩ link ⁻¹' {Λ}) c s c'‖ₑ ^ 2 +
@@ -815,16 +798,16 @@ theorem linkSecondMoment_le_of_le_meetNorm {E : Type} [Field E] [CMType E]
       rfl
     calc
       _ = ∑' p : Ω × Link, ‖S.amplitudeSum .cut (terms p.2) c p.1 c'‖ₑ ^ 2 :=
-        ENNReal.tsum_prod.symm
+        tsum_prod.symm
       _ ≤ ∑' (p : Ω × Link) (q : nearRepsInLink c c' p × nearRepsInLink c c' p),
           .ofReal (S.unipotentCovolume ^ 2) * size c c' (q.1, q.2) :=
-        ENNReal.tsum_le_tsum fun p ↦ by
+        tsum_le_tsum fun p ↦ by
           rw [sq]
           exact enorm_amplitudeSum_mul_le (h_stable p.2) (h_stable p.2) (h_sub p.2) (h_sub p.2)
       _ = ∑' x, .ofReal (S.unipotentCovolume ^ 2) * size c c' (pair x) :=
-        by rw [ENNReal.tsum_sigma']
+        by rw [tsum_sigma']
       _ ≤ ∑' q : sameLinkPairs c c', .ofReal (S.unipotentCovolume ^ 2) * size c c' q :=
-        ENNReal.tsum_comp_le_tsum_of_injective h_injective fun q ↦
+        tsum_comp_le_tsum_of_injective h_injective fun q ↦
           .ofReal (S.unipotentCovolume ^ 2) * size c c' q
       _ = _ := ENNReal.tsum_mul_left
   calc

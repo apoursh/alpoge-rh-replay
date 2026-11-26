@@ -1,6 +1,7 @@
 module
 
 public import Lib.Weil.Construction.ProductsAndTransport
+public import Lib.Weil.Construction.VacuumProjections
 
 /-!
 # Data named by Schwartz–Bruhat functions: Heisenberg laws, transport, Weil action
@@ -115,24 +116,6 @@ lemma integrated_schrodingerOp (v : Heisenberg.IsVacuum.Model (Fock.realHeisenbe
     exact (V.rho_integrated v u hy_real).symm
   exact DFunLike.congr_fun h_comm.eq f
 
-/-- For any function `Ψ` on finite adelic vectors, the operator Ψ⊗ = `V.schrodingerOp S Ψ` on 𝒮(V)
-commutes with the Heisenberg operator `V.ϱ z` of any adelic vector `z` whose finite components
-vanish at the places of S ∪ S̄. -/
-lemma commute_rho_schrodingerOp {z : n → 𝔸 E} (hz : ∀ i : n, ∀ w ∈ S.conjClosure, (z i).2 w = 0)
-    (Ψ : (n → 𝔸f E) → ℂ) : Commute (V.ϱ z) (V.schrodingerOp S Ψ) := by
-  refine V.commute_schrodingerOp (fun y hy_real hy_off ↦ ?_) Ψ
-  -- The coordinates of `z` and `y` have disjoint supports, so the commutator is trivial.
-  have h_zero (i : n) : star (y i) * z i = 0 := by
-    refine Prod.ext (by simp [hy_real]) ?_
-    ext w
-    by_cases hw : w ∈ S.conjClosure
-    · simp [hz i w hw]
-    · simp [hy_off i (star w) (by simpa [and_comm] using hw)]
-  have h_pair : star y ⬝ᵥ stdForm E s *ᵥ z = 0 := by
-    simp [stdForm, dotProduct, mulVec_diagonal, mul_left_comm (star (y _)), h_zero]
-  ext f : 1
-  simp [V.rho_swap z y, adelicHeisenberg, h_pair]
-
 /-- Naming ignores the projection P^S = `New.Space.projOn` S: `V.schrodingerOp S Ψ` takes the same
 value at `P^S f` as at `f`. -/
 lemma schrodingerOp_projOn (f : 𝒮 V) :
@@ -176,7 +159,7 @@ lemma localInner_boxIndicator_mulVec (g : GL n (𝔸f E)) :
   -- Both sides are the volume of the set `A` of integral `x` with `g x` integral on `S`; for the
   -- right side this is `latticeMeasure_inter_eq_glMultiplier`.
   set A : Set (n → 𝔸f E) :=
-    {x | (cutGL (idem_mul_self S) g).1 *ᵥ x ∈ stdLattice E n ∧ x ∈ stdLattice E n} with hA
+    {x | (cutGL (idem_mul_self S) g).val *ᵥ x ∈ stdLattice E n ∧ x ∈ stdLattice E n} with hA
   have hA_open : IsOpen A := (isOpen_stdLattice.preimage (by fun_prop)).inter isOpen_stdLattice
   have h_volume : (((‖glMultiplier (cutGL (idem_mul_self S) g)‖ ^ 2)⁻¹ : ℝ) : ℂ) =
       ∫ x : n → 𝔸f E, ((A.indicator 1 x : ℝ) : ℂ) ∂latticeMeasure E n := by
@@ -415,19 +398,13 @@ lemma Space.boxProd_projOn (f₁ : 𝒮 V₁) (f₂ : 𝒮 V₂) :
 
 /-- For any set `S` of finite places and any function `Ψ`, the operator `V.schrodingerOp S Ψ` maps
 the finite part `V.finitePart` (the span of the finite Heisenberg translates of the vacuum) into
-itself: if `f` lies in `V.finitePart`, so does `V.schrodingerOp S Ψ f`. -/
-lemma Space.schrodingerOp_mem_finitePart_of_mem (S : Set (FinPlace E)) (Ψ : (n → 𝔸f E) → ℂ)
-    {f : 𝒮 V} (h : f ∈ V.finitePart) :
+itself: if `f` lies in `V.finitePart`, so does `V.schrodingerOp S Ψ f`. The membership of `f` is a
+default argument proved by `simp`. -/
+lemma Space.schrodingerOp_mem_finitePart (S : Set (FinPlace E)) (Ψ : (n → 𝔸f E) → ℂ) {f : 𝒮 V}
+    (h : f ∈ V.finitePart := by simp [funext_iff, finVec]) :
     V.schrodingerOp S Ψ f ∈ V.finitePart := by
   simp [schrodingerOp, heisenbergCombination, sum_smul_mem, rho_finVec_mem_finitePart,
     projOn_mem_finitePart h, Finsupp.sum]
-
-/-- `New.Space.schrodingerOp_mem_finitePart_of_mem`, with the membership of `f` in `V.finitePart` as
-a default argument proved by `simp`. -/
-lemma Space.schrodingerOp_mem_finitePart (S : Set (FinPlace E)) (Ψ : (n → 𝔸f E) → ℂ) {f : 𝒮 V}
-    (h : f ∈ V.finitePart := by simp [funext_iff, finVec]) :
-    V.schrodingerOp S Ψ f ∈ V.finitePart :=
-  Space.schrodingerOp_mem_finitePart_of_mem S Ψ h
 
 /-- Let `S` be disjoint from its conjugate, `Ψ`, `Ψ'` Schwartz–Bruhat above `S`, and
 `e : n₁ ⊕ n₂ ≃ n` a splitting of the coordinates compatible with the signs (`hs`); write Ψ⊗ for the
@@ -516,13 +493,6 @@ lemma schrodingerOp_union {Ψ' : (n → 𝔸f E) → ℂ} {T : Set (FinPlace E)}
     simp [projOn_union, projOn_rho _ h_off, smul_smul, h_idem]
   simp [sum_mul, mul_sum, Finsupp.sum.eq_1, h_term]
 
-omit [WeilData E] in
-/-- The finite parts of the entries of `g.adeleMatrix` are the entries of the finite component
-`g.snd`. -/
-private lemma map_snd_adeleMatrix (g : G E s) :
-    g.adeleMatrix.map (fun a : 𝔸 E ↦ a.2) = ((↑g.snd : GL n (𝔸f E)) : Matrix n n (𝔸f E)) :=
-  Matrix.ext fun _ _ ↦ rfl
-
 include hS
 /-- Let S be disjoint from its conjugate, Ψ be Schwartz–Bruhat above S, g ∈ `G E s` with finite
 component g_f = `g.snd`, and f ∈ 𝒮(V), and write Φ⊗ = `V.schrodingerOp S Φ` for the operator ∑ c_y
@@ -547,7 +517,9 @@ lemma omega_schrodingerOp (g : G E s) (f : 𝒮 V) :
     -- The translation by the image of `y` is `g.adeleMatrix` applied to the translation by `y`.
     have h_vec : finVec (idem S.conjClosure • (M *ᵥ y)) =
         g.adeleMatrix *ᵥ finVec (idem S.conjClosure • y) := by
-      rw [mulVec_finVec, map_snd_adeleMatrix, mulVec_smul]
+      rw [mulVec_finVec]
+      change _ = finVec (M *ᵥ (idem S.conjClosure • y))
+      rw [mulVec_smul]
     rw [h_vec, ← omega_rho, rho_schrodingerOp hS]
     simp [T, M, schrodingerAct, LinearMap.pi, LinearMap.funLeft, Function.comp_def, mulVec_add]
   -- Integral translations, corrected by `semichar`, fix the box function, so their mean fixes `u`.

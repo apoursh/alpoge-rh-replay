@@ -108,8 +108,10 @@ theorem conjTranspose_mul_self_eq_one_iff_commute {J A : Matrix n n ℂ} (h_invo
 exactly when it is block diagonal, that is, commutes with `signMatrix ε`. -/
 theorem mem_maxCompactU {g : U (signMatrix ε)} :
     g ∈ maxCompactU ε ↔ (g : Matrix n n ℂ) ∈ blockDiagAlg ε := by
-  rw [maxCompactU, Subgroup.mem_subgroupOf, mem_U, Matrix.mul_one, mem_blockDiagAlg_iff_commute]
-  exact conjTranspose_mul_self_eq_one_iff_commute (signMatrix_mul_self ε) (mem_U.mp g.property)
+  rw [maxCompactU, Subgroup.mem_subgroupOf, mem_unitaryGroupOf_iff, Matrix.mul_one,
+      mem_blockDiagAlg_iff_commute]
+  exact conjTranspose_mul_self_eq_one_iff_commute (signMatrix_mul_self ε)
+      (mem_unitaryGroupOf_iff.mp g.property)
 
 /-- Let `Φ` have the complex derivative `D` at `1`, and let `φ` be a complex linear form. If for
 every `Y` in the Lie algebra `unitaryLie (signMatrix ε)` of `U(diag ε)` whose one-parameter group
@@ -280,10 +282,10 @@ theorem IsKDominant.weightMinors_mul_borel (ho : o.Injective) (hw : IsKDominant 
         d i j = 0 ∨ x j k = 0 := Or.inl (diagonal_apply_ne _ (by grind))
     have h_det : principalMinor b (t ≤ w ·) = principalMinor d (t ≤ w ·) := by
       simp [d, principalMinor, toSquareBlockProp, toBlock, submatrix_diagonal,
-        det_eq_prod_diag_of_blockTriangular _ hb_borel.left.submatrix, ho]
+        hb_borel.left.submatrix.det_eq_prod_diag _, ho]
     rw [principalMinor_mul h_zero, principalMinor_mul h_zero_diag, h_det, mul_comm]
   have h_diag : weightMinors w (x * b) = weightMinors w (d * x) := by
-    simp [weightMinors, h_minor, d, det_eq_prod_diag_of_blockTriangular ho hb_borel.left, mul_comm]
+    simp [weightMinors, h_minor, d, hb_borel.left.det_eq_prod_diag ho, mul_comm]
   rw [h_diag, weightMinors_diagonal_mul hx (hb_borel.diag_ne_zero ho), mul_comm, diagChar]
 
 /-- Let `o` be injective and `w` dominant within each block of `ε` for `o`, not `-o`

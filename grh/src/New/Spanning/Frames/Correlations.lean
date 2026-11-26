@@ -1,7 +1,7 @@
 module
 
+public import Mathlib.MeasureTheory.Group.IntegralConvolution
 public import New.Spanning.Frames.Levels
-public import New.Spanning.Frames.TwoGauges
 
 /-!
 # The scale, near points and partial correlations
@@ -271,7 +271,7 @@ lemma quotientMeasureFrom_isNear_le {V : ℝ≥0∞} (hV : ∀ a : Fin 𝔰.n, F
       F.quotientMeasureFrom (l + 1) {x : T.G | F.IsNear (𝔰.ϱ + 2) (x * (σ * c))}
     let N : Set T.G := {σ : T.G | F.IsNear (l + 1) (σ * c)}
     have h_floor : F.floorMeasure l N ≤ V := by
-      simpa [N, Set.univ_inter] using hV ⟨l, hl⟩ c
+      simpa [Set.univ_inter] using hV ⟨l, hl⟩ c
     -- if `σ * c` is not near at `l + 1`, no point `x * σ * c` with `x` on the higher floors is near
     have h_support : support mass ⊆ N := by
       have h_ae : ∀ᵐ x : T.G ∂F.quotientMeasureFrom (l + 1), x ∈ floorGroup (l + 1) :=
@@ -497,7 +497,7 @@ lemma partialCorrelation_eq_integral_floorMeasure (hk : F.IsPairingKernel j k d)
 lemma enorm_partialCorrelation_le (hk : F.IsPairingKernel j k d) :
     ‖F.partialCorrelation l k g y‖ₑ ≤ F.pivotL1Norm l k g y := by
   rw [hk.partialCorrelation_eq_integral_floorMeasure]
-  exact enorm_integral_le_lintegral_enorm _
+  exact eNorm_integral_le_lintegral_eNorm _
 
 /-- Let `k` satisfy `F.IsPairingKernel j k d` with `j ≤ l`. Then `F.partialCorrelation l k`, the
 integral of k(x g, x y) in x for `F.quotientMeasureFrom l`, is unchanged when both arguments are

@@ -229,7 +229,7 @@ lemma IsCouplingFamily.isLowestTerm_pderiv_couplingSum {pr : ℕ → Φ → Φ} 
 /-- A series with constant term `1` has lowest term `1 = 1 z ^ 0` for the total degree:
 `IsLowestTerm w f m c` says that, in `w`-weight at most that of `m`, the coefficients of `f` are
 those of `c z ^ m`, here with all weights `1`, `m = 0` and `c = 1`. -/
-lemma isLowestTerm_zero_one {X R : Type} [Fintype X] [CommRing R] {f : MvPowerSeries X R}
+lemma isLowestTerm_zero_one {X R : Type} [CommRing R] {f : MvPowerSeries X R}
     (hf : f.constantCoeff = 1) : IsLowestTerm 1 f 0 1 := by
   intro d hd
   obtain rfl : d = 0 := by
@@ -278,12 +278,6 @@ copies `z'`, `z''` of the variables. -/
 noncomputable def couplingSubst {R : Type} [CommRing R] {n : ℕ} (δ : Fin (n + 1) → R)
     (c : Fin (n + 1)) : Fin 2 → R :=
   ![δ c, if c = 0 then 1 else 0]
-
-/-- The coefficients of `couplingSubst δ` are integral if the `δ_c` are. -/
-lemma norm_couplingSubst_le_one {n : ℕ} {δ : Fin (n + 1) → ℂ_[p]}
-    (hδ : ∀ c : Fin (n + 1), ‖δ c‖ ≤ 1) (c : Fin (n + 1)) (k : Fin 2) :
-    ‖couplingSubst δ c k‖ ≤ 1 := by
-  fin_cases k <;> simp [couplingSubst, hδ, apply_ite (‖·‖), ite_le_one]
 
 /-- Let `δ 0 = 1` and let `G = ∏_c copySubst (couplingSubst δ c) F`, that is,
 `G(z', z'') = F(z' + z'') ∏_(c ≠ 0) F(δ_c z')` in two copies `z'`, `z''` of the variables. Only the
@@ -549,9 +543,8 @@ lemma leastValLE_partnerDegree_of_isCouplingFamily [PadicPlace p] {J Φ : Type}
   set sumJ : ℝ := ∑ τ ∈ Φ₀, (j τ : ℝ) with h_sumJ
   have h_degree : (pairExponent ν' ν'').degree = (ν' + ν'').degree := by
     rw [← mapDomain_fst_pairExponent, Finsupp.degree_mapDomain]
-  have h_fact : ‖∏ x : Φ × Unit, ((ν'' x)! : ℂ_[p])‖ = p ^ (-valFact) := by
-    simp [h_valFact, norm_natCast_eq_inv_pow_padicValNat, factorial_ne_zero,
-      Real.rpow_neg hp_pos.le, ← cast_sum, prod_pow_eq_pow_sum]
+  have h_fact : ‖∏ x : Φ × Unit, ((ν'' x)! : ℂ_[p])‖ = p ^ (-valFact) :=
+    norm_prod_natCast_eq_rpow_neg_sum (fun x ↦ (ν'' x).factorial_ne_zero)
   have h_rpow : p ^ (-valFact + -ρ * (ν' + ν'').degree) * ‖coeff (pairExponent ν' ν'') G‖ =
       p ^ ((1 - 1 / (p - 1)) * sumJ) := by
     rw [coeff_prod_copySubst_rescale, norm_mul, norm_pow, h_degree, h_fact, hϖ, h_norm] at h_scaled
@@ -565,7 +558,8 @@ lemma leastValLE_partnerDegree_of_isCouplingFamily [PadicPlace p] {J Φ : Type}
     simp only [one_mul, ← hG, h_rpow]
     exact le_of_eq (by ring_nf)
   simpa only [mapDomain_fst_pairExponent] using
-    leastValLE_of_copySubst (norm_couplingSubst_le_one hδ_le) (fun _ ↦ one_mem _) h_le
+    leastValLE_of_copySubst (fun c k ↦ by fin_cases k <;> simp [couplingSubst, hδ_le, apply_ite (‖·‖), ite_le_one])
+      (fun _ ↦ one_mem _) h_le
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.sum Finset.prod Finset.univ in

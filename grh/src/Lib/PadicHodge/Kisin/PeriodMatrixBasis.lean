@@ -511,7 +511,7 @@ lemma exists_spanning_matrix (hU : c.IsPeriodMatrix U h v) :
       pi_dvd_iff.mpr fun i ↦ (prime_p.dvd_or_dvd ⟨_, h_entry i⟩).resolve_left c.not_p_dvd_z
     refine ⟨⟨w, fun i ↦ ⟨u, hu⟩ * y₀ i, ?_⟩, rfl⟩
     -- `u` inverts `p` in `S_B`, so `u y₀` solves the equation for `w`
-    show U *ᵥ (u • Subtype.val ∘ y₀) = g w
+    change U *ᵥ (u • Subtype.val ∘ y₀) = g w
     rw [mulVec_smul, hx, ← nsmul_eq_mul, map_nsmul, ← Nat.cast_smul_eq_nsmul BPlus, smul_smul, hup,
       one_smul]
   -- `P` is also `(p, z)`-adically separated, `p`-torsion free and of bounded rank, hence free
@@ -542,13 +542,6 @@ lemma exists_spanning_matrix (hU : c.IsPeriodMatrix U h v) :
   refine ⟨s, funext fun k ↦ ?_⟩
   simpa [mulVec, dotProduct, Finset.sum_apply, Subalgebra.smul_def, mul_comm] using
     congrFun h_vals k
-
-omit [DecidableEq d] in
-/-- If `p` does not divide `δ`, then `δ ∣ l · (p ^ n x)` gives `δ ∣ l · x`. -/
-private lemma dvd_dotProduct_of_dvd_dotProduct_pow_smul {δ : Ainf} (hδ : ¬(p : Ainf) ∣ δ)
-    (l x : d → Ainf) (n : ℕ) (h_dvd : δ ∣ l ⬝ᵥ p ^ n • x) : δ ∣ l ⬝ᵥ x := by
-  rw [dotProduct_smul, nsmul_eq_mul, Nat.cast_pow] at h_dvd
-  exact dvd_of_dvd_prime_pow_mul prime_p hδ h_dvd
 
 /-- The approximation step of `dvd_dotProduct_of_spanning`. Let `U` be a period matrix of height `h`
 with Frobenius factor `v` for `c` (`IsPeriodMatrix`). Let `Q` over `A_inf` be such that every `x`
@@ -596,7 +589,7 @@ lemma exists_dotProduct_pow_smul_sub_mul_mem_span_pow (hU : c.IsPeriodMatrix U h
   -- as `δ g = l Q`, the difference is `l · t` for the error vector `t`
   rw [← smul_eq_mul, ← smul_dotProduct, ← hl, ← dotProduct_mulVec, ← dotProduct_sub]
   set t : d → Ainf := p ^ N • x - Q *ᵥ ∑ j ∈ G, c.adicBasis.b j • Subtype.val ∘ s j with ht
-  show l ⬝ᵥ t ∈ span {(p : Ainf), xi} ^ m
+  change l ⬝ᵥ t ∈ span {(p : Ainf), xi} ^ m
   -- the error `t`, divided by `p ^ (m + k)`, has an integral solution; `hk` loses `p ^ k`, so
   -- `p ^ m` divides `t` in `Amax`, which puts `t` in `(p, ξ) ^ m` (`mem_span_pow_of_p_pow_dvd`)
   have h_error :
@@ -618,7 +611,7 @@ lemma exists_dotProduct_pow_smul_sub_mul_mem_span_pow (hU : c.IsPeriodMatrix U h
     rw [ha]
     simp [← pow_add, ← mul_assoc, ← mul_pow, hup, mul_comm _ u]
   refine ⟨a, injective_Amax_BPlus ?_⟩
-  show ainfToBPlus (t i) = (IsScalarTower.toAlgHom Ainf Amax BPlus).toRingHom ((p : Amax) ^ m * a)
+  change ainfToBPlus (t i) = (IsScalarTower.toAlgHom Ainf Amax BPlus).toRingHom ((p : Amax) ^ m * a)
   rwa [map_mul, map_pow, map_natCast]
 
 /-- Let `U` be a period matrix of height `h` (`hU`), and let `Q` span the solutions over
@@ -636,8 +629,10 @@ lemma dvd_dotProduct_of_spanning (hU : c.IsPeriodMatrix U h v) {Q : Matrix d d A
   -- `δ` divides `l · (p ^ N x)` as the ideal of `δ` is closed for the `(p, ξ)`-adic topology
   -- (`dvd_of_forall_exists_sub_mem_span_pow`); `p ∤ δ` then removes `p ^ N`.
   obtain ⟨N, h_approx⟩ := hU.exists_dotProduct_pow_smul_sub_mul_mem_span_pow hQ x y hy δ l g hl
-  exact dvd_dotProduct_of_dvd_dotProduct_pow_smul hδ l x N
-    (dvd_of_forall_exists_sub_mem_span_pow prime_p.not_isUnit prime_xi.not_isUnit hδ h_approx)
+  have h_dvd := dvd_of_forall_exists_sub_mem_span_pow
+    prime_p.not_isUnit prime_xi.not_isUnit hδ h_approx
+  rw [dotProduct_smul, nsmul_eq_mul, Nat.cast_pow] at h_dvd
+  exact dvd_of_dvd_prime_pow_mul prime_p hδ h_dvd
 
 /-- Every period matrix `U` has a basis `Q`, `Z` in the sense of `New.Lift.Chart.IsPeriodBasis`:
 the nonsingular `Q` over `A_inf` spans the `x` with `U y = E ^ h x` solvable over `c.bicommutant`,
@@ -746,7 +741,7 @@ lemma _root_.New.Period.HasInvariantColumns.frobTwist {M : GL ι Bmax}
     HasInvariantColumns ρ e (frobTwist n M).val := by
   intro g
   have h_inv : (repMatrix ρ e g).map (↑) * matrixAction (1, toGp g) M.val = M.val := hM g
-  show (repMatrix ρ e g).map (↑) * matrixAction (1, toGp g) (Period.frobTwist n M).val =
+  change (repMatrix ρ e g).map (↑) * matrixAction (1, toGp g) (Period.frobTwist n M).val =
     (Period.frobTwist n M).val
   refine .trans ?_ (congrArg (matrixAction (.ofAdd n, 1)) h_inv)
   simp [comp_def, smul_smul]
@@ -852,12 +847,12 @@ lemma IsChartOf.exists_transition_matrix (hc : IsChartOf c 𝒥.toGp) {e : Basis
     have hMg : R * σ M.val = M.val := hM g
     have hNg : R * σ N.val = N.val := hN g
     have h_det : IsUnit M.val.det := isUnits_det_units M
-    calc σ (M.val⁻¹ * N.val)
-        = M.val⁻¹ * (R * σ M.val) * σ (M.val⁻¹ * N.val) := by
-          rw [hMg, nonsing_inv_mul _ h_det, one_mul]
-      _ = M.val⁻¹ * (R * σ (M.val * (M.val⁻¹ * N.val))) := by
-          rw [map_mul σ M.val, mul_assoc, mul_assoc]
-      _ = M.val⁻¹ * N.val := by rw [mul_nonsing_inv_cancel_left _ _ h_det, hNg]
+    apply M.isUnit.mul_left_cancel
+    calc
+      M.val * σ (M.val⁻¹ * N.val) = R * σ (M.val * (M.val⁻¹ * N.val)) := by
+        rw [map_mul σ M.val, ← mul_assoc, hMg]
+      _ = N.val := by rw [mul_nonsing_inv_cancel_left _ _ h_det, hNg]
+      _ = M.val * (M.val⁻¹ * N.val) := (mul_nonsing_inv_cancel_left _ _ h_det).symm
   choose X hX_mem hX using
     fun i l ↦ hc.exists_mem_bicommutant_of_fixed fun g ↦ congrFun₂ (h_fix g) i l
   exact ⟨of X, hX_mem, ext hX⟩
@@ -915,7 +910,7 @@ lemma IsChartOf.exists_mulVec_extendToBPlus_eq_smul (hc : IsChartOf c 𝒥.toGp)
       ← IsScalarTower.algebraMap_apply]
     simp [hU_dR, hM_dR, ← mul_assoc, hodgeMatrix, smul_mulVec]
     -- As `U = (E τ) ^ a W t ^ k adj(Y)` over `BdR`, both sides are `(E τ) ^ a W` times a vector.
-    show (c.E.val * tau) ^ a •
+    change (c.E.val * tau) ^ a •
         (((W.val.map (algebraMap BdRPlus BdR) *
             diagonal fun j ↦ algebraMap BdRPlus BdR (s j) * (tUnit : BdR) ^ k j) *
           Y.val.adjugate.map (algebraMap (PadicAlgCl p) BdR)) *ᵥ
@@ -999,11 +994,13 @@ lemma IsChartOf.exists_isPeriodMatrixOf (hc : IsChartOf c 𝒥.toGp) (h : IsCrys
     · rw [smul_mul_smul, ← mul_pow, hw, hX'X, one_pow, one_smul]
     · -- `φ (E τ) = φ E * μ = φ E * v * E τ`
       refine (hU_smul _).trans ?_
-      simp [Units.smul_def, hU, hX, ← hv, φ, FrobGal.smul_def, mul_assoc, AlgHom.map_smul_of_tower]
       -- both sides are `(φ E · E τ v) ^ a` times `φ M`
-      show (frobEnd c.E.val * (c.E.val * (tau * v.val))) ^ a • matrixAction (.ofAdd 1, 1) M.val =
-        v.val ^ a • Chart.ainfToBPlus (frobEnd c.E.val) ^ a • (c.E.val * tau) ^ a •
-          matrixAction (.ofAdd 1, 1) M.val
+      suffices h : (frobEnd c.E.val * (c.E.val * (tau * v.val))) ^ a •
+            matrixAction (.ofAdd 1, 1) M.val =
+          v.val ^ a • Chart.ainfToBPlus (frobEnd c.E.val) ^ a • (c.E.val * tau) ^ a •
+            matrixAction (.ofAdd 1, 1) M.val by
+        simpa [Units.smul_def, hU, hX, ← hv, φ, FrobGal.smul_def, mul_assoc,
+          AlgHom.map_smul_of_tower] using h
       module
   have h_exists_gal (g : Gp p) (hg : c.FixesThetaZ g) :
       ∃ R : Matrix ι ι Ainf, R.map Chart.ainfToBPlus * g • U = U := by

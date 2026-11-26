@@ -1,6 +1,5 @@
 module
 
-public import New.Determinant.Chain.NormOfChain
 public import New.OneLift.ComparisonOperator.GluedForms
 public import New.OneLift.ComparisonOperator.ProductsSpan
 public import New.OneLift.FalseLifts.PeriodsOfFalseLifts
@@ -95,22 +94,20 @@ def formTupleNormSq (σ : ℂ ≃+* ℂ) (ζ : FormTuples j) : ℝ :=
 /-- The rank `r + 9 m + 1` of `V″` is at most `2 n_m`. -/
 lemma card_firstFactorIndex_le_two_mul_n : card (FirstFactorIndex j) ≤ 2 * D.n D.m := by
   rw [card_firstFactorIndex]
-  linarith [D.six_mul_r_le_n, D.r_add_one, D.hundred_mul_m_add_nine_lt_k]
+  linarith only [D.six_mul_r_le_n, D.r_add_one, D.hundred_mul_m_add_nine_lt_k]
 
 variable (D) in
 /-- The rank `r + t = 6 r` of `V_j` is at most `2 n_m`. -/
 lemma card_rowIndex_sum_fin_le_two_mul_n : card (D.RowIndex ⊕ Fin D.t) ≤ 2 * D.n D.m := by
   rw [D.card_rowIndex_sum_fin]
-  linarith [D.six_mul_r_le_n, D.t_eq_five_mul_r]
+  linarith only [D.six_mul_r_le_n, D.t_eq_five_mul_r]
 
 /-- The basis of `V″` is large enough to hold the divided directions: `D.CarrierIndex` embeds in
 `FirstFactorIndex j`. -/
 lemma nonempty_carrierIndex_embedding_firstFactorIndex :
     Nonempty (D.CarrierIndex ↪ FirstFactorIndex j) := by
-  have r_add_one : D.r + 1 = D.k + D.m := D.r_add_one
-  have k_large : 100 * D.m + 9 < D.k := D.hundred_mul_m_add_nine_lt_k
   refine nonempty_of_card_le ?_
-  rw [card_firstFactorIndex, Fintype.card_sum, Fintype.card_fin, Fintype.card_fin]
+  simp only [Fintype.card_sum, Fintype.card_fin]
   omega
 
 /-- If `card N ≤ card n` and the diagram `κ` has no column of height at least `card N`, then
@@ -127,7 +124,7 @@ lemma card_padIndex_sum_flatIndex_sum_secondFactorIndex :
   have k_large : 100 * D.m + 9 < D.k := D.hundred_mul_m_add_nine_lt_k
   have r_add_one : D.r + 1 = D.k + D.m := D.r_add_one
   have t_eq : D.t = 5 * D.r := D.t_eq_five_mul_r
-  have j_le : j.val ≤ D.m := j.2.2
+  have j_le : j.val ≤ D.m := j.property.2
   simp only [Fintype.card_sum, Fintype.card_fin, D.card_rowIndex]
   omega
 
@@ -147,7 +144,7 @@ lemma hasColumnsBelow_colsPlus :
     omega
   · -- the entry `h - 1` of the row parameter lies below `-w_j`
     have h_rank : D.posRank j ≤ h - 1 := by
-      have j_le : j.val ≤ D.m := j.2.2
+      have j_le : j.val ≤ D.m := j.property.2
       rw [card_firstFactorIndex] at h_le
       rw [posRank]
       omega
@@ -258,15 +255,17 @@ def firstFactorPairing (i : ChoiceIndex j) (g : G D.E (D.signsW j)) : ℂ :=
 the class sum over `U(V″)` whose multiple by a number is the twist-free function `choiceFn`. -/
 lemma firstFactorPairing_eq_mul_thirdExchangeLeftSide (i : ChoiceIndex j) (g : G D.E (D.signsW j)) :
     firstFactorPairing j ϑ i g = firstFactorScale j * thirdExchangeLeftSide ϑ j i g := by
-  have h_rows : Matrix.fromCols 1 0 * (splittingV j ϑ).stackOverGenScalar i.1 = i.1 := by
-    -- `erw`, since `stackOverGenScalar` is a `fromRows` only up to unfolding
-    erw [Matrix.fromCols_mul_fromRows, Matrix.zero_mul, Matrix.one_mul, add_zero]
   have h_star : (fun h : Gf D.E (FirstFactorIndex j) ↦ star (firstFactor j ϑ i h)) =
       fun h ↦ firstFactorScale j • leftSideSeries ϑ j i h := funext fun h ↦ star_star _
-  rw [thirdExchangeLeftSide_eq_kernelClassSum ϑ j h_rows, firstFactorPairing]
+  rw [firstFactorPairing]
   -- rewrite by `h_star` with `congrArg`, as the motive of `rw` is not type correct
-  exact (congrArg (kernelClassSum (D.descentPair ϑ j) (firstFactorChar ϑ j) _ _ · g) h_star).trans
-    (kernelClassSum_smul (O := D.descentPair ϑ j) ..)
+  refine ((congrArg (kernelClassSum (D.descentPair ϑ j) (firstFactorChar ϑ j) _ _ · g) h_star).trans
+    (kernelClassSum_smul (O := D.descentPair ϑ j) ..)).trans
+    (congrArg (firstFactorScale j * ·)
+      (thirdExchangeLeftSide_eq_kernelClassSum ϑ j (u := Matrix.fromCols 1 0) ?_ g).symm)
+  exact (Matrix.fromCols_mul_fromRows 1 0 i.1 _).trans
+    ((congrArg₂ (· + ·) (Matrix.one_mul i.1) (Matrix.zero_mul (l := D.CarrierIndex) _)).trans
+      (add_zero _))
 
 /-- Let `y` be a good form on the hermitian space `W_j = D.spaceW j`. The theta series
 `firstFactorPairing j ϑ i` on `U(W_j)` of a twist `ϑ` and a choice `i` is a finite combination of
@@ -327,17 +326,9 @@ lemma isIntegralAndSmall_firstFactor (i : ChoiceIndex j) (h : Gf D.E (FirstFacto
 /-- Arithmetic of the first factors: the value of `φ″_{ϑ,i}` at `h` is integral (`weylGauge` at
 most `1`) at a place above a prime `l` that does not divide the norm of the level of `ϑ`. -/
 lemma weylGauge_firstFactor_le_one (i : ChoiceIndex j) (h : Gf D.E (FirstFactorIndex j)) (l : ℕ)
-    [Fact l.Prime] [PadicPlace l] (hl : l.Coprime ϑ.1.normQ) :
+    [Fact l.Prime] [PadicPlace l] (hl : l.Coprime ϑ.toTameChar.normQ) :
     weylGauge (untwistedDescentPair j).colsPlus 0 h (firstFactor j ϑ i h) ≤ 1 :=
   (isIntegralAndSmall_firstFactor j ϑ i h).weylGauge_le_one l hl
-
-/-- Arithmetic of the first factors: for the trivial twist, every conjugate
-`σ ∘ firstFactor j 1 i h` of the values of `φ″_{1,i}` has squared norm (`weylNormSq`) at most
-`exp (D.f * D.m * D.b * D.logB ^ 2)`. -/
-lemma weylNormSq_firstFactor_le (i : ChoiceIndex j) (h : Gf D.E (FirstFactorIndex j))
-    (σ : ℂ ≃+* ℂ) :
-    weylNormSq (σ ∘ firstFactor j 1 i h) ≤ exp (D.f * D.m * D.b * D.logB ^ 2) :=
-  (isIntegralAndSmall_firstFactor j 1 i h).weylNormSq_le rfl σ
 
 /-! ### The gluing map and the slices of lifts -/
 
@@ -580,7 +571,7 @@ Let `l` be a prime coprime to `ϑ.1.normQ`, the product of the norms of the plac
 the twist `ϑ`. Let `φ` be an embedding of `ℂ` in `ℂ_l` (`PadicPlace l`). If all values of the tuple
 `ζ` are integral at `φ`, so are all values of `glue j ϑ ζ`. -/
 lemma glue_mem_integralForms {l : ℕ} [Fact l.Prime] (φ : PadicPlace l)
-    (hl : l.Coprime ϑ.1.normQ) {ζ : FormTuples j} (hζ : IsIntegralFormTuple φ ζ) :
+    (hl : l.Coprime ϑ.toTameChar.normQ) {ζ : FormTuples j} (hζ : IsIntegralFormTuple φ ζ) :
     glue j ϑ ζ ∈ LevelForm.integralForms φ := by
   -- All stabilisers are trivial, so `glue ζ` is `M ^ l₁` times a plain sum of forms supported on
   -- one class, and it is enough to bound the gauge of each term.
@@ -686,7 +677,8 @@ lemma M_pow_denominatorExponent_sq_mul_le_exp :
   set L : ℕ := card D.Φ * (D.t * (D.t * D.gap)) with hL
   have h_det (τ : NumberField.InfinitePlace D.E) :
       ∑ i ∈ range (card (FirstFactorIndex j)), (untwistedDescentPair j).colsPlus τ i ≤
-        D.natB + D.offWeight + D.gap + D.m * D.gap := by grind [card_detIndex j τ]
+        D.natB + D.offWeight + D.gap + D.m * D.gap := by
+    grind [card_detIndex_eq_sum j τ, card_detIndex_le j τ]
   set e : ℕ := card D.Φ * (3 * D.m * (D.natB + D.offWeight + D.gap + D.m * D.gap)) + L with he
   have h_exponent : (splittingV j 1).denominatorExponent ≤ e := by
     grw [DividedSplitting.denominatorExponent, h_det, colsMinus_le]
@@ -724,7 +716,6 @@ lemma M_pow_denominatorExponent_sq_mul_le_exp :
       (D.b + log D.chosenGroupOrder))) ≤ D.f * D.m * D.b * D.logB ^ 2 := by
     simpa [ha, he, hL, D.t_eq_five_mul_r, card_firstFactorIndex j, add_assoc] using
       D.le_of_hasLogBound
-  have h_flat_pos : 0 < card D.FlatIndex := Fintype.card_pos
   grw [h_exponent, h_card, h_ring]
   refine le_exp_of_log_le ?_
   grw [← h_size, ← h_rows]
@@ -756,7 +747,7 @@ lemma weylNormSq_evalForm_productForm_le (ζ : FormTuples j) (σ : ℂ ≃+* ℂ
       cartanProduct V.ε 1 (σ ∘ firstFactor j 1 p.1 h) (σ ∘ ζ p) :=
     map_cartanProduct h_plus h_minus V.ε (firstFactor j 1 p.1 h) (ζ p) σ.toRingHom
   have h_first : weylNormSq (σ ∘ firstFactor j 1 p.1 h) ≤ exp (D.f * D.m * D.b * D.logB ^ 2) :=
-    weylNormSq_firstFactor_le j p.1 h σ
+    (isIntegralAndSmall_firstFactor j 1 p.1 h).weylNormSq_le rfl σ
   have h_second : weylNormSq (σ ∘ ζ p) ≤ formTupleNormSq σ ζ :=
     single_le_sum (fun q _ ↦ weylNormSq_nonneg (σ ∘ ζ q)) (mem_univ p)
   -- A form supported on one class costs the order of a stabiliser, and the norm of the product
@@ -862,7 +853,7 @@ lemma normalizedDescent_eq_zero_of_mem_orthogonal {Ξ : (D.descentPair ϑ j).For
   -- For every `y`, `⟨Θ y, Ξ⟩ = ⟨Θ y, e₀ Ξ⟩ = ⟨e₀ Θ y, Ξ⟩`, and `e₀ Θ y` is the lift of a good form.
   have h_fix : (D.descentPair ϑ j).groupAlgAction D.e₀ Ξ = Ξ :=
     (D.isCentralProj_e₀.1.map _).mem_range_iff.1 hΞ
-  refine (D.normalizedDescent_eq_zero_iff ϑ Ξ).2 fun y ↦ ?_
+  refine D.normalizedDescent_eq_zero_of_inner_eq_zero ϑ Ξ fun y ↦ ?_
   have h_lift : (D.descentPair ϑ j).groupAlgAction D.e₀ (D.singleLift ϑ j y) ∈
     (D.goodLift ϑ j).range :=
     ⟨⟨_, _, rfl⟩, singleLift_asAlgebraHom ..⟩
@@ -875,7 +866,7 @@ lemma normalizedDescent_eq_zero_of_mem_orthogonal {Ξ : (D.descentPair ϑ j).For
 at any place of its set `Q`. -/
 lemma tamePart_twistPlace_ne_one (i : (D.descentPair ϑ j).TwistIndex) :
     (D.descentPair ϑ j).tamePart ((D.descentPair ϑ j).twistPlace i) ≠ 1 :=
-  (liftTamePart_eq_of_mem_Q ..).trans_ne (ϑ.tamePart_ne_one _ i.2)
+  (liftTamePart_eq_of_mem_Q ..).trans_ne (ϑ.tamePart_ne_one _ i.property)
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.univ in
@@ -949,7 +940,7 @@ lemma thetaKernelPairing_adjoint_glue_eq_zero {w : FinPlace D.E} {hw : star w �
     by_cases hi : i' = i
     · simp only [η, ite_eq_left hi]
       exact sum_slice_eq_zero_of_mem_falseLiftsAt j ϑ hΞ (glueLattice j ϑ i') h _ _ _ g
-    · simp [η, hi]
+    · simp only [η, hi, ↓reduceIte, map_zero]
       exact Finset.sum_eq_zero fun _ _ ↦ rfl
   refine star_eq_zero.1 ?_
   calc star (thetaKernelPairing j (fun c ↦ (glue j ϑ).adjoint Ξ (i, c)) g)

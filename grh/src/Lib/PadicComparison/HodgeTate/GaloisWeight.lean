@@ -72,7 +72,7 @@ both lifts reduce to the structure map, and the lift is unique (`PadicTest.eq_un
 lemma PadicTest.uniqueLift_comp_eq_uniqueLift_twist [ThePrime p] (g : Gp p) (c : PadicTest) :
     c.uniqueLift.comp (g.toAlgHom.restrictScalars ℤ_[p]) = (PadicTest.twist g c).uniqueLift := by
   refine (PadicTest.twist g c).eq_uniqueLift _ fun z ↦ ?_
-  rw [c.genericStructureMap_twist, smul_coe_Cp]
+  rw [c.genericStructureMap_twist, UniformSpace.Completion.algEquiv_smul_coe]
   exact c.thickeningProj_uniqueLift (g z)
 
 /-- For a `p`-adic test `c` with ring `R`, let `ι = mulMu` be the additive map from `K = R[1/p]` to
@@ -94,17 +94,30 @@ lemma thickeningOver.mulMu_twist [EmbeddedInQpBar p k] (g : Gp p) (c : PadicTest
   have h_tw (a : Ainf) :
       algebraMap Ainf c.Thickening (g • a) = algebraMap Ainf c'.Thickening a := by
     refine congrArg (algebraMap (WittVector p c.TiltRing) c.Thickening) ?_
-    ext
+    ext : 1
     exact (congrArg _ (pow_one _)).trans (tiltMap_comp ..).symm
   have h_mu : mu = g • ((cyclotomicGp g⁻¹).val • mu + mu ^ 2 * a) :=
     inv_smul_eq_iff.mp (eq_add_of_sub_eq' ha)
   have h_sq : algebraMap Ainf c'.Thickening mu ^ 2 = 0 :=
     c'.ker_thickeningProj_sq.le (Ideal.pow_mem_pow c'.thetaGeneric_mu 2)
   rw [mulMu_thickeningProj, h_mu, h_tw]
-  -- On the right, lift the scalar to `c.Thickening` along `c.uniqueLift` and move it out of `mulMu`
-  -- by `mulMu_proj_mul`. `erw`: the thickening and the generic ring of `c'` are those of `c` only
-  -- up to unfolding the twist
-  erw [← c.thickeningProj_uniqueLift, mulMu_proj_mul, mulMu_thickeningProj, AlgHom.commutes]
+  -- Lift the scalar to the thickening and move it out of `mulMu`.
+  let χ := (cyclotomicGp g⁻¹).val
+  let z := algebraMap ℤ_[p] (PadicAlgCl p) χ
+  let lift : c'.Thickening := c.uniqueLift z
+  have h_proj : c'.thickeningProj lift = c.genericStructureMap z :=
+    c.thickeningProj_uniqueLift z
+  let m : c'.Thickening := mulMu c' (c'.thickeningProj x)
+  have h_mu_scalar : mulMu c' (c.genericStructureMap z * c.thickeningProj x) =
+      lift * m :=
+    (congrArg (fun s : c'.GenericRing ↦ mulMu c' (s * c'.thickeningProj x)) h_proj.symm).trans
+      (mulMu_proj_mul c' lift (c'.thickeningProj x))
+  refine Eq.trans ?_ h_mu_scalar.symm
+  refine Eq.trans ?_ (congrArg (fun y : c'.Thickening ↦ lift * y)
+    (mulMu_thickeningProj c' x)).symm
+  have h_lift : lift = algebraMap ℤ_[p] c'.Thickening χ :=
+    c.uniqueLift.commutes χ
+  rw [h_lift]
   simp [Algebra.smul_def, ← IsScalarTower.algebraMap_apply, h_sq]
   -- what remains is associativity, in rings that agree only up to unfolding the twist
   exact mul_assoc _ _ _
@@ -144,10 +157,9 @@ lemma HodgeTatePair.contractionPow_galTwist [EmbeddedInQpBar p k] (g : Gp p) (h 
   | zero =>
     -- both sides are the class of the projection to degree zero
     rw [contractionPow, map_homClass, pullbackAlong_pullbackAlong]
-    -- `erw`: the exterior algebras of `Index → baseAlg` and of `Index → X.test.GenericRing` carry
-    -- the same module structure only up to unfolding, so `homClass_comp` matches only with `erw`
-    erw [← homClass_comp]
-    rfl
+    -- The exterior algebras of `Index → baseAlg` and of `Index → X.test.GenericRing` carry
+    -- the same module structure only up to unfolding, so `homClass_comp` matches only up to that.
+    exact (homClass_comp ..).symm
   | succ h ih =>
     -- Move `twistForms g` past the class of the cocycle `contractionCocycle`, then use the
     -- induction hypothesis. The side goal, that `twistForms g` carries the twisted cocycle to
@@ -185,10 +197,9 @@ theorem hodgeTateMap_galois_twist
     (ht : algebraMap k (PadicAlgCl p) t = algebraMap ℤ_[p] (PadicAlgCl p) (cyclotomicGp g⁻¹).val) :
     let τ : genericOver ⋙ restrictAlg E k ⟶ PadicTest.twist g ⋙ genericOver ⋙ restrictAlg E k :=
       .mk fun (c : PadicTest) ↦
-      CommAlg.homOfRingHom (.id c.GenericRing) fun (z : E) ↦ by
-        symm
-        erw [c.genericStructureMap_twist, smul_coe_Cp, hg]
-        rfl
+      CommAlg.homOfRingHom (.id c.GenericRing) fun (z : E) ↦
+        ((c.genericStructureMap_twist g _).trans (congrArg c.genericStructureMap
+          ((UniformSpace.Completion.algEquiv_smul_coe ..).trans (congrArg _ (hg z))))).symm
     restrictToPairs
         ((Comparison.of (PadicTest.twist g) (twistGenericCoeff g)).pull (whiskerRight τ N) n ξ :
         H (genericOver ⋙ restrictAlg E k ⋙ N) genericCoeff n) =
@@ -236,7 +247,6 @@ theorem hodgeTateMap_galois_twist
   let u : TotalH (galTwist g ⋙ formCoeff) scalarCoeff :=
     TotalH.comp (TotalH.map (restrictAlong (galTwist g)) (contractionPow h)) β
   let s : formCoeff ⟶ formCoeff := toHodgeTest.whiskerLeft (HodgeTest.scaleModule t hodgeCoeff)
-
   have h_tw : pullbackAlong (twistForms g) u = contractionPow h := contractionPow_galTwist g h
   -- The class `y` comes from the Hodge class `x` over `E`, so its twist along `T` is its scaling
   -- by `t`.

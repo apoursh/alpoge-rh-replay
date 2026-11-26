@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Analysis.Fourier.FiniteAbelian.PontryaginDuality
 public import Lib.General.NumberTheory.SUnitsAndClassNumber
 public import Lib.Shimura.GoodReduction.GaussSums
 public import Lib.Shimura.ThetaModuli.PELThetaTori
@@ -74,7 +75,7 @@ variable {V R : Type} [FinComplexSpace V] [CommRing R] [StarRing R] [IsDomain R]
 /-- The action of `a` on the points of `V` of finite order modulo `L`: `x ↦ F a x`, again of finite
 order because `F a` preserves `L`. -/
 abbrev torsionAction (a : R) (x : torsionPoints L) : torsionPoints L :=
-  ⟨F a x, x.2.imp (by grind [IsHermitianAction])⟩
+  ⟨F a x, x.property.imp (by grind [IsHermitianAction])⟩
 
 include h
 
@@ -172,7 +173,7 @@ private lemma averagedPullback_mem_thetaSpace (hd : star c = d) {t : V → ℂ}
     rw [h.normShift_comp_inverse_eq hd l t, t_fixed _ (h.map_mem c l hl)]
   rw [mem_thetaSpace_iff_normalizedShift]
   constructor
-  · simp [averagedPullback, normalizedShift, canonicalMultiplier, funLeft]
+  · simp [averagedPullback, normalizedShift, funLeft]
     fun_prop
   · refine (action_isInvertible (F := F) d).surjective.forall.mpr fun x hx ↦ ?_
     simpa [averagedPullback, funLeft] using
@@ -233,7 +234,7 @@ private lemma exists_averagedPullback_eq_smul (hd : star c = d)
   have Q_commute : ∀ a : B.dualLattice, Commute (h.isAppellHumbert.thetaShiftEnd a) Q := by
     rintro ⟨a, ha⟩
     refine LinearMap.ext fun t ↦ Subtype.ext ?_
-    show B.thetaShift a (h.averagedPullback c d t) = h.averagedPullback c d (B.thetaShift a t)
+    change B.thetaShift a (h.averagedPullback c d t) = h.averagedPullback c d (B.thetaShift a t)
     have shift_eq_smul (s : V → ℂ) : h.normShift a s = (h.multiplier a)⁻¹ • B.thetaShift a s := rfl
     have multiplier_ne : (h.multiplier a)⁻¹ ≠ 0 := by simp [canonicalMultiplier]
     have scaled : (h.multiplier a)⁻¹ • h.averagedPullback c d (B.thetaShift a t) =
@@ -247,7 +248,7 @@ private lemma exists_averagedPullback_eq_smul (hd : star c = d)
     h.isAppellHumbert.schur_lemma (hp := h.isAmpleType.isPosRiemann) Q_commute
   refine ⟨μ, fun t ht ↦ ?_⟩
   have Q_apply : Q ⟨t, ht⟩ = μ • ⟨t, ht⟩ := by
-    rw [hμ, LinearMap.smul_apply, Module.End.one_apply]
+    rw [hμ, LinearMap.smul_apply, one_apply_eq_self]
   simpa [Q] using congrArg Subtype.val Q_apply
 
 /-- Let `d = star c` with `c` and `d` non-zero, and let `c` and `d` act as the identity on the dual
@@ -478,7 +479,7 @@ lemma mul_normShift_eq_mul_normShift_sub_sum (hd : star c = d) {μ : ℂ}
           h.normShift (F c q) (h.normShift (F c z.out) f) 0 := by
   have plain : ∑ z : h.MulKernel d, h.normShift (F c q) (h.normShift (F c z.out) f) 0 =
       μ * h.normShift (F d q) f 0 := by
-    simpa [h.normShift_comp_inverse_eq hd, mem_thetaSpace_iff_normalizedShift.mp hf]
+    simpa [h.normShift_comp_inverse_eq hd]
       using congrArg (fun s : V → ℂ ↦ h.normShift (F d q) s 0) (identity f hf)
   have moved : ∑ z : h.MulKernel d, B.riemannPhase (F c g) (F c z.out) *
       h.normShift (F c q) (h.normShift (F c z.out) f) 0 =
@@ -527,7 +528,7 @@ lemma hasShiftBound_one_of_ker {A : LatticeForm L} {w : torsionPoints L} (hd : s
           simp
         _ = F (1 - α * c) w := by rw [eq_sub_of_add_eq' hαγ]
         _ = (w : V) - F α (F c w) := by simp
-    show (w : V) - F d (F γ w) ∈ L
+    change (w : V) - F d (F γ w) ∈ L
     simpa only [T, g, torsionAction, h_apply, sub_sub_cancel] using h.map_mem α _ hw
   have g_mem : F c g ∈ L := by simpa [g, action_comm c] using h.map_mem _ _ hw
   have killed (z : h.MulKernel d) : F d (F c z.out) ∈ L := by simp [action_comm _ c, h.map_mem]
@@ -639,7 +640,7 @@ lemma hasShiftBound_of_torsionAction
     have h_ample : IsAmpleType B χ :=
       ⟨h_ah, h.isAmpleType.isPosRiemann, 2 * Nat.card (h.MulKernel c), by simp, h_order⟩
     refine .of_mem_thetaSpace h_ample ⟨?_, fun l hl z ↦ ?_⟩
-    · simp [s, normalizedShift, canonicalMultiplier]
+    · simp only [normShift, normalizedShift, canonicalMultiplier, LinearMap.smul_apply, s]
       fun_prop
     -- translation by `l ∈ L` multiplies `s ξ` by `ξ (c⁻¹ l)`
     let y : h.divLattice c := ⟨(F c).inverse l, by simpa [divLattice]⟩
@@ -661,7 +662,7 @@ lemma hasShiftBound_of_torsionAction
       h_ker _ _ (by simp [a, b, sub_sub, add_right_comm, sub_mem])
     refine (mul_le_iSup_of_hasShiftBound hφ hφ h_one).trans_eq' ?_
     simp [a, b, ← map_add, T, φ_def, h_transl, h_pull.sizeAt_add,
-      valuation_eq_one_of_pow_eq_one (orderOf_pos ξ).ne', ← ξ.pow_apply]
+      valuation_eq_one_of_pow_eq_one (orderOf_pos ξ).ne', ← pow_apply ξ]
   have h_card_pos : 0 < v (Nat.card (h.MulKernel c)) := by simp [v.pos_iff]
   -- Take square roots and move the order of the kernel to the left.
   suffices h_main : φ x * v (Nat.card (h.MulKernel c)) ≤ NNReal.sqrt (D * ⨆ z, φ z * φ (z + w)) by
@@ -761,7 +762,7 @@ lemma hasMultiplicativeNorm_of_frequently_hasShiftBound
   -- distorts sizes: `A.HasShiftBound v w 1` for all `A` and `w`.
   have h_tendsto : Tendsto (fun e : V →L[ℂ] V ↦ pullForm e (B + B)) (nhds 0) (nhds 0) := by
     refine Continuous.tendsto' ?_ 0 0 (by aesop)
-    simp [continuous_clm_apply]
+    simp only [continuous_clm_apply, pullForm_apply_apply, add_apply]
     fun_prop
   obtain ⟨e, ⟨c, hc_ne, hce, h_ker⟩, h_pos⟩ : ∃ e : V →L[ℂ] V,
       (∃ c : R, c ≠ 0 ∧ (∀ x : V, F c (e x) = x) ∧
@@ -857,7 +858,7 @@ lemma _root_.New.ThetaTori.hasMultiplicativeNorm_of_expanding [CharZero R] {n p 
     (h_cop_ni.map _).isUnit_of_dvd (by simp)
   obtain ⟨m, hm_pos, h_pow⟩ := h_unit.isOfFinOrder.exists_pow_eq_one
   obtain ⟨j, rfl⟩ := Nat.exists_eq_add_one.mpr hm_pos
-  obtain ⟨t, ht⟩ : (n * i : R) ∣ c ^ (j + 1) - 1 := mk_span_eq_iff_dvd_sub.mp h_pow
+  have h_dvd_pow : (n * i : R) ∣ c ^ (j + 1) - 1 := mk_span_eq_iff_dvd_sub.mp h_pow
   have h_cop_pow : IsCoprime (c ^ (j + 1)) (star (c ^ (j + 1))) := by simpa using h_cop.pow
   -- A non-unit prime to its conjugate differs from it.
   have h_ne_star : c ^ (j + 1) ≠ star (c ^ (j + 1)) := by
@@ -867,17 +868,21 @@ lemma _root_.New.ThetaTori.hasMultiplicativeNorm_of_expanding [CharZero R] {n p 
   -- `i • B` into `L`.
   have h_tor (a : V) (ha : a ∈ (i • B).dualLattice) : n • i • a ∈ L :=
     h_dual _ (mem_dualLattice_nsmul.mp ha)
-  have h_dual_pow : ∀ a ∈ (i • B).dualLattice, F (c ^ (j + 1)) a - a ∈ L := fun a ha ↦ by
-    simpa [eq_add_of_sub_eq ht] using h.map_mem _ _ (h_tor a ha)
-  have h_dual_pow_star : ∀ a ∈ (i • B).dualLattice, F (star (c ^ (j + 1))) a - a ∈ L :=
-    fun a ha ↦ by simpa [eq_add_of_sub_eq ht] using h.map_mem _ _ (h_tor a ha)
+  have h_dual_of_dvd {u : R} (hu : (n * i : R) ∣ u - 1) :
+      ∀ a ∈ (i • B).dualLattice, F u a - a ∈ L := by
+    obtain ⟨t, ht⟩ := hu
+    intro a ha
+    simpa [eq_add_of_sub_eq ht] using h.map_mem t _ (h_tor a ha)
+  have h_dvd_star : (n * i : R) ∣ star (c ^ (j + 1)) - 1 := by
+    simpa using map_dvd starRingAut h_dvd_pow
   -- `p ^ k` is a multiple of `c`
   have hy_p : p ^ k • (y : V) ∈ L := by
     obtain ⟨r, hr⟩ := h_dvd
     have h_mem : F ((p ^ k : ℕ) : R) y ∈ L := by grind [action_comm, map_mem]
     simpa only [map_natCast, ContinuousLinearMap.natCast_apply] using h_mem
   have h_det_pow : v (LinearMap.det (F (star (c ^ (j + 1))) : V →ₗ[ℂ] V)) = 1 := by simp [h_det]
-  exact (h.nsmul hi0).hasShiftBound_one_of_ker rfl h_dual_pow h_dual_pow_star h_ne_star hp hv
+  exact (h.nsmul hi0).hasShiftBound_one_of_ker rfl
+    (h_dual_of_dvd h_dvd_pow) (h_dual_of_dvd h_dvd_star) h_ne_star hp hv
     h_det_pow h_pos (by grind [map_mem]) h_cop_pow hy_p
 
 end New.ThetaTori.IsHermitianAction
@@ -969,7 +974,7 @@ lemma New.ThetaTori.ThetaTorus.hasGoodReduction_and_val_card_eq_one {E : Type} [
   -- The inverse of `x.intAction c` is `complexMul` of a small vector, and `complexMul` is
   -- continuous at `0`.
   have h_cont : Continuous x.isPeriodMap.complexMul := by
-    simp [continuous_clm_apply]
+    simp only [continuous_clm_apply, Variety.IsPeriodMap.complexMul_apply_apply]
     fun_prop
   refine (h_cont.tendsto' 0 _ (map_zero _)).frequently
     (Metric.nhds_basis_ball.frequently_iff.mpr fun r hr_pos ↦ ?_)

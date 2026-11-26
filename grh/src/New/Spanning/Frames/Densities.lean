@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 public import New.Spanning.Bessel.Basic
 public import New.Spanning.Frames.Depth
 
@@ -206,8 +207,8 @@ theorem PlaceData.enorm_floorForm_le (ω : T.G → ℂ) :
   have h_integral : ‖∫ z : T.G × T.G, F.formIntegrand j p q W z.1 ω z.2
       ∂F.groupMeasure.prod (F.partialGroupMeasure 0 j)‖ₑ ≤
       ∫⁻ x : T.G, F.formIntegrandL1Norm j p q W x ω ∂F.groupMeasure :=
-    (enorm_integral_le_lintegral_enorm _).trans (lintegral_prod_le _)
-  rw [floorForm, enorm_mul]
+    (eNorm_integral_le_lintegral_eNorm _).trans (lintegral_prod_le _)
+  rw [floorForm, eNorm_mul]
   exact mul_le_mul' h_density h_integral
 
 /-- The partial group measure of the last two floors, `ϱ` and `ϱ + 1`, is the convolution of the
@@ -252,15 +253,15 @@ theorem PlaceData.IsCut.formIntegrandL1Norm_le_formMajorant {W : T.G → Euclide
     have hω : ‖ω (σ * τ⁻¹)‖ₑ ≤ 1 := by
       rw [← ofReal_norm]
       exact ofReal_le_one.2 (hω_le _)
-    grw [enorm_mul, hω, one_mul]
+    grw [eNorm_mul, hω, one_mul]
     simp [partialCorrelationProduct, plain, twisted, mul_assoc]
   have h_plain_meas : Measurable plain := by fun_prop [partialCorrelation]
   calc ‖F.formIntegrand j p q W x ω g‖ₑ
     _ ≤ ∫⁻ σ : T.G, ∫⁻ τ : T.G, plain σ * twisted τ ∂F.floorMeasure j ∂F.floorMeasure j :=
-      (enorm_integral_le_lintegral_enorm _).trans <| lintegral_mono fun σ ↦
-        (enorm_integral_le_lintegral_enorm _).trans (lintegral_mono (h_integrand σ))
+      (eNorm_integral_le_lintegral_eNorm _).trans <| lintegral_mono fun σ ↦
+        (eNorm_integral_le_lintegral_eNorm _).trans (lintegral_mono (h_integrand σ))
     _ = ∫⁻ σ : T.G, plain σ * ∫⁻ τ : T.G, twisted τ ∂F.floorMeasure j ∂F.floorMeasure j :=
-      lintegral_congr fun σ ↦ lintegral_const_mul' _ _ enorm_ne_top
+      lintegral_congr fun σ ↦ lintegral_const_mul' _ _ eNorm_ne_top
     _ = (∫⁻ σ : T.G, plain σ ∂F.floorMeasure j) * ∫⁻ τ : T.G, twisted τ ∂F.floorMeasure j :=
       lintegral_mul_const _ h_plain_meas
     _ = F.pivotL1Norm j (frameCorrelation W 1) g (g * x) *
@@ -553,10 +554,14 @@ lemma PlaceData.integrable_and_integral_succ_eq_mul_floorForm {W : T.G → Eucli
     refine ⟨h_succ_meas.aemeasurable, h_form_meas.aemeasurable, ext_of_lintegral _ fun f hf ↦ ?_⟩
     rw [lintegral_map hf h_succ_meas, lintegral_map hf h_form_meas]
     -- Write both sides as iterated integrals over `x`, `g`, `σ` and the remaining variables.
-    -- (As a discharger, `fun_prop` needs `with_unfolding_all` to treat the inner integrals.)
-    simp (disch := with_unfolding_all fun_prop) only [μ_succ, μ_form, ν, lintegral_prod,
-      lintegral_mconv_symm]
-    refine lintegral_congr fun x ↦ lintegral_congr fun g ↦ ?_
+    dsimp only [μ_succ, μ_form, ν]
+    rw [lintegral_prod _ (by fun_prop), lintegral_prod _ (by fun_prop),
+      lintegral_prod _ (by fun_prop), lintegral_prod _ (by fun_prop),
+      lintegral_prod _ (by fun_prop)]
+    refine lintegral_congr fun x ↦ ?_
+    rw [lintegral_mconv_symm (by fun_prop)]
+    refine lintegral_congr fun g ↦ ?_
+    rw [lintegral_mconv_symm (by fun_prop)]
     exact lintegral_congr_of_ae_imp ae_floorMeasure_mem fun σ hσ ↦ h_fiber hf x g hσ
   -- As `‖χ‖ ≤ 1`, the integral of `‖formTerm‖` is at most that of `F.formMajorant`.
   have h_form_le : ∫⁻ z : ((T.G × T.G) × T.G) × T.G, ‖formTerm z‖ₑ ∂μ_form ≤
@@ -564,12 +569,14 @@ lemma PlaceData.integrable_and_integral_succ_eq_mul_floorForm {W : T.G → Eucli
     have hχ_le (y : T.G) : ‖χ y‖ₑ ≤ 1 := by
       rw [← ofReal_norm]
       exact ofReal_le_one.2 (hφ_le _)
-    simp (disch := with_unfolding_all fun_prop) only [μ_form, lintegral_prod]
+    dsimp only [μ_form]
+    rw [lintegral_prod _ (by fun_prop), lintegral_prod _ (by fun_prop),
+      lintegral_prod _ (by fun_prop)]
     refine lintegral_mono fun x ↦ lintegral_mono fun g ↦ ?_
-    simp only [formTerm, enorm_mul]
+    simp only [formTerm, eNorm_mul]
     grw [hχ_le]
     -- The remaining double integral over floor `b` splits into the two factors `pivotL1Norm`.
-    simp only [one_mul, pivotL1Norm, partialCorrelationProduct, enorm_mul, enorm_conj,
+    simp only [one_mul, pivotL1Norm, partialCorrelationProduct, eNorm_mul, eNorm_conj,
       _root_.mul_inv_rev,
       inv_inv, mul_assoc, inv_mul_cancel_left]
     exact (lintegral_lintegral_mul (by fun_prop) (by fun_prop)).le

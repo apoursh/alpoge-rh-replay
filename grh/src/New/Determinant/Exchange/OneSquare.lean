@@ -3,6 +3,7 @@ module
 public import Lib.Weil.Seesaw
 public import New.Determinant.Chain.SquareLaw
 public import New.Determinant.Exchange.TheoremForPartners
+public import Lib.General.Algebra.MultivariatePolynomials
 
 /-!
 # One square: up then down against down then up
@@ -214,7 +215,7 @@ lemma exists_eq_mul_of_forall_polyVector {J : Type*} {Λ : J → fockSpace s →
   have h_span (v : fockSpace s) :
       (fun j : J ↦ Λ j v) ∈ Submodule.span ℂ {ρ} ↔ ∃ r : ℂ, ∀ j : J, Λ j v = r * ρ j := by
     simp [Submodule.mem_span_singleton, funext_iff, eq_comm]
-  exact (h_span x).1 ((Submodule.closed_of_finiteDimensional _).isSeqClosed
+  exact (h_span x).1 ((Submodule.isClosed_of_finiteDimensional _).isSeqClosed
     (fun m ↦ (h_span _).2 (h_poly (P m))) (tendsto_pi_nhds.2 h_tendsto))
 
 /-! ### The kernels multiply -/
@@ -223,6 +224,15 @@ section Kernels
 
 variable (A' : Space E n s) (A : Space E n' s') (U₁ : Space E n₁ s₁) (U₂ : Space E n₂ s₂)
   {𝔪 : Modulus E} (ν₀ γ b : AutChar E) {f₁ : G E s₁ → ℂ} {f₂ : G E s₂ → ℂ}
+
+/-- A point mass factors into the point masses of two coordinates that determine the point. -/
+lemma single_one_eq_mul_of_coordinates {α β γ : Type*} [DecidableEq α] [DecidableEq β]
+    [DecidableEq γ] (x : α) (f : α → β) (g : α → γ)
+    (h : ∀ y, (f y = f x ∧ g y = g x) ↔ y = x) :
+    (Pi.single x 1 : α → ℂ) = fun y ↦
+      (Pi.single (f x) 1 : β → ℂ) (f y) * (Pi.single (g x) 1 : γ → ℂ) (g y) := by
+  funext y
+  simp only [Pi.single_apply, ite_zero_mul_ite_zero, one_mul, h]
 
 /-- Let `U₁`, `U₂`, `A` be hermitian spaces, `ν₀` and `aᵢ`, `bᵢ` characters of `[U(1)]` with
 `b₂ * ν₀ = b₁`. Take the indicator function of `x` and the product of `P₁` and `P₂`, read by
@@ -236,11 +246,8 @@ lemma modKernel_single_sum_left {a₁ a₂ b₁ b₂ : AutChar E} (hb : b₂ * �
         (renameRowsCols id Sum.inl P₁ * renameRowsCols id Sum.inr P₂) (G.sum (g₁, g₂)) h =
       modKernel U₁ A a₁ b₁ 𝔪 (Pi.single x.toCols₁ 1) P₁ g₁ h *
         modKernel U₂ A a₂ b₂ 𝔪 (Pi.single x.toCols₂ 1) P₂ g₂ h := by
-  have h_single : Pi.single x 1 = fun z : Matrix n' (n₁ ⊕ n₂) 𝔪.ResidueRing ↦
-      (Pi.single x.toCols₁ 1 : Matrix n' n₁ 𝔪.ResidueRing → ℂ) z.toCols₁ *
-        (Pi.single x.toCols₂ 1 : Matrix n' n₂ 𝔪.ResidueRing → ℂ) z.toCols₂ := by
-    funext z
-    simp [Pi.single_apply, ← ite_and, and_comm, ← fromCols_ext_iff]
+  have h_single := single_one_eq_mul_of_coordinates x Matrix.toCols₁ Matrix.toCols₂
+    (fun _ ↦ by simp only [← fromCols_ext_iff, fromCols_toCols])
   have h_twist : modKernel U₂ A a₂ b₁ 𝔪 (Pi.single x.toCols₂ 1) P₂ g₂ h =
       1 / ν₀.val g₂.det * modKernel U₂ A a₂ b₂ 𝔪 (Pi.single x.toCols₂ 1) P₂ g₂ h := by
     simpa [hb] using modKernel_twist U₂ A a₂ b₂ 𝔪 1 ν₀ _ P₂ g₂ h
@@ -259,11 +266,8 @@ lemma modKernel_single_sum_right {a₁ a₂ b₁ b₂ : AutChar E} (hb : b₁ * 
         (renameRowsCols Sum.inl id P₁ * renameRowsCols Sum.inr id P₂) h (G.sum (g₁, g₂)) =
       modKernel A' U₁ b₁ a₁ 𝔪 (Pi.single y.toRows₁ 1) P₁ h g₁ *
         modKernel A' U₂ b₂ a₂ 𝔪 (Pi.single y.toRows₂ 1) P₂ h g₂ := by
-  have h_single : Pi.single y 1 = fun z : Matrix (n₁ ⊕ n₂) n 𝔪.ResidueRing ↦
-      (Pi.single y.toRows₁ 1 : Matrix n₁ n 𝔪.ResidueRing → ℂ) z.toRows₁ *
-        (Pi.single y.toRows₂ 1 : Matrix n₂ n 𝔪.ResidueRing → ℂ) z.toRows₂ := by
-    funext z
-    simp [Pi.single_apply, ← ite_and, and_comm, ← fromRows_ext_iff]
+  have h_single := single_one_eq_mul_of_coordinates y Matrix.toRows₁ Matrix.toRows₂
+    (fun _ ↦ by simp only [← fromRows_ext_iff, fromRows_toRows])
   have h_twist : modKernel A' U₂ b₂ a₂ 𝔪 (Pi.single y.toRows₂ 1) P₂ h g₂ =
       ν₀.val g₂.det * modKernel A' U₂ b₁ a₂ 𝔪 (Pi.single y.toRows₂ 1) P₂ h g₂ := by
     simpa [hb] using modKernel_twist A' U₂ b₁ a₂ 𝔪 ν₀ 1 _ P₂ h g₂
@@ -292,13 +296,6 @@ lemma upIntegrand_add (f₁ : G E s₁ → ℂ) (f₂ : G E s₂ → ℂ) (x : M
       upIntegrand A U₁ U₂ ν₀ γ b f₁ f₂ x v + upIntegrand A U₁ U₂ ν₀ γ b f₁ f₂ x w := by
   ext q
   simp [upIntegrand, pairTheta, modDatum, mul_add]
-
-/-- The function `upIntegrand` respects differences in its real datum, the Fock vector in
-`PairFock E (s₁ ⊕ᵥ s₂) s'`: its value at `v - w` is its value at `v` minus its value at `w`. -/
-lemma upIntegrand_sub (f₁ : G E s₁ → ℂ) (f₂ : G E s₂ → ℂ) (x : Matrix n' (n₁ ⊕ n₂) 𝔪.ResidueRing)
-    (v w : PairFock E (s₁ ⊕ᵥ s₂) s') : upIntegrand A U₁ U₂ ν₀ γ b f₁ f₂ x (v - w) =
-      upIntegrand A U₁ U₂ ν₀ γ b f₁ f₂ x v - upIntegrand A U₁ U₂ ν₀ γ b f₁ f₂ x w := by
-  rw [eq_sub_iff_add_eq, ← upIntegrand_add, sub_add_cancel]
 
 /-- Let `x` be onto modulo an ideal `𝔪` with at least one prime divisor (`𝔪 ≠ 1`), let `f₁`, `f₂`
 be automorphic functions of rapid decay for the hermitian spaces `U₁`, `U₂`, and let `ν₀`, `γ`, `b`
@@ -359,7 +356,9 @@ lemma exists_norm_integral_upIntegrand_sub_le (h𝔪 : Nonempty 𝔪.places)
   refine ⟨N, D * μA.real .univ, fun v v' hv hv' hvv' ↦ ?_⟩
   rw [norm_sub_rev, ← integral_sub (h_bound v' hv').left (h_bound v hv).left, mul_right_comm]
   refine norm_integral_le_of_norm_le_const (.of_forall fun q ↦ ?_)
-  simpa only [upIntegrand_sub, Pi.sub_apply] using (h_bound (v' - v) hvv').right q
+  have h_sub := eq_sub_iff_add_eq.2
+    ((upIntegrand_add A U₁ U₂ ν₀ γ b f₁ f₂ x (v' - v) v).symm.trans (by rw [sub_add_cancel]))
+  simpa only [h_sub, Pi.sub_apply] using (h_bound (v' - v) hvv').right q
 
 /-- Let `y` be left invertible modulo `𝔪 ≠ 1`, let `f₁`, `f₂` be automorphic functions of rapid
 decay for `U₁`, `U₂`, and let `ν₀`, `γ`, `b` be any characters of `[U(1)]`. At `((g₁, g₂), h)`,
@@ -563,17 +562,17 @@ lemma pairTransposedLift_comp_pairLift_mul (h₁ : IsPairEdge a₁ b₁ e₁ e P
   let k : Gf E n' := liftMod g
   let lifted : A.Form e := pairLift U₁ A (a₁ i) (b₁ i) P₁ (Pi.single (g.val * x.toCols₁) 1) e₁ e f
   have h_char : χ g.val.det = (a₂ i)⁻¹.val (detFin s' k) * (a₁ i)⁻¹.val (detFin s' k) := by
-    simpa [mul_comm] using (h_tame.apply_det (s := s') (liftMod g)).symm
+    simpa using (h_tame.apply_det (s := s') (liftMod g)).symm
   have h_first : A.formRep e k⁻¹ lifted = ((a₁ i)⁻¹.val (detFin s' k) : ℂ) •
       pairLift U₁ A (a₁ i) (b₁ i) P₁ (Pi.single x.toCols₁ 1) e₁ e f := by
-    simpa only [map_one, Module.End.one_apply] using (h₁.isArrow i).left.formRep_formLift_of_eq_smul
+    simpa only [map_one, one_apply_eq_self] using (h₁.isArrow i).left.formRep_formLift_of_eq_smul
       (pairWeil_modDatum_single_mul_left U₁ A (a₁ i) (b₁ i) g x.toCols₁ _) f
   have h_second :
       pairTransposedLift U₂ A (a₂ i) (b₂ i) P₂ (Pi.single (g.val * x.toCols₂) 1) e e₂ lifted =
         ((a₂ i)⁻¹.val (detFin s' k) : ℂ) •
           pairTransposedLift U₂ A (a₂ i) (b₂ i) P₂ (Pi.single x.toCols₂ 1) e e₂
             (A.formRep e k⁻¹ lifted) := by
-    simpa only [map_one, Module.End.one_apply] using (h₂.isArrow_swap i).formRep_formLift_of_eq_smul
+    simpa only [map_one, one_apply_eq_self] using (h₂.isArrow_swap i).formRep_formLift_of_eq_smul
       (pairWeil_modDatum_single_mul_left U₂ A (a₂ i) (b₂ i) g x.toCols₂ _) lifted
   rw [h_first, map_smul, smul_smul, ← h_char] at h_second
   -- the column blocks of `g * x` are by definition `g` times those of `x`
@@ -603,16 +602,16 @@ lemma pairLift_comp_pairTransposedLift_mul (h₁ : IsPairEdge b₁' a₁' (star 
   let lifted : A'.Form e' :=
     pairTransposedLift A' U₁ (b₁' i) (a₁' i) P₁' (Pi.single (y.toRows₁ * g.val) 1) e₁ e' f
   have h_char : χ g.val.det = (a₂' i)⁻¹.val (detFin s k) * (a₁' i)⁻¹.val (detFin s k) := by
-    simpa [mul_comm] using (h_tame.apply_det (s := s) (liftMod g)).symm
+    simpa using (h_tame.apply_det (s := s) (liftMod g)).symm
   have h_first : A'.formRep e' k lifted = ((a₁' i)⁻¹.val (detFin s k) : ℂ) •
       pairTransposedLift A' U₁ (b₁' i) (a₁' i) P₁' (Pi.single y.toRows₁ 1) e₁ e' f := by
-    simpa only [map_one, Module.End.one_apply] using (h₁.isArrow_swap i).formRep_formLift_of_eq_smul
+    simpa only [map_one, one_apply_eq_self] using (h₁.isArrow_swap i).formRep_formLift_of_eq_smul
       (pairWeil_modDatum_single_mul_right A' U₁ (b₁' i) (a₁' i) g y.toRows₁ _) f
   have h_second :
       pairLift A' U₂ (b₂' i) (a₂' i) P₂' (Pi.single (y.toRows₂ * g.val) 1) e' e₂ lifted =
         ((a₂' i)⁻¹.val (detFin s k) : ℂ) • pairLift A' U₂ (b₂' i) (a₂' i) P₂'
           (Pi.single y.toRows₂ 1) e' e₂ (A'.formRep e' k lifted) := by
-    simpa only [map_one, Module.End.one_apply] using (h₂.isArrow i).left.formRep_formLift_of_eq_smul
+    simpa only [map_one, one_apply_eq_self] using (h₂.isArrow i).left.formRep_formLift_of_eq_smul
       (pairWeil_modDatum_single_mul_right A' U₂ (b₂' i) (a₂' i) g y.toRows₂ _) lifted
   rw [h_first, map_smul, smul_smul, ← h_char] at h_second
   -- the row blocks of `y * g` are by definition those of `y` times `g`

@@ -1,5 +1,6 @@
 module
 
+public import Lib.LocalGL.Green.TauFunctions
 public import Lib.Weil.Periods.DescentVanishing
 public import New.UpperBound.Objects.AuxiliaryPair
 
@@ -132,7 +133,7 @@ lemma rowShear_mul_eq_self_of_vecMul_eq_zero {v : r → R} {l : n → R} {x : Ma
     (hlx : l ᵥ* x = 0) :
     rowShear ι v l * x = x := by
   ext a b
-  simp [rowShear, Matrix.add_mul, vecMulVec_mul, hlx, vecMulVec_apply]
+  simp [rowShear, Matrix.add_mul, vecMulVec_mul, hlx]
 
 /-- The matrix `rowShear ι v l` is block upper triangular with first block `1 + v λ`, where
 `λ = l ∘ ι`. -/
@@ -203,9 +204,6 @@ def hyperplaneGroup (l : r → k) : Subgroup (GL r k) where
     refine ⟨-(s⁻¹.val *ᵥ v), ?_⟩
     rw [neg_vecMulVec, ← mul_vecMulVec, eq_add_neg_iff_add_eq, ← s.inv_mul, hv, mul_add, mul_one]
 
-lemma mem_hyperplaneGroup {l : r → k} {s : GL r k} :
-    s ∈ hyperplaneGroup l ↔ ∃ v : r → k, (s : Matrix r r k) = 1 + vecMulVec v l := .rfl
-
 /-- Over a finite field the group of the invertible `1 + v λ` is finite. -/
 instance [Finite k] (l : r → k) : Fintype (hyperplaneGroup l) := .ofFinite _
 
@@ -233,7 +231,7 @@ matrices `s = 1 + v λ` for the row `λ = l`, and `0` elsewhere. -/
 lemma coeff_hyperplaneSum_eq_ite [Finite k] (χ : MulChar k ℂ) (l : r → k) (s : GL r k) :
     (hyperplaneSum χ l).coeff s =
       if s ∈ hyperplaneGroup l then χ⁻¹ (s : Matrix r r k).det else 0 := by
-  simp [hyperplaneSum, mem_hyperplaneGroup]
+  simp [hyperplaneSum, hyperplaneGroup]
 
 /-- The hyperplane sum `∑ χ(det s)⁻¹ s` over the invertible `s = 1 + v λ` is `1` for the zero row
 `λ = 0`. -/
@@ -327,9 +325,7 @@ lemma exists_isAnnihilatingRow_of_det_eq_zero (h_det : (x.submatrix ι id).det =
   refine exists_isAnnihilatingRow_of_max (by rw [inclMatrix_mulVec_vecMul, h_ann]) ?_
     (fun a ↦ ?_) fun _ ↦ μ_lt
   · simpa only [μ_apply] using (Valuation.pos_iff _).1 h_pos
-  · obtain ⟨c, rfl⟩ | ha : a ∈ Set.range ι ∨ a ∉ Set.range ι := Classical.em _
-    · simpa only [μ_apply] using h_max c
-    · exact (μ_lt a ha).le
+  · grind
 
 /-- Let the block `x'` of the rows `ι` of `x` be invertible, and let `x x'⁻¹` have, in a row `a`
 outside `ι`, an entry of valuation `v ≥ 1` at `w`, and `v > 1` unless `chosen` holds. Then `x` has
@@ -358,9 +354,7 @@ lemma exists_isAnnihilatingRow_of_one_le (h_unit : IsUnit (x.submatrix ι id).de
     obtain rfl | h := eq_or_ne c a <;> simp [μ, inclMatrix_mulVec_apply_of_notMem_range ι _ hc, *]
   refine exists_isAnnihilatingRow_of_max (b := b) hμ ?_ (fun c ↦ ?_) fun h_not c hc ↦ ?_
   · simpa only [μ_apply] using (Valuation.pos_iff _).1 (zero_lt_one.trans_le h_ge)
-  · obtain ⟨d, rfl⟩ | hc : c ∈ Set.range ι ∨ c ∉ Set.range ι := Classical.em _
-    · simpa only [μ_apply] using h_max d
-    · simpa only [μ_apply] using (μ_le c hc).trans h_ge
+  · grind
   · simpa only [μ_apply] using (μ_le c hc).trans_lt (h_gt h_not)
 
 /-- **Points without an integral block ratio.** If `x` has no integral block ratio, there is an
@@ -891,7 +885,8 @@ def levelTranslate (O : DescentPair E r n) :
     Representation ℂ O.levelGroup ((n × r → 𝔸f E) → ℂ) where
   toFun h := star (O.levelChar h) • LinearMap.funLeft ℂ ℂ (leftMul E r n h.val⁻¹)
   map_one' := LinearMap.ext fun Ψ ↦ funext fun x ↦ by simp
-  map_mul' h k := LinearMap.ext fun Ψ ↦ funext fun x ↦ by simp [mul_assoc, mul_left_comm]
+  map_mul' h k := LinearMap.ext fun Ψ ↦ funext fun x ↦ by
+    simpa [mul_assoc] using mul_left_comm (star (O.levelChar h)) (star (O.levelChar k)) _
 
 lemma levelTranslate_apply (h : O.levelGroup) (Ψ : (n × r → 𝔸f E) → ℂ) (x : n × r → 𝔸f E) :
     O.levelTranslate h Ψ x = star (O.levelChar h) * Ψ (leftMul E r n h.val⁻¹ x) := rfl
@@ -1350,7 +1345,7 @@ lemma blockAction_mulSingle_inr [DecidableEq O.TwistIndex] (i : O.TwistIndex)
   have h_one : (fun i' : O.ChosenIndex ↦ Pi.mulSingle
       (M := fun j ↦ GL r (ResField (O.placeAt j))) (.inr i) s (.inl i')) = (1 : O.ChosenGL r) :=
     funext fun _ ↦ Pi.mulSingle_eq_of_ne Sum.inl_ne_inr _
-  rw [blockAction_mulSingle, h_one, map_one, Module.End.one_apply]
+  rw [blockAction_mulSingle, h_one, map_one, one_apply_eq_self]
 
 /-- Assume `χ_w ≠ 1` for `w ∈ Q`. Assume also `O.HyperplaneSumsAnnihilate y`: for rows `λ_w` at the
 chosen places, not all zero, the product of the sums `∑ χ_w(det s)⁻¹ s` kills `y`, with

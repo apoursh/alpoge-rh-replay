@@ -1,6 +1,15 @@
 module
 
-public import Lib.Adelic.Unitary.Defs
+public import Mathlib.Algebra.Order.Star.Rat
+public import Mathlib.Algebra.Order.Star.Real
+public import Mathlib.Algebra.Ring.IsFormallyReal
+public import Mathlib.Analysis.CStarAlgebra.Module.Constructions
+public import Mathlib.Analysis.InnerProductSpace.TensorProduct
+public import Mathlib.NumberTheory.LegendreSymbol.Complex
+public import Mathlib.RingTheory.Etale.Weakly
+public import Mathlib.RingTheory.Henselian
+public import Mathlib.RingTheory.RegularLocalRing.Defs
+public import Mathlib.RingTheory.TotallySplit
 public import Lib.General.Analysis.FiniteFourier
 public import Lib.General.LinearAlgebra.IntegralLattices
 
@@ -64,13 +73,6 @@ lemma norm_sq_sum_tmul_eq_card_mul_sum [DecidableEq k] {E : Type*} [NormedAddCom
   rw [norm_sq_eq_re_inner (𝕜 := ℂ), inner_sum_sum_eq_card_mul (fun s ↦ f s) h_inner, sum_filter]
   simp [f]
 
-/-- Orthogonality of characters as a mean: for a primitive additive character `ψ` of a finite field,
-the mean of `ψ (z ⬝ᵥ x)` over `x` is `1` if `z = 0` and `0` otherwise. -/
-lemma expect_addChar_dotProduct [DecidableEq m] [Fintype k] [DecidableEq k] {ψ : AddChar k ℂ}
-    (hψ : ψ.IsPrimitive) (z : m → k) :
-    𝔼 x : m → k, ψ (z ⬝ᵥ x) = if z = 0 then 1 else 0 := by
-  simp [Fintype.expect_eq_sum_div_card, sum_addChar_dotProduct hψ, ite_div]
-
 /-- For a primitive additive character `ψ` of a finite field with `q` elements, the functions
 `ζ ↦ ψ (-x ⬝ᵥ ζ) / √(q ^ |n|)`, one for each `x : kⁿ`, are orthonormal. -/
 lemma orthonormal_addChar_div_sqrt [Fintype k] [DecidableEq k] {ψ : AddChar k ℂ}
@@ -132,7 +134,6 @@ lemma re_sum_addChar_dotProduct_mul_le [Fintype k] [DecidableEq k] {ψ : AddChar
   have h_cs : 2 * (⟪X₁, X₀⟫_ℂ).re ≤ ‖X₁‖ ^ 2 + ‖X₀‖ ^ 2 := by
     have h_re : (⟪X₁, X₀⟫_ℂ).re ≤ ‖X₁‖ * ‖X₀‖ := re_inner_le_norm (𝕜 := ℂ) X₁ X₀
     linarith [two_mul_le_add_sq ‖X₁‖ ‖X₀‖]
-  have hr_pos : 0 < r := by positivity
   calc (∑ s, ψ (x ⬝ᵥ (π s • z)) * Θ s).re
       = r * (2 * (⟪X₁, X₀⟫_ℂ).re / card G) / 2 := by simp [h_X, w, ← sum_div, field]
     _ ≤ r * ((‖X₁‖ ^ 2 + ‖X₀‖ ^ 2) / card G) / 2 := by gcongr
@@ -188,12 +189,13 @@ lemma card_mul_sum_det_eq_zero_le [DecidableEq m] [Fintype k] [DecidableEq k] (�
     · linarith [on_axes y v (.inl hy)]
     · linarith [on_axes y v (.inl hy)]
     · linarith [on_axes y v (.inr hv)]
-    · linarith [off_axes y v hy hv]
+    · linarith only [off_axes y v hy hv]
   -- By orthogonality of characters, the mean over `v` is the mass of the `s` with `y` in the left
   -- kernel of `Z s`.
   have mean_eq (y : m → k) : 𝔼 v : m → k, (∑ s, W y v s).re = ∑ s with y ᵥ* Z s = 0, Θ s := by
     rw [← re_expect, expect_sum_comm]
-    simp [W, ← expect_mul, expect_addChar_dotProduct hψ, sum_filter, apply_ite Complex.re]
+    simp [W, ← expect_mul, Fintype.expect_eq_sum_div_card, sum_addChar_dotProduct hψ, ite_div,
+      sum_filter, apply_ite Complex.re]
   calc card k * ∑ s with (Z s).det = 0, Θ s
       ≤ ∑ s, #{y | y ᵥ* Z s = 0} * Θ s := by
         rw [mul_sum, sum_filter]

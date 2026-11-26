@@ -141,7 +141,7 @@ Here `Φ t i z` is `z` pulled back along `(u i ∘ s_t, c)` (`New.Variety.scaled
 `s_t : (a, m) ↦ (a, t m)` on the square-zero extension `B ⊕ M` of a `k`-algebra `B`. -/
 lemma New.Variety.sum_mul_hodgeTateMap_scaledGraph_eq_zero {p : ℕ} {A : Type*} {E k : Type}
     {d h : ℕ} {I : Type} [CommRing A] [Field E] [CharZero E] [Algebra A E] [Field k]
-    [IsAlgClosed k] [EmbeddedInQpBar p k] [Algebra E k] {R : Subalgebra A E}
+    [EmbeddedInQpBar p k] [Algebra E k] {R : Subalgebra A E}
     {W Y : Over (Spec (CommRingCat.of R))} {u : I → (W ⟶ Y)} {b : I →₀ k}
     (hY_atlas : HasAtlas d (algPointsOf E (CommRingCat.of R) Y))
     (h_null : h ≤ d → ∀ q : ℕ, q ≤ d →
@@ -166,7 +166,7 @@ lemma New.Variety.sum_mul_hodgeTateMap_scaledGraph_eq_zero {p : ℕ} {A : Type*}
   -- restate the goal with `Φ`, and `φ`, `z` in terms of `XW`, `XY`
   revert φ z
   intro (φ : Module.Dual k (PairH (freeAb XW))) (z : HodgeH (freeAb.obj (XY ⊗ XY)) d)
-  show ∑ i : b.support, b i * L (fun t : k ↦ φ (hodgeTateMap d (Φ t i z))) = 0
+  change ∑ i : b.support, b i * L (fun t : k ↦ φ (hodgeTateMap d (Φ t i z))) = 0
   -- the diagonal of `W`, followed by the map to the tensor square
   let diag := freeAb.map (lift (𝟙 _) (𝟙 _)) ≫ freeAb.prod XW XW
   -- `diag` as a linear map on `PairH`, so that `simp` can use its linearity

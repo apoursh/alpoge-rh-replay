@@ -190,7 +190,7 @@ lemma IsShort.sub_translate {B : ℝ} {k : Gf E n} {φ : AlgForm n κ e} (hφ : 
 /-- Let y be an array over ℂ_p with entries of absolute value at most 1. The evaluation vector
 `New.weylEval` at y has norm at most 1: its coordinates are the values at y of the products of
 minors `New.nablaBasis`, which are polynomials with integer coefficients. -/
-lemma norm_weylEval_le_one_of_integral {p : ℕ} [Fact p.Prime] [PadicPlace p]
+lemma norm_weylEval_le_one_of_integral {p : ℕ} [Fact p.Prime]
     {y : (Σ _ : InfinitePlace E, n) × ℕ → ℂ_[p]}
     (hy : ∀ x : (Σ _ : InfinitePlace E, n) × ℕ, ‖y x‖ ≤ 1) :
     ‖weylEval (fun _ : InfinitePlace E ↦ n) κ y‖ ≤ 1 := by
@@ -438,7 +438,7 @@ def algFormCentralRep {J : Subgroup (Gf E n)} {χ : J →* ℂ} :
     Representation ℂ (unitary (𝔸f E)) (levelSpace (algFormRep κ e) J χ) :=
   Representation.subrepresentation ((algFormRep κ e).comp (scalarFin n))
     (levelSpace (algFormRep κ e) J χ) fun _ _ hφ ↦ map_mem_levelSpace_of_commute hφ fun k ↦
-      (Seesaw.commute_scalarFin k.1).symm.map (algFormRep κ e)
+      (Seesaw.commute_scalarFin k.val).symm.map (algFormRep κ e)
 
 /-- For `φ` in the level space of `algFormRep κ e` for `J` and `χ`, the form underlying
 `algFormCentralRep z φ` is `φ` right-translated by the scalar matrix `scalarFin n z` under
@@ -447,6 +447,11 @@ lemma coe_algFormCentralRep_apply {J : Subgroup (Gf E n)} {χ : J →* ℂ} (z :
     (φ : levelSpace (algFormRep κ e) J χ) :
     (algFormCentralRep z φ).val = algFormRep κ e (scalarFin n z) φ.val :=
   rfl
+
+private lemma one_sub_dvd_natCast_sub_geom_sum {R : Type*} [Ring R] (x : R) (r : ℕ) :
+    1 - x ∣ (r : R) - ∑ i ∈ range r, x ^ i := by
+  rw [show (r : R) - ∑ i ∈ range r, x ^ i = ∑ i ∈ range r, (1 - x ^ i) by simp]
+  exact dvd_sum fun i _ ↦ one_sub_dvd_one_sub_pow x i
 
 /-- Let `T` be an endomorphism of a complex vector space with `T ^ r = 1`, where `r ≠ 0`. The
 vectors `T ^ i φ`, `0 ≤ i < r`, have sum `0` if and only if `φ = ψ - T ψ` for some vector `ψ`. -/
@@ -457,11 +462,11 @@ lemma sum_pow_apply_eq_zero_iff_exists_eq_sub {V : Type*} [AddCommGroup V] [Modu
   constructor
   · intro h_sum
     -- The operator `r - ∑ T ^ i` is the scalar `r` on `φ`, and `1 - T` divides it.
-    obtain ⟨S, hS⟩ : ∃ S : Module.End ℂ V, ∑ i ∈ range r, (1 - T ^ i) = (1 - T) * S :=
-      dvd_sum fun i _ ↦ one_sub_dvd_one_sub_pow T i
+    obtain ⟨S, hS⟩ := one_sub_dvd_natCast_sub_geom_sum T r
     have h_scalar : (r : ℂ) • φ = S φ - T (S φ) :=
       calc
-        (r : ℂ) • φ = (∑ i ∈ range r, (1 - T ^ i)) φ := by simp [h_sum, Nat.cast_smul_eq_nsmul]
+        (r : ℂ) • φ = ((r : Module.End ℂ V) - ∑ i ∈ range r, T ^ i) φ := by
+          simp [h_sum, Nat.cast_smul_eq_nsmul]
         _ = S φ - T (S φ) := by simp [hS]
     refine ⟨(r : ℂ)⁻¹ • S φ, ?_⟩
     rw [map_smul, ← smul_sub, ← h_scalar, inv_smul_smul₀ hr]
@@ -496,23 +501,20 @@ lemma iInf_ker_sum_pow_eq_range {G V ι : Type*} [CommGroup G] [AddCommGroup V] 
       | cons w s hw ih =>
         have h_factor : ρ (↑r - σ w) φ = (r : ℂ) • φ := by
           simp [(h_mem φ).1 hφ w, Nat.cast_smul_eq_nsmul]
-        simp only [prod_cons, map_mul, Module.End.mul_apply, ih, map_smul, h_factor, card_cons,
+        simp only [prod_cons, map_mul, mul_apply_eq_comp, ih, map_smul, h_factor, card_cons,
           pow_succ, mul_smul]
-    have h_dvd (w : ι) : 1 - y w ∣ ↑r - σ w := by
-      have h_sum : ↑r - σ w = ∑ i ∈ range r, (1 - y w ^ i) := by simp [σ]
-      rw [h_sum]
-      exact dvd_sum fun i _ ↦ one_sub_dvd_one_sub_pow (y w) i
-    obtain ⟨q, hq⟩ : ∏ w, (1 - y w) ∣ ∏ w, (↑r - σ w) :=
-      prod_dvd_prod_of_dvd _ _ fun w _ ↦ h_dvd w
+    have h_dvd : ∀ w ∈ (univ : Finset ι), 1 - y w ∣ ↑r - σ w :=
+      fun w _ ↦ one_sub_dvd_natCast_sub_geom_sum (y w) r
+    obtain ⟨q, hq⟩ := prod_dvd_prod_of_dvd _ _ h_dvd
     rw [← smul_mem_iff _ (pow_ne_zero _ hr), ← h_scalar univ, hq, map_mul]
-    exact ⟨ρ q φ, (Module.End.mul_apply _ _ φ).symm⟩
+    exact ⟨ρ q φ, (mul_apply_eq_comp _ _ φ).symm⟩
   · -- `σ w * (1 - z w) = 1 - z w ^ r` acts as `0`.
     rintro _ ⟨ψ, rfl⟩
     refine (h_mem _).2 fun w ↦ ?_
     have h_zero : ρ (σ w * (1 - y w)) = 0 := by
       rw [geom_sum_mul_neg, map_sub, map_one, map_pow, Representation.asAlgebraHom_of, hz,
         sub_self]
-    rw [← Module.End.mul_apply, ← map_mul, prod_eq_mul_prod_compl w, ← mul_assoc, map_mul, h_zero,
+    rw [← mul_apply_eq_comp, ← map_mul, prod_eq_mul_prod_compl w, ← mul_assoc, map_mul, h_zero,
       zero_mul, LinearMap.zero_apply]
 
 /-- For levels `K' ≤ K` such that `classAut stdRatPoints K g` and `classAut stdRatPoints K' g` are
@@ -736,10 +738,6 @@ lemma algFormCentralRep_scalingGenerator_pow {P : Parameters} (D : Data P) {j : 
   rw [coe_algFormCentralRep_apply]
   simpa using mem_levelSpace.1 φ.property ⟨_, h_mem⟩
 
-lemma centralRep_scalingGenerator_pow_eq_one {P : Parameters} (D : Data P) (w : D.piNPlaces) :
-    D.centralRep (D.scalingGenerator w) ^ (D.N - 1) = 1 :=
-  D.algFormCentralRep_scalingGenerator_pow w
-
 /-- The ramified source forms: those for which, at each `w ∣ π`, the translates by the powers
 `z_w ^ i`, `0 ≤ i < N - 1`, of the chosen scaling `z_w = D.scalingGenerator w` have sum `0`. -/
 def ramifiedSourceForms {P : Parameters} (D : Data P) : Submodule ℂ D.SourceForm :=
@@ -762,7 +760,7 @@ product of the operators `1 - z_w` over all `w` dividing `π`. -/
 lemma ramifiedSourceForms_eq_range {P : Parameters} (D : Data P) :
     D.ramifiedSourceForms = (D.ramifyingOp univ).range :=
   iInf_ker_sum_pow_eq_range D.centralRep D.scalingGenerator D.cast_N_sub_one_ne_zero
-    D.centralRep_scalingGenerator_pow_eq_one
+    D.algFormCentralRep_scalingGenerator_pow
 
 /-- Let `D` be admissible data for the parameters `P`, with CM field `E = D.E`, prime `N = D.N` and
 integer `π = D.piN` of `E` with `π π̄ = N`, and let `w` be a prime dividing `π`. The finite adelic
@@ -938,8 +936,8 @@ lemma finrank_ker_ramifyingOp_le {P : Parameters} (D : Data P) (s : Finset D.piN
     have h_ker : finrank ℂ (D.ramifyingOp (cons w s hw)).ker ≤
         finrank ℂ (1 - D.centralRep (D.scalingGenerator w)).ker +
           finrank ℂ (D.ramifyingOp s).ker := by
-      rw [D.ramifyingOp_cons w hw]
-      exact finrank_ker_mul_le _ _
+      exact (congrArg (fun f : Module.End ℂ D.SourceForm ↦ finrank ℂ f.ker)
+        (D.ramifyingOp_cons w hw)).trans_le (finrank_ker_mul_le _ _)
     calc (finrank ℂ (D.ramifyingOp (cons w s hw)).ker : ℝ)
         ≤ finrank ℂ (1 - D.centralRep (D.scalingGenerator w)).ker +
             finrank ℂ (D.ramifyingOp s).ker := by exact_mod_cast h_ker
@@ -963,7 +961,6 @@ lemma le_finrank_ramifiedSourceForms {P : Parameters} (D : Data P) :
 
 /-- The proportion `f / (N - 1)` is at most `b⁻⁸`, because `f ≤ b` and `b⁹ + 1 ≤ N`. -/
 lemma f_div_N_sub_one_le {P : Parameters} (D : Data P) : D.f / (D.N - 1 : ℝ) ≤ (D.b ^ 8)⁻¹ := by
-  have hb : 0 < D.b := HasLogBound.pos D
   have hf : D.f ≤ D.b := D.le_of_hasLogBound
   have hN : D.b ^ 9 ≤ D.N - 1 := le_sub_iff_add_le.2 D.le_of_hasLogBound
   calc D.f / (D.N - 1 : ℝ) ≤ D.b / D.b ^ 9 := by gcongr
@@ -1017,8 +1014,8 @@ lemma span_isShort_ramifiedSourceForms_eq_top {P : Parameters} (D : Data P) :
       {φ : D.SourceForm | IsShort D.errorUnit.exp φ.val} := by
     intro φ hφ
     simpa [Z, card_piNPlaces, mul_div_cancel₀] using D.isShort_ramifyingOp univ hφ
-  exact span_setOf_mem_eq_top_of_eq_range D.ramifiedSourceForms_eq_range D.span_isShort_eq_top
-    h_maps
+  exact span_setOf_mem_eq_top_of_eq_range (T := {φ : D.SourceForm | IsShort D.errorUnit.exp φ.val})
+    D.ramifiedSourceForms_eq_range D.span_isShort_eq_top h_maps
 
 end Data
 

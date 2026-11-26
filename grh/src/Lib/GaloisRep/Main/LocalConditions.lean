@@ -1,6 +1,6 @@
 module
 
-public import Lib.GaloisRep.Main.Defs
+public import Lib.General.LinearAlgebra.MatrixPolynomials
 public import Lib.PadicHodge.Crystalline.HodgeTateJumps
 public import Lib.PadicHodge.Crystalline.Regularity
 
@@ -16,11 +16,17 @@ This map respects Frobenius elements, inertia and the cyclotomic character. Fini
 polynomials pass from a representation to one that embeds in it near the identity. This covers
 subrepresentations, restriction to open subgroups and conjugation by automorphisms of `Ω`.
 
+`PolyKillsAt` records an annihilating polynomial, not its equality with the characteristic
+polynomial. Even a monic annihilator of degree equal to the rank need not record root
+multiplicities. The above-`ℓ` clauses are quantified over local embedding data; they do not
+by themselves assert the existence of such data.
+
 ## Main definitions and results
 
 * `New.GaloisRep.IsGoodAt`: unramified, or crystalline.
 * `New.GaloisRep.IsFiniteTypeAt`: trivial on an open part of inertia, or potentially crystalline.
-* `New.GaloisRep.PolyKillsAt`: the polynomial `P` kills `s`.
+* `New.GaloisRep.PolyKillsAt`: the polynomial `P` kills the relevant action of `s`, without
+  prescribing its characteristic polynomial.
 * `New.GaloisRep.JumpsRelAt`, `New.GaloisRep.HasJumpsAt`: the Hodge–Tate jumps compared with
   multisets `J`.
 * `New.GaloisRep.IsSphericalAbove`: the three conditions that hold at a spherical place `w` of `E`.
@@ -344,7 +350,7 @@ private lemma PadicPlaceEmbedding.eventually_toLin'_decompRep
         P.toLin'.restrictScalars ℤ_[ℓ] (decompRep (r.comp φ) (A.comap c.toRingHom) g x) =
           decompRep r' (A.comap c.toRingHom) g (P.toLin'.restrictScalars ℤ_[ℓ] x) := by
   rw [nearOne_eq_nhds_one (𝒥 := (L.comap c hφ).toOverGp) (L.isOpenEmbedding_comp c hφ)]
-  exact (continuousAt_subtype_val.eventually_mem hS).mono (toLin'_decompRep_comp_of_mem h_comm)
+  exact (continuousAt_subtypeVal.eventually_mem hS).mono (toLin'_decompRep_comp_of_mem h_comm)
 
 /-- Let `P' * P = 1` and `r' g * P = P * r (φ g)` on a neighbourhood `S` of `1`. If `r'` is
 potentially crystalline on the decomposition group of `A.comap c` along `L.comap c hφ`, then `r`

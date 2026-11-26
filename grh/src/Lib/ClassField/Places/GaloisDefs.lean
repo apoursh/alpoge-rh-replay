@@ -1,6 +1,18 @@
 module
 
-public import Lib.Base
+public import TauCeti.RingTheory.Valuation.ValuationSubring
+public import Mathlib.Algebra.Pointwise.Stabilizer
+public import Mathlib.NumberTheory.Cyclotomic.CyclotomicCharacter
+public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.RingTheory.IsGaloisGroup.Defs
+public import Mathlib.RingTheory.SimpleRing.Principal
+public import Mathlib.RingTheory.WittVector.IsPoly
+public import Mathlib.Tactic.Basify
+public import Mathlib.Tactic.Polynomial.Basic
+public import Mathlib.Tactic.ReduceModChar
+public import Std.Internal.Order.Automation
+public import Std.Tactic.BVDecide.Normalize.Prop
+public import Lib.Speed
 
 /-!
 # Vocabulary of Galois theory: places, decomposition, Frobenius elements and inertia
@@ -141,9 +153,6 @@ lemma IsFrob.valuation_sub_pow_lt_one (h : IsFrob A q σ) {x : Ω} (hx : A.valua
 lemma mem_decompGroup_iff : σ ∈ decompGroup Γ A ↔ ∀ x : Ω, σ • x ∈ A ↔ x ∈ A :=
   ext'_iff.trans mem_stabilizer_set
 
-lemma smul_eq_comap : g • A = A.comap (toRingHom Γ Ω g⁻¹) :=
-  ext' (Set.preimage_smul_inv g _).symm
-
 lemma conj_mem_decompGroup_smul (hσ : σ ∈ decompGroup Γ A) :
     g * σ * g⁻¹ ∈ decompGroup Γ (g • A) := by
   simp [mem_stabilizer_iff, mul_smul, mem_stabilizer_iff.mp hσ]
@@ -156,7 +165,7 @@ lemma comap_apply_lt_one_iff {x : Ω} : (comap A' j) x < 1 ↔ A' (j x) < 1 :=
   isEquiv_comap.lt_one_iff_lt_one
 
 lemma smul_apply_smul_lt_one_iff (g : Γ) {x : Ω} : (g • A) (g • x) < 1 ↔ A x < 1 := by
-  rw [smul_eq_comap, comap_apply_lt_one_iff]
+  rw [pointwise_smul_eq_comap, comap_apply_lt_one_iff]
   simp
 
 /-- Let `j : Ω → Ω'` be a ring map and `φ : Γ' → Γ` a map with `j (φ g • x) = g • j x`
@@ -216,12 +225,9 @@ lemma IsFrob.mul_iff (h : IsFrob A q σ) : IsFrob A (q * q') (σ * τ) ↔ IsFro
     _ ↔ (σ • A).valuation (σ • (τ • x - x ^ q')) < 1 := by rw [hσ_stab]
     _ ↔ A.valuation (τ • x - x ^ q') < 1 := smul_apply_smul_lt_one_iff σ
 
-lemma isFrob_one_one : IsFrob A 1 (1 : Γ) :=
-  ⟨one_mem _, fun x _ ↦ by simp⟩
-
 lemma IsFrob.pow (h : IsFrob A q σ) (n : ℕ) : IsFrob A (q ^ n) (σ ^ n) := by
   induction n with
-  | zero => simpa using isFrob_one_one
+  | zero => simpa using show IsFrob A 1 (1 : Γ) from ⟨one_mem _, fun x _ ↦ by simp⟩
   | succ n ih =>
     rw [pow_succ, pow_succ]
     exact ih.mul_iff.mpr h

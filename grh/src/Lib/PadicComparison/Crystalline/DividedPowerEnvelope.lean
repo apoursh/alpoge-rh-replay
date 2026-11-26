@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Analysis.SpecialFunctions.RegularizedHypergeometric
 public import Lib.PadicComparison.Completion
 public import Lib.PadicComparison.ToricTower
 
@@ -74,7 +75,7 @@ lemma IsCompleteTorsionFree.p_mem_pdIdeal (h : IsCompleteTorsionFree S) : ↑p �
   intro n
   obtain ⟨a, b, hab⟩ := (coprime_ordCompl hp.out n.factorial_ne_zero).cast (R := S)
   have h_unit : IsUnit ((p : S) * -a + 1) :=
-    mem_jacobson_bot.mp (h.complete.le_jacobson_bot _ (subset_span rfl)) (-a)
+    Ring.mem_jacobson_iff.mp (h.complete.le_jacobson _ (subset_span rfl)) (-a)
   have h_fact : (n ! : S) ∣ p ^ multiplicity p n ! := by
     refine h_unit.dvd_mul_right.mp ⟨b, ?_⟩
     -- multiply `a * p + b * m = 1` by `p ^ v` and use `p ^ v * m = n !`
@@ -90,8 +91,11 @@ lemma IsCompleteTorsionFree.isLocalHom_pdQuotientMk (h : IsCompleteTorsionFree S
     IsLocalHom (pdQuotientMk S) := by
   -- If `x ∈ pdIdeal S` then `p ∣ p ! ∣ x ^ p`, so `x ^ p` lies in the Jacobson radical, which is a
   -- radical ideal.
-  refine isLocalHom_of_le_jacobson_bot _ fun x hx ↦
-    isRadical_jacobson _ ⟨p, h.complete.le_jacobson_bot _ ?_⟩
+  refine isLocalHom_of_le_jacobson fun x hx ↦ ?_
+  rw [← Ideal.jacobson_bot]
+  refine isRadical_jacobson _ ⟨p, ?_⟩
+  rw [Ideal.jacobson_bot]
+  refine h.complete.le_jacobson _ ?_
   grw [mem_span_singleton, ← hx p, ← dvd_factorial Fin.pos' le_rfl]
 
 /-- Let `S` be `p`-torsion-free and `p`-complete, and `M` a commutative monoid on which `x ↦ x ^ p`
@@ -344,12 +348,14 @@ lemma exists_preEnvelope_basis (z : T) (b : Basis (I × ℕ) B T) (u : I → T) 
     suffices h_gen : ∀ (i : I × ℕ), ∀ x ∈ Submonoid.closure ((Subtype.val : preEnvelope {z} → _) ⁻¹'
         {(z' ^ n) ⊗ₜ[ℤ] (n ! : ℚ)⁻¹ | (z' ∈ ({z} : Set T)) (n : ℕ)}),
           b' i • x ∈ span B (Set.range w) by
-      -- `erw`: `preEnvelope {z}` is `adjoin T _` only after unfolding its definition, and
-      -- `adjoin_adjoin_coe_preimage` is stated for `adjoin`.
-      erw [← restrictScalars_top _ T, ← top_toSubmodule, ← adjoin_adjoin_coe_preimage,
-        adjoin_eq_span, ← span_smul_of_span_eq_top b'.span_eq, span_le, Set.smul_subset_iff,
-        Set.forall_mem_range]
-      exact h_gen
+      let generators : Set (T ⊗[ℤ] ℚ) :=
+        {(z' ^ n) ⊗ₜ[ℤ] (n ! : ℚ)⁻¹ | (z' ∈ ({z} : Set T)) (n : ℕ)}
+      rw [← restrictScalars_top _ T, ← top_toSubmodule]
+      change Submodule.restrictScalars B ((⊤ : Subalgebra T (adjoin T generators)).toSubmodule) ≤ _
+      rw [← adjoin_adjoin_coe_preimage, adjoin_eq_span, ← span_smul_of_span_eq_top b'.span_eq]
+      refine span_le.mpr (Set.smul_subset_iff.mpr ?_)
+      rintro _ ⟨i, rfl⟩
+      exact h_gen i
     rintro ⟨a, k⟩ x hx
     suffices key : ∀ n c : ℕ, algebraMap T _ (u a) * (c * y n) * x ∈ span B (Set.range w) by
       simpa [← hb', smul_def', hy] using key k k !
@@ -416,7 +422,7 @@ lemma IsCompleteTorsionFree.bijective_one_sub_smul {E : Type} [CommRing E] [Alge
     have h_shift :
         shiftDiff E (p : B) (fun i ↦ W^[i] x) = shiftDiff E (p : B) (fun i ↦ W^[i] z) := by
       funext i
-      simpa [shiftDiff, ← End.pow_apply, pow_add] using congrArg (W^[i]) hxz
+      simpa [shiftDiff, ← pow_apply_eq_iterate, pow_add] using congrArg (W^[i]) hxz
     exact congrFun (hE.isDerivedComplete.injective h_shift) 0
   · -- every `x` is in the image modulo `p`: `x = (1 - p W) x + p W x`
     exact hE.isDerivedComplete.exists_apply_eq_of_approx hE.isDerivedComplete (1 - (p : B) • W)

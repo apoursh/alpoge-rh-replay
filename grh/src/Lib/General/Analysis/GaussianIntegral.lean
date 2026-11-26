@@ -1,20 +1,41 @@
 module
 
+import TauCeti.Analysis.SpecialFunctions.Gaussian.Reproducing
+import TauCeti.Analysis.Matrix.L2OpNorm
+import TauCeti.Analysis.Matrix.OstrowskiTaussky
+public import Mathlib.Algebra.Algebra.Field
+public import Mathlib.Algebra.Module.StablyFree.Basic
+public import Mathlib.Algebra.Ring.IsFormallyReal
+public import Mathlib.Analysis.Matrix.Order
+public import Mathlib.Analysis.SpecialFunctions.Gaussian.FourierTransform
+public import Mathlib.LinearAlgebra.Matrix.Charpoly.Eigs
+public import Mathlib.MeasureTheory.Integral.Pi
+public import Mathlib.RingTheory.Complex
+public import Mathlib.RingTheory.PiTensorProduct
+public import Mathlib.RingTheory.SimpleRing.Principal
+public import Mathlib.RingTheory.TotallySplit
+public import Mathlib.RingTheory.WittVector.IsPoly
+public import Mathlib.Tactic.Basify
+public import Mathlib.Tactic.ENatToNat
+public import Mathlib.Tactic.Polynomial.Basic
+public import Mathlib.Tactic.ReduceModChar
+public import Mathlib.Topology.Separation.CompletelyRegular
+public import Std.Internal.Order.Automation
+public import Std.Tactic.BVDecide.Normalize.Prop
 public import Lib.Base
 
 /-!
-# Matrix norm estimates, the Ostrowski–Taussky inequality, and the complex Gaussian integral
+# Matrix norm estimates and the complex Gaussian integral
 
 This file proves estimates for complex matrices and computes the complex Gaussian integral on
 `ι → ℂ`. Here `‖A‖` is the `ℓ²` operator norm. For accretive `A`, the integral of
 `exp (-x* A (x - a))` against normalised Lebesgue measure is `(det A)⁻¹`.
+Nonvanishing of accretive determinants follows from Tau Ceti's Ostrowski–Taussky inequality.
 
 ## Main definitions and results
 
 * `New.norm_apply_le_l2_opNorm`, `New.l2_opNorm_le_of_apply`: the operator norm bounds the entries,
   and for an `m × n` matrix it is at most `|m| |n|` times a bound for the entries.
-* `New.ostrowski_taussky`: the Ostrowski–Taussky inequality, in the form
-  `|det H| ≤ 2 ^ card n |det Θ|` when `0 ≤ H ≤ Θ + Θᴴ`.
 * `Matrix.IsAccretive`: the matrices `A` with `A + Aᴴ` positive definite. Positive definite matrices
   are accretive (`Matrix.PosDef.isAccretive`), and accretive matrices have nonzero determinant
   (`Matrix.IsAccretive.det_ne_zero`).
@@ -32,7 +53,7 @@ The Ostrowski–Taussky inequality and the complex Gaussian integral are known r
 
 @[expose] public section
 
-/-! ## Operator norm, matrix entries and the Ostrowski–Taussky inequality -/
+/-! ## Operator norm and matrix entries -/
 
 namespace New
 
@@ -53,47 +74,7 @@ lemma l2_opNorm_le_of_apply {M : ℝ} (h_apply : ∀ (i : m) (j : n), ‖A i j�
   simp [field]
 
 lemma norm_apply_le_l2_opNorm (i : m) (j : n) : ‖A i j‖ ≤ ‖A‖ :=
-  calc ‖A i j‖ = ‖WithLp.toLp 2 (A *ᵥ Pi.single j 1) i‖ := by simp
-    _ ≤ ‖WithLp.toLp 2 (A *ᵥ Pi.single j 1)‖ := PiLp.norm_apply_le _ i
-    _ ≤ ‖A‖ := by simpa using A.l2_opNorm_mulVec (EuclideanSpace.single j 1)
-
-/-- If `H` is positive definite and `Θ + Θᴴ - H` is positive semidefinite, then every eigenvalue
-`l` of `H⁻¹ (Θ + Θ)` has real part at least `1`. -/
-lemma one_le_re_of_mem_roots_charpoly_inv_mul {Θ H : Matrix n n ℂ} (hH : H.PosDef)
-    (h_sub : (Θ + Θᴴ - H).PosSemidef) {l : ℂ} (hl : l ∈ (H⁻¹ * (Θ + Θ)).charpoly.roots) :
-    1 ≤ l.re := by
-  -- For an eigenvector `v`, `l.re * vᴴ H v = vᴴ (Θ + Θᴴ) v ≥ vᴴ H v > 0`.
-  obtain ⟨v, hv_ne, hv⟩ : ∃ v : n → ℂ, v ≠ 0 ∧ l • v = (H⁻¹ * (Θ + Θ)) *ᵥ v := by
-    simpa [eval_charpoly, ← exists_mulVec_eq_zero_iff, sub_mulVec, sub_eq_zero] using
-      Polynomial.isRoot_of_mem_roots hl
-  have h_eigen : l • H *ᵥ v = Θ *ᵥ v + Θ *ᵥ v := by
-    simp [← mulVec_smul, hv, ← add_mulVec, hH.det_pos.ne']
-  obtain ⟨h_pos, h_im⟩ : 0 < (star v ⬝ᵥ H *ᵥ v).re ∧ 0 = (star v ⬝ᵥ H *ᵥ v).im :=
-    Complex.pos_iff.1 (hH.dotProduct_mulVec_pos hv_ne)
-  have h_re : l.re * (star v ⬝ᵥ H *ᵥ v).re = 2 * (star v ⬝ᵥ Θ *ᵥ v).re := by
-    simpa [← h_im, two_mul] using congrArg (fun w : n → ℂ ↦ (star v ⬝ᵥ w).re) h_eigen
-  have h_le : (star v ⬝ᵥ H *ᵥ v).re ≤ 2 * (star v ⬝ᵥ Θ *ᵥ v).re := by
-    simpa [add_mulVec, sub_mulVec, mulVec_conjTranspose, dotProduct_star, ← dotProduct_mulVec,
-      two_mul] using h_sub.re_dotProduct_nonneg v
-  exact le_of_mul_le_mul_right (by rwa [one_mul, h_re]) h_pos
-
-/-- Ostrowski–Taussky inequality: if `H` and `Θ + Θᴴ - H` are positive semidefinite complex matrices
-indexed by `n`, then `|det H| ≤ 2 ^ card n |det Θ|`. -/
-lemma ostrowski_taussky {Θ H : Matrix n n ℂ} (hH : H.PosSemidef)
-    (h_sub : (Θ + Θᴴ - H).PosSemidef) : ‖H.det‖ ≤ 2 ^ card n * ‖Θ.det‖ := by
-  by_cases h_det : H.det = 0
-  · simp [h_det]
-  set M : Matrix n n ℂ := H⁻¹ * (Θ + Θ)
-  have h_root (l : ℂ) (hl : l ∈ M.charpoly.roots) : 1 ≤ ‖l‖ :=
-    (one_le_re_of_mem_roots_charpoly_inv_mul (hH.posDef_iff_det_ne_zero.2 h_det) h_sub hl).trans
-      l.re_le_norm
-  -- The determinant of `M` is the product of its eigenvalues.
-  have h_prod : 1 ≤ ‖M.det‖ := by
-    rw [det_eq_prod_roots_charpoly]
-    exact Multiset.prod_induction (1 ≤ ‖·‖) _
-      (fun a b ha hb ↦ by simpa using one_le_mul_of_one_le_of_one_le ha hb) norm_one.ge h_root
-  have h_norm : ‖M.det‖ = 2 ^ card n * ‖Θ.det‖ / ‖H.det‖ := by simp [M, ← two_smul ℂ, field]
-  rwa [h_norm, one_le_div (norm_pos_iff.2 h_det)] at h_prod
+  Matrix.norm_apply_le_l2_opNorm A i j
 
 end New
 
@@ -114,7 +95,7 @@ lemma Matrix.PosDef.isAccretive (hA : A.PosDef) : A.IsAccretive := hA.add hA.con
 lemma Matrix.IsAccretive.det_ne_zero [DecidableEq ι]
     (hA : A.IsAccretive) : A.det ≠ 0 := fun h_det ↦ by
   have h_le : ‖(A + Aᴴ).det‖ ≤ 2 ^ Fintype.card ι * ‖A.det‖ :=
-    New.ostrowski_taussky hA.posSemidef (by simpa using PosSemidef.zero)
+    hA.posSemidef.norm_det_le_two_pow_mul (by simpa using PosSemidef.zero)
   simp [h_det, hA.det_pos.ne'] at h_le
 
 namespace New.Fock
@@ -192,22 +173,11 @@ lemma exists_eq_conjTranspose_mul_diagonal_mul [DecidableEq ι] (hA : A.IsAccret
 integral `π / d` over `ℂ`. -/
 lemma integral_cexp_neg_star_mul {d : ℂ} (hd : 0 < d.re) (a : ℂ) :
     ∫ z : ℂ, exp (-(star z * (d * (z - a)))) = Real.pi / d := by
-  -- With `z = v 0 + i v 1` the linear part `star z * (d a)` has the coefficients `d a` of `v 0`
-  -- and `-i d a` of `v 1`; apply the Gaussian integral on `ℝ²`.
-  let c : Fin 2 → ℂ := (d * a) • ![1, -I]
-  let g (v : Fin 2 → ℝ) : ℂ := exp (-d * ∑ i : Fin 2, (v i : ℂ) ^ 2 + ∑ i : Fin 2, c i * v i)
-  have h_exponent (z : ℂ) : -(star z * (d * (z - a))) =
-      -d * ((z.re : ℂ) ^ 2 + (z.im : ℂ) ^ 2) + (d * a * z.re - I * (d * a) * z.im) := by
-    rw [show star z = z.re - z.im * I by simp [Complex.ext_iff]]
-    linear_combination (z.re - z.im * I) * d * re_add_im z + d * z.im ^ 2 * I_sq
-  have h_coeff : ∑ i : Fin 2, c i ^ 2 = 0 := by simp [c, mul_pow]
-  calc
-    _ = ∫ z : ℂ, g (measurableEquivPi z) := by
-      simp only [h_exponent]
-      simp [g, c, sub_eq_add_neg, mul_comm]
-    _ = ∫ v : Fin 2 → ℝ, g v := volume_preserving_equiv_pi.integral_comp' g
-    _ = Real.pi / d := by
-      simpa [h_coeff, g] using GaussianFourier.integral_cexp_neg_mul_sum_add hd c
+  convert TauCeti.integral_cexp_neg_mul_norm_sq_add hd 0 (d * a) using 1
+  · congr 1; ext z; congr 1
+    rw [← conj_mul', star_def]
+    ring
+  · simp
 
 /-- The complex Gaussian integral: if `A` is accretive (that is, `A + Aᴴ` is positive definite),
 then `exp (-x* A (x - a))` has integral `(det A)⁻¹` for `normalizedVolume ι`, Lebesgue measure on

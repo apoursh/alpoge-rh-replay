@@ -1,5 +1,6 @@
 module
 
+public import Lib.GLn.SchurModule.SchurMatrix
 public import New.Derivatives.Divisibility.NullFrames
 public import New.Derivatives.FormalGroup.ThetaProducts
 
@@ -73,24 +74,16 @@ lemma norm_prod_factorial_le (d : σ →₀ ℕ) :
     ‖d.prod fun (_ : σ) (k : ℕ) ↦ (k.factorial : ℂ_[p])‖ ≤
       p ^ (card σ * (p.log d.degree + 1) - d.degree / (p - 1) : ℝ) := by
   have hp : 1 < p := Nat.Prime.one_lt Fact.out
-  have h_legendre (x : σ) :
-      (d x / (p - 1) - padicValNat p (d x).factorial : ℝ) ≤ p.log d.degree + 1 := by
-    have h_mem : (d x / (p - 1) - (p.log d.degree + 1 : ℕ) : ℝ) ≤ padicValNat p (d x).factorial :=
-      (padicValNat_factorial_mem_Icc
-        ((d.le_degree x).trans_lt (p.lt_pow_succ_log_self hp _))).1
-    push_cast at h_mem
-    linarith
-  have h_sum : ∑ x, (d x / (p - 1) - padicValNat p (d x).factorial : ℝ) ≤
-      card σ • (p.log d.degree + 1 : ℝ) := sum_le_card_nsmul univ _ _ fun x _ ↦ h_legendre x
-  rw [sum_sub_distrib, ← sum_div, ← Nat.cast_sum, ← d.degree_eq_sum, nsmul_eq_mul] at h_sum
-  calc
-    _ = ∏ x, (p : ℝ)⁻¹ ^ padicValNat p (d x).factorial := by
-      rw [d.prod_fintype _ (by simp), norm_prod]
-      exact prod_congr rfl fun x _ ↦ norm_natCast_eq_inv_pow_padicValNat (d x).factorial_ne_zero
-    _ = (p : ℝ) ^ (-∑ x, (padicValNat p (d x).factorial : ℝ)) := by
-      rw [← Nat.cast_sum, Real.rpow_neg (by positivity), Real.rpow_natCast, ← inv_pow,
-        prod_pow_eq_pow_sum]
-    _ ≤ _ := Real.rpow_le_rpow_of_exponent_le (mod_cast hp.le) (by linarith)
+  have h_sum : (∑ x : σ, (d x / (p - 1) - (p.log d.degree + 1 : ℕ) : ℝ)) ≤
+      ∑ x : σ, (padicValNat p (d x).factorial : ℝ) :=
+    sum_le_sum fun x _ ↦ (padicValNat_factorial_mem_Icc
+      ((d.le_degree x).trans_lt (p.lt_pow_succ_log_self hp _))).1
+  rw [sum_sub_distrib, ← sum_div, ← Nat.cast_sum, ← d.degree_eq_sum,
+    sum_const, Finset.card_univ, nsmul_eq_mul] at h_sum
+  push_cast at h_sum
+  rw [d.prod_fintype _ (by simp),
+    norm_prod_natCast_eq_rpow_neg_sum (p := p) (fun x : σ ↦ (d x).factorial_ne_zero)]
+  exact Real.rpow_le_rpow_of_exponent_le (mod_cast hp.le) (by linarith)
 
 /-- If the coefficients of degree `l` of the series `G` are integral and `Q` is a homogeneous
 polynomial of degree `l` with integral coefficients, then the jet `(Q(∂) G)(0)` has valuation at
@@ -123,7 +116,7 @@ and on the first `h` columns. -/
 noncomputable def minorProd (i' : WeylIndex n' κ) (y : Φ → n → ℕ → R) :
     MvPolynomial (Φ × n' × n) R :=
   ∏ τ : Φ, ∏ h : Fin (card n'), ∏ j : Fin (κ τ h),
-    (of fun b k : Fin h ↦ ∑ a : n, y τ a k • X (τ, (i' τ).1 h j b, a)).det
+    (of fun b k : Fin h ↦ ∑ a : n, y τ a k • X (τ, (i' τ).val h j b, a)).det
 
 end Minors
 
@@ -169,7 +162,7 @@ and `b` among the rows that the filling `i'` puts into the column. -/
 noncomputable def columnDetProd (i' : WeylIndex n' κ) :
     MvPolynomial (DirectionVar Φ n' (card n')) R :=
   ∏ τ : Φ, ∏ h : Fin (card n'), ∏ j : Fin (κ τ h),
-    (of fun b k : Fin h ↦ X (⟨h, k⟩, τ, (i' τ).1 h j b)).det
+    (of fun b k : Fin h ↦ X (⟨h, k⟩, τ, (i' τ).val h j b)).det
 
 /-- The polynomial `columnDetProd R i'` is compatible with change of the coefficient ring. -/
 lemma map_columnDetProd {R' : Type} [CommRing R'] (φ : R →+* R') (i' : WeylIndex n' κ) :
@@ -199,7 +192,7 @@ lemma isHomogeneous_columnDetProd (i' : WeylIndex n' κ) :
     simp [boxes, sum_range, mul_comm]
   rw [h_boxes, columnDetProd]
   exact .prod univ _ _ fun τ _ ↦ .prod univ _ _ fun h _ ↦ .prod univ _ _ fun j _ ↦
-    isHomogeneous_det_directionVar τ h ((i' τ).1 h j)
+    isHomogeneous_det_directionVar τ h ((i' τ).val h j)
 
 /-- The chain rule for the substitution `z(s)` along the polynomial `P_* = columnDetProd R i'`. The
 filling `i'` puts the row `(i' τ).1 h j b` into box `b` of column `j` of height `h` at the place
@@ -216,7 +209,7 @@ lemma jet_columnDetProd_subst [DecidableEq Φ] (i' : WeylIndex n' κ) (c : Φ �
     jet R (columnDetProd R i')
         (F.subst fun x : Φ × n' × n ↦ linearSeries (directionSubst c (newDirection g y) x)) =
       (∏ τ : Φ, ∏ h : Fin (card n'), ∏ j : Fin (κ τ h),
-        ((g τ h).det * ∏ b : Fin h, c τ h ((i' τ).1 h j b))) *
+        ((g τ h).det * ∏ b : Fin h, c τ h ((i' τ).val h j b))) *
         jet R (minorProd i' y) F := by
   -- For one column, the matrix of derivatives along the `β` is that along the `y` times `gᵀ`,
   -- with the rows scaled by the `c`.
@@ -233,7 +226,7 @@ lemma jet_columnDetProd_subst [DecidableEq Φ] (i' : WeylIndex n' κ) (c : Φ �
     exact congrArg _ (sum_comm.trans (sum_congr rfl fun k' _ ↦ sum_congr rfl fun a _ ↦ by ring))
   have h_poly : linSubst (directionSubst c (newDirection g y)) (columnDetProd R i') =
       (∏ τ : Φ, ∏ h : Fin (card n'), ∏ j : Fin (κ τ h),
-        ((g τ h).det * ∏ b : Fin h, c τ h ((i' τ).1 h j b))) • minorProd i' y := by
+        ((g τ h).det * ∏ b : Fin h, c τ h ((i' τ).val h j b))) • minorProd i' y := by
     rw [columnDetProd, minorProd, smul_eq_C_mul]
     simp only [map_prod, ← prod_mul_distrib]
     refine prod_congr rfl fun τ _ ↦ prod_congr rfl fun h _ ↦ prod_congr rfl fun j _ ↦ ?_
@@ -321,10 +314,6 @@ def IsChargeExponent (partner : Φ → Φ) (ev : Finset Φ) (w : Φ → ℕ → 
 diagrams `κ τ`, where `r` is the row that the filling `i'` puts into the box. -/
 def fillingCharge {κ : Φ → ℕ → ℕ} (w : Φ → ℕ → n' → ℕ) (i' : WeylIndex n' κ) : ℕ :=
   ∑ τ : Φ, ∑ h : Fin (card n'), ∑ j : Fin (κ τ h), ∑ b : Fin h, w τ h ((i' τ).val h j b)
-
-omit [DecidableEq Φ] in
-lemma fillingCharge_zero {κ : Φ → ℕ → ℕ} (i' : WeylIndex n' κ) :
-    fillingCharge (0 : Φ → ℕ → n' → ℕ) i' = 0 := by simp [fillingCharge]
 
 omit [DecidableEq Φ] in
 /-- The sum `fillingCharge w i'` of the exponents `w` over the filling `i'` depends only on the
@@ -717,7 +706,7 @@ theorem norm_jet_minorProd_le_of_hasNormalForm [DecidableEq n'] (hp : chiK P.d p
       p ^ (-(predictedDivisibility P.d p (P.partner s p) κ N -
         card (P.Φ s) * N ^ 3 * (1 + Real.logb p (max (boxes κ N) 1 : ℕ))) : ℝ) := by
   -- With no marked places and all charges equal to one, no column is removed.
-  simpa [eraseHeightOne_empty, fillingCharge_zero] using
+  simpa [eraseHeightOne_empty, fillingCharge] using
     P.norm_jet_minorProd_le_of_charges s hp hϖ hF ∅ 0 (by simp) i' y
 
 end Parameters

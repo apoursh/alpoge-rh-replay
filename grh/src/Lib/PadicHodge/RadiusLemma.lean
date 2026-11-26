@@ -51,14 +51,6 @@ associates). -/
 private lemma exists_E_dvd_xi_sub_p_mul : ∃ b : Ainf, c.E.val ∣ xi - p * b :=
   ⟨0, by simp [associated_E_xi, Associated.dvd]⟩
 
-/-- The identity `n - v_p(n!) + 2 = (n + 1 - v_p((n + 1)!)) + v_p(n + 1) + 1` of `p`-adic
-valuations, from `v_p((n + 1)!) = v_p(n + 1) + v_p(n!)` and `v_p((n + 1)!) ≤ n + 1`. -/
-private lemma sub_padicValNat_factorial_add_two_eq (n : ℕ) :
-    n - padicValNat p n ! + 2 = n + 1 - padicValNat p (n + 1)! + padicValNat p (n + 1) + 1 := by
-  grind [Nat.padicValNat_def, multiplicity_factorial_le, factorial, Nat.multiplicity_mul]
-
-private lemma coe_z_eq_seriesMap_X : (c.z : Ainf) = c.seriesMap X := rfl
-
 /-- If `tau` divides `E ^ h * a` in `BPlus`, for `a` in `Ainf`, then `tau` divides `a` in
 `Ainf`. -/
 lemma tau_dvd_of_dvd_E_pow_mul {h : ℕ} {a : Ainf}
@@ -102,38 +94,6 @@ lemma tau_pow_dvd_of_dvd_E_pow_mul {m h : ℕ} {a : Ainf}
     (h_dvd : ainfToBPlus (tau ^ m) ∣ ainfToBPlus (c.E ^ h * a)) : tau ^ m ∣ a := by
   rw [← mul_one (tau ^ m), ← pow_zero (c.z : Ainf)] at h_dvd ⊢
   exact tau_pow_mul_z_pow_dvd_of_dvd_E_pow_mul h_dvd
-
-/-- Let `c` be a chart with ring S = `c.S` (the image of Λ⟦X⟧ in A_inf), E = `c.E` and
-S_B = `c.bicommutant` (the p-adic closure of S[E/p] in `BPlus`, with p inverted). If E^h·a lies in
-S_B, for a in `Ainf`, then a lies in S. -/
-lemma mem_S_of_E_pow_mul_mem_bicommutant {h : ℕ} {a : Ainf}
-    (h_mem : ainfToBPlus (c.E ^ h * a) ∈ c.bicommutant) : a ∈ c.S := by
-  -- Cancel `E ^ h` in `S_B`; the projection onto `S_B` then fixes `a` and sends it into `S`.
-  have hE_ne : ainfToBPlus c.E ^ h ≠ 0 := by simp [c.E_ne_zero']
-  have ha_mem : ainfToBPlus a ∈ c.bicommutant :=
-    c.mem_bicommutant_of_mul (pow_mem (ainfToBPlus_mem_bicommutant c.E) h) hE_ne
-      (by simpa using h_mem)
-  have h_coord : ainfToBPlus (c.adicBasis.coord c.oneIndex a) = ainfToBPlus a :=
-    (c.extendToBPlus_ainfToBPlus _ a).symm.trans (c.extendedCoord_oneIndex_eq_self ha_mem)
-  rw [← FaithfulSMul.algebraMap_injective Ainf BPlus h_coord]
-  exact (c.adicBasis.coord c.oneIndex a).property
-
-/-- The equality A_inf[1/τ] ∩ S_B[1/E] = S, with denominators cleared. Let `c` be a chart with ring
-S = `c.S` (the image of Λ⟦X⟧ in A_inf), E = `c.E` and S_B = `c.bicommutant` (the p-adic closure of
-S[E/p] in `BPlus`, with p inverted), and let τ = [ε^{1/p}] − 1. For a in `Ainf`, the fraction a/τ^m
-equals y/E^h for some h and some y in S_B if and only if a = τ^m·s for some s in S. -/
-theorem exists_E_pow_mul_eq_tau_pow_mul_iff {m : ℕ} {a : Ainf} :
-    (∃ h : ℕ, ∃ y ∈ c.bicommutant, ainfToBPlus (c.E ^ h * a) = ainfToBPlus (tau ^ m) * y) ↔
-      ∃ s : c.S, a = tau ^ m * s := by
-  refine ⟨fun ⟨h, y, hy_mem, h_eq⟩ ↦ ?_, fun ⟨s, hs⟩ ↦
-    ⟨0, ainfToBPlus s, ainfToBPlus_mem_bicommutant s, by simp [hs]⟩⟩
-  -- The fraction `a / tau ^ m` is an element `b` of `Ainf`, and `E ^ h * b = y` lies in `S_B`.
-  obtain ⟨b, rfl⟩ : tau ^ m ∣ a := tau_pow_dvd_of_dvd_E_pow_mul ⟨y, h_eq⟩
-  have h_quotient : ainfToBPlus (c.E ^ h * b) = y := by
-    rw [mul_left_comm, map_mul] at h_eq
-    exact mul_left_cancel₀ (by simp) h_eq
-  have hb_mem : b ∈ c.S := mem_S_of_E_pow_mul_mem_bicommutant (h := h) (by rwa [h_quotient])
-  exact ⟨⟨b, hb_mem⟩, rfl⟩
 
 /-- `φ ^ l` on `BPlus` restricts on `S` to the Frobenius `c.φ ^ l` of the chart. -/
 lemma frobEnd_pow_ainfToBPlus (l : ℕ) (s : c.S) :
@@ -185,7 +145,7 @@ lemma exists_z_pow_eq {n N : ℕ} (h_le : c.e * n ≤ N) :
   -- `xi = p * Amax.xiDivP` in `Amax`, and `xi` divides the image of `z ^ e * (unit) + p`.
   have h_p_dvd_xi : (p : Amax) ∣ algebraMap Ainf Amax xi := ⟨Amax.xiDivP, p_mul_X.symm⟩
   have p_dvd : (p : Amax) ∣ algebraMap Ainf Amax c.z ^ c.e := by
-    simpa [(c.unitSeries.isUnit.map _).map, ← coe_z_eq_seriesMap_X] using
+    simpa [(c.unitSeries.isUnit.map _).map, z] using
       h_p_dvd_xi.trans (map_dvd (algebraMap Ainf Amax) c.associated_xi.dvd')
   obtain ⟨y, hy⟩ : (p : Amax) ^ n ∣ algebraMap Ainf Amax c.z ^ N := by grw [p_dvd, ← pow_mul, h_le]
   exact ⟨y, by simpa [← IsScalarTower.algebraMap_apply] using congrArg (algebraMap Amax BPlus) hy⟩
@@ -321,7 +281,7 @@ lemma exists_ainfToBPlus_eq_p_pow_mul_sub_z_mul (ht_fixes : c.FixesThetaZ t)
   have h_expand : ainfToBPlus (α * (∑ l : d, A l * G l j - t • A j)) =
       ainfToBPlus (tau * c.z ^ (n + 1)) * (p ^ (v + 1) * W j - ainfToBPlus c.z * W'') := by
     linear_combination (norm :=
-      (simp [W'', ← smul_algebraMap_eq_algebraMap_smul t (A _), smul_sub, hA, ht_z, mu, mul_sub,
+      (simp [W'', ← smul_algebraMap_eq_algebraMap_smul t (A _), smul_sub, hA, ht_z, mu_eq, mul_sub,
          mul_assoc, Matrix.mul_apply, ← mul_sum, sub_mul, Matrix.one_apply, sub_eq_zero]
        ring) )
       -ainfToBPlus c.z ^ (n + 1) *
@@ -358,7 +318,7 @@ lemma exists_ev_eq_frobEnd_pow (ht_fixes : c.FixesThetaZ t)
   -- Successive approximation in powers of `ev X`, for which `BPlus` is separated as `z ∣ ev X`.
   have h_hausdorff : IsHausdorff (span {ev X}) BPlus := by
     refine ⟨fun x hx ↦ c.eq_zero_of_z_pow_dvd fun n ↦ ?_⟩
-    grw [hz, smodEq_span_pow_iff_dvd.mp (hx n), sub_zero]
+    grw [hz, (TauCeti.sModEq_span_singleton_pow_iff ..).mp (hx n), sub_zero]
   -- The family: `p ^ (n - v_p n! + 2) * φ ^ l (W' j)` for the rows `W'` over `S_B` such that
   -- `q • Y i - z ^ (n + 1) * W'` is a row over `Ainf`; row `i` of `W` is one, with `n = 0`.
   let Row : Type :=
@@ -383,7 +343,14 @@ lemma exists_ev_eq_frobEnd_pow (ht_fixes : c.FixesThetaZ t)
   set v : ℕ := padicValNat p (n + 1)
   let a : ℕ := n + 1 - padicValNat p (n + 1)!
   -- The exponents match because `v_p (n + 1)! = v + v_p n! ≤ n + 1`.
-  have h_exp : n - padicValNat p n ! + 2 = a + v + 1 := sub_padicValNat_factorial_add_two_eq n
+  have h_exp : n - padicValNat p n ! + 2 = a + v + 1 := by
+    dsimp only [a, v]
+    simp only [Nat.padicValNat_def]
+    have h1 : multiplicity p (n + 1)! = multiplicity p (n + 1) + multiplicity p n ! := by
+      rw [Nat.factorial_succ, Nat.multiplicity_mul n.succ_ne_zero n.factorial_ne_zero]
+    have h2 : multiplicity p (n + 1)! ≤ n + 1 := multiplicity_factorial_le (p := p) (n + 1)
+    have h3 : multiplicity p n ! ≤ n := multiplicity_factorial_le (p := p) n
+    omega
   refine ⟨C (p ^ a * (c.φ ^ l) (s j)), ⟨(n + 1, W'), hW', p ^ (v + 1) * q,
     p ^ (v + 1) • A + fun j ↦ c.z.val ^ (n + 1) * s j, fun j ↦ ?_⟩, ?_⟩
   · -- The new row is `p ^ (v + 1) • A + z ^ (n + 1) * s`, and `p ^ (v + 1) * W_row - s = z * W'`.

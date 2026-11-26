@@ -1,6 +1,6 @@
 module
 
-public import Lib.Base
+public import Lib.Speed
 
 /-!
 # The index of a product of subgroups is the product of the indices

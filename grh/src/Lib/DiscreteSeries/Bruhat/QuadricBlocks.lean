@@ -1,8 +1,8 @@
 module
 
-public import Mathlib.Probability.Kernel.Composition.MeasureCompProd
-public import Lib.DiscreteSeries.Bruhat.FloorGroups
+public import Mathlib.Probability.Kernel.Deterministic
 public import Lib.General.Measure.QuadricDisintegration
+public import Lib.DiscreteSeries.Bruhat.FloorGroups -- shake: keep (`open FloorGroups`)
 
 /-!
 # Solving the equation of a quadric in a block of coordinates
@@ -186,8 +186,8 @@ lemma submatrix_eq_fromBlocks_one_of_orthonormal [DecidableEq B] [DecidableEq κ
 /-- Let T be block diagonal along e, with blocks T₂ and 1. In the flat chart of the quadric of index
 β of a hyperbolic plane plus T, the part z in the second block is free, and the rest is the flat
 chart of the quadric of index β − (index of h(z, z)) of the plane plus T₂. -/
-lemma flatChart_sumElim_comp_symm [DecidableEq B] [DecidableEq κ] {κ₂ : Type} [Fintype κ₂]
-    [DecidableEq κ₂] {T : Matrix κ κ A} {T₂ : Matrix κ₂ κ₂ A} {e : κ₂ ⊕ B ≃ κ}
+lemma flatChart_sumElim_comp_symm [DecidableEq B] {κ₂ : Type} [Fintype κ₂]
+    {T : Matrix κ κ A} {T₂ : Matrix κ₂ κ₂ A} {e : κ₂ ⊕ B ≃ κ}
     (h_split : T.submatrix e e = fromBlocks T₂ 0 0 1) (β : skewAdjoint A) (t : A) (w : κ₂ → A)
     (z : B → A) (a : skewAdjoint A) :
     flatChart T β ((t, (w ⊕ᵥ z) ∘ e.symm), a) =
@@ -206,17 +206,6 @@ lemma flatChart_sumElim_comp_symm [DecidableEq B] [DecidableEq κ] {κ₂ : Type
   · simp [flatChart, h_form, h_index, mul_sub, sub_sub, add_comm]
   · simp [flatChart]
   · simp [flatChart]
-
-/-- The volume in (z, (t, w), a) is carried to that in ((t, x), a), where x joins w and z along e
-and a is skew. -/
-lemma measurePreserving_join_coordinates {κ₂ : Type} [Fintype κ₂] (e : κ₂ ⊕ B ≃ κ) :
-    MeasurePreserving
-      (fun p : (B → A) × (A × (κ₂ → A)) × skewAdjoint A ↦
-        ((p.2.1.1, (p.2.1.2 ⊕ᵥ p.1) ∘ e.symm), p.2.2))
-      (volume.prod (volume.prod skewMeasure)) (volume.prod skewMeasure) :=
-  ((((MeasurePreserving.id volume).prod (measurePreserving_sumElim_comp_symm e)).comp
-    (volume_preserving_prodAssoc.comp measurePreserving_swap)).prod (.id skewMeasure)).comp
-    ((measurePreserving_prodAssoc volume volume skewMeasure).symm _)
 
 /-- Let the measures l(b) on A^B, for skew b, disintegrate the volume along x ↦ x*x, so l(b) is the
 fibre measure on x*x = δ⁻¹b with δ the skew unit of the place, and let each give mass at most M to
@@ -262,7 +251,9 @@ theorem IsDisintegration.isSolvedIn_quadricMeasure [DecidableEq B] [DecidableEq 
       ((p.2.1.1, (p.2.1.2 ⊕ᵥ p.1) ∘ e.symm), p.2.2)
     have h_coords : MeasurePreserving coords
         (volume.prod (volume.prod skewMeasure)) (volume.prod skewMeasure) :=
-      measurePreserving_join_coordinates e
+      (((((MeasurePreserving.id volume).prod (measurePreserving_sumElim_comp_symm e)).comp
+        (volume_preserving_prodAssoc.comp measurePreserving_swap)).prod (.id skewMeasure)).comp
+        ((measurePreserving_prodAssoc volume volume skewMeasure).symm _))
     have h_meas : Measurable fun x : (A × (κ → A)) × skewAdjoint A ↦ f (flatChart T β x) := by
       fun_prop
     calc

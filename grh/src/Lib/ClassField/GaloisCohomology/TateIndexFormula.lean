@@ -1,5 +1,18 @@
 module
 
+public import Mathlib.Algebra.Module.StablyFree.Basic
+public import Mathlib.Algebra.Ring.IsFormallyReal
+public import Mathlib.GroupTheory.FiniteAbelian.Basic
+public import Mathlib.GroupTheory.IndexNSmul
+public import Mathlib.GroupTheory.Nilpotent
+public import Mathlib.LinearAlgebra.Dimension.Torsion.Basic
+public import Mathlib.LinearAlgebra.Eigenspace.Zero
+public import Mathlib.NumberTheory.NumberField.Cyclotomic.Ideal
+public import Mathlib.RepresentationTheory.Homological.GroupCohomology.Hilbert90
+public import Mathlib.RingTheory.Coalgebra.CoassocSimps
+public import Mathlib.RingTheory.Etale.Weakly
+public import Mathlib.RingTheory.TotallySplit
+public import Mathlib.Topology.Sheaves.Presheaf
 public import Lib.ClassField.Places.DecompositionCyclotomic
 
 /-!
@@ -457,7 +470,7 @@ lemma New.tate_index_formula_norm {K L : Type} [Field K] [Field L] [Algebra K L]
       refine ⟨.ofMul ⟨_, hx⟩, Subtype.ext (Units.ext ?_)⟩
       -- With `a` the image of `x`, `(σ g - 1) w` is `g • w / w` in `Lˣ` for `w = a / z`.
       let w : Lˣ := x.map (algebraMap K L) / z
-      show ((g • w / w : Lˣ) : L) = val y
+      change ((g • w / w : Lˣ) : L) = val y
       rw [← hz]
       simp [w, field]
   have norm_incl : N.toAdditive.toIntLinearMap ∘ₗ j.toAdditive.toIntLinearMap = finrank K L :=

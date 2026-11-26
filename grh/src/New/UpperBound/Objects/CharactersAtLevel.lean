@@ -1,7 +1,8 @@
 module
 
-public import New.UpperBound.Divisibility.MarkedPrimes
+public import Lib.ClassField.Avatar.HeckeBaseChange
 public import New.UpperBound.Objects.Rows
+public import New.UpperBound.Size.ShortColumns
 
 /-!
 # Characters of the lifts of the chain above the level N
@@ -157,7 +158,7 @@ theorem doubleLiftChain_eq_zero_of_ramified
     · rw [ite_eq_right (by omega), ite_eq_left rfl]
       exact h_fix
     · rw [ite_eq_right (by omega), ite_eq_right (by omega), TensorProduct.map_one,
-        Module.End.one_apply]
+        one_apply_eq_self]
   rw [doubleLiftChain, ← TensorChain.lift_ofPairs]
   exact D.tensorChainLift_eq_zero_of_ramified ϑ w (by omega) _ h_regrouped hφ
 

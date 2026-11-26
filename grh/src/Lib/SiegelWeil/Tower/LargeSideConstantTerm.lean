@@ -162,9 +162,6 @@ theorem homSlice_zero_planeDatum (σ' : b ⊕ r' ≃ n') (v : PairFock E s' t')
   simpa [localDatum, ← Pi.zero_def] using 𝔠.readsAt.homSlice_localDatum A V' (G := 0)
     (stdRowDatum_mem σ' 𝔠.semilocalChar) 0 v fun w hw ↦ h_std w (by simpa using hw)
 
-/-- A shortcut for instance search, for the Haar measures on `maxCompact E t` below. -/
-local instance : LocallyCompactSpace (maxCompact E t) := inferInstance
-
 /-- Let `A` and `X` be base-adapted splittings of a plane off `W'` and `V'`, let `v` be a Schwartz
 vector (all Fock moments finite), let `y` be a matrix over the completions at the places
 `𝔠.ramifiedPlaces`, and let `g ∈ U(W)` and `σ : b ⊕ r ≃ n`. Then for every character `ψ`, every side
@@ -202,8 +199,8 @@ theorem integrable_theta_cone [IsBaseAdapted X]
   have h_bound (h : G E t) (q : maxCompact E t' × (InfinitePlace E → ℂ)ˣ) :
       ‖kernel h (coneIntegrand A X μ β x v q)‖ ≤ D * ‖φ q‖ :=
     calc _ ≤ D * (Fock.fockMoment Q (coneIntegrand A X μ β x v q)).toReal :=
-        h_decay _ _ ((hφ q).trans_lt enorm_lt_top).ne
-      _ ≤ _ := by grw [ENNReal.toReal_mono enorm_ne_top (hφ q), toReal_enorm]
+        h_decay _ _ ((hφ q).trans_lt eNorm_lt_top).ne
+      _ ≤ _ := by grw [ENNReal.toReal_mono eNorm_ne_top (hφ q), toReal_eNorm]
   have h_cont : Continuous (Function.uncurry kernel) := by
     simp only [kernel, pairTheta]
     fun_prop
@@ -269,7 +266,6 @@ theorem theta_lineTerm_levi (hn : 2 ∣ card n) {u : (𝔸 E)ˣ} (hu : u = 1 ∨
           rpow_mul_natCast ideleAbs_pos.le]
   have h_factor : (ideleAbs a ^ (card r + 1) : ℝ) * c =
       ν.baseChange.val (a * u) * (ideleAbs (a * u) ^ e : ℝ) := by
-    have h_ne : (√(ideleAbs (a * u)) : ℂ) ≠ 0 := ofReal_ne_zero.2 (sqrt_pos.2 ideleAbs_pos).ne'
     rw [← mul_div_assoc, ← ofReal_pow, ← ofReal_mul, h_module]
     simp [circleChar_inv_apply, field]
   rw [h_move, ← mul_assoc, h_factor, mul_right_comm]
@@ -377,14 +373,6 @@ lemma stdKernelForm_apply (σ : b ⊕ r ≃ n) (y : Matrix b n (LocProd 𝔠.ram
     stdKernelForm 𝔠 W V σ y g h v = pairTheta W V (rankTwist 𝔠.character⁻¹ n)
       (rankTwist 𝔠.character⁻¹ n)
       (localDatum W V v (stdRowDatum σ 𝔠.semilocalChar y) 𝔠.readsAt) (g, h) :=
-  rfl
-
-/-- The integral over `[U(V)]` of the kernel `stdKernelForm` on a real vector `v` is the theta
-integral of `(W, V)` on `v` and the standard datum of `y`. -/
-lemma integral_stdKernelForm (σ : b ⊕ r ≃ n) (y : Matrix b n (LocProd 𝔠.ramifiedPlaces)) (g : G E s)
-    (v : PairFock E s t) :
-    ∫ h : G E t, stdKernelForm 𝔠 W V σ y g h v ∂V.quotMeasure =
-      thetaLarge W V 𝔠 v (stdRowDatum σ 𝔠.semilocalChar y) g :=
   rfl
 
 /-- The datum factors. For integral `y`, the function of Tate's integral of `planeDatum 𝔠 A σ' v y`
@@ -495,7 +483,7 @@ theorem integral_coneKernel (hv : IsSchwartzVector v) {x : ℝ} (hx : 0 < x) :
       thetaLarge W V 𝔠 (∫ p : maxCompact E t' × (InfinitePlace E → ℂ)ˣ,
         coneIntegrand A X μ β x v p ∂haar.prod haar)
         (stdRowDatum σ 𝔠.semilocalChar y) g := by
-  rw [integral_prod _ (integrable_coneKernel A X y g β hv hx), ← integral_stdKernelForm]
+  rw [integral_prod _ (integrable_coneKernel A X y g β hv hx)]
   exact integral_congr_ae (.of_forall fun h ↦ (stdKernelForm 𝔠 W V σ y g h).integral_comp_comm
     (integrable_coneIntegrand A X μ β hx hv).1)
 
@@ -571,7 +559,7 @@ let `ρ` be a Haar measure on the finite ideles such that Haar measure on the id
 Tate's integral at `x` (for `β = true`) or at `1 - x` (for `β = false`) converges, and it is the
 integral of the cone kernel times `L^S(x, ν)` and explicit factors, for `ν = 𝔠.character` and
 `S = 𝔠.ramifiedPlaces`. -/
-theorem integral_zetaIntegrand_of_one_lt [Fintype b] [DecidableEq b]
+theorem integral_zetaIntegrand_of_one_lt
     (h_factor : LineValueFactors 𝔠 A X σ v y g f κ)
     (hc : ∀ a : 𝔸f E, lineFinFactor 𝔠 ϖ.val a = lineFinFactor 𝔠 1 (a * c))
     (hn : 2 ∣ card n) (hv : IsSchwartzVector v) (u : (𝔸 E)ˣ)
@@ -608,7 +596,7 @@ theorem integral_zetaIntegrand_of_one_lt [Fintype b] [DecidableEq b]
 character `𝔠 : SplitTameChar E μ` in terms of the cone kernel holds for all `x ≥ 1`, under the same
 hypotheses, if Tate's integral is continuous in its exponent: both sides are then continuous up to
 `1`. -/
-theorem integral_zetaIntegrand_of_one_le [Fintype b] [DecidableEq b]
+theorem integral_zetaIntegrand_of_one_le
     (h_factor : LineValueFactors 𝔠 A X σ v y g f κ)
     (hc : ∀ a : 𝔸f E, lineFinFactor 𝔠 ϖ.val a = lineFinFactor 𝔠 1 (a * c))
     (hn : 2 ∣ card n) (hv : IsSchwartzVector v) (u : (𝔸 E)ˣ)
@@ -690,7 +678,7 @@ with `u = 1` or `rk V = rk W`. If Tate's integral `𝒵(e + 1)` of `planeDatum �
 integral of `Θ`, converges absolutely, then the constant term along `A` at `(u, g)` of the theta
 integral of `(W', V')` on this datum is `c 𝒵(e + 1)`. -/
 theorem exists_planeConstantTerm_eq_integral (A : W'.Splitting W Unit) (X : V'.Splitting V Unit)
-    [IsBaseAdapted A] [IsBaseAdapted X] (σ' : b ⊕ r' ≃ n') (hn : 2 ∣ card n) :
+    [IsBaseAdapted A] (σ' : b ⊕ r' ≃ n') (hn : 2 ∣ card n) :
     ∃ c : ℝ, c ≠ 0 ∧ ∀ {μ : InfinitePlace E → ℤ} (𝔠 : SplitTameChar E μ)
       {v : PairFock E s' t'}, IsSchwartzVector v → ∀ (y : Matrix b n (LocProd 𝔠.ramifiedPlaces))
         (g : G E s)
@@ -771,14 +759,8 @@ theorem exists_zetaIntegral (σ' : b ⊕ r' ≃ n') (σ : b ⊕ r ≃ n) (hn : 2
   have h_vol (β : Bool) : 0 < vol β := measureReal_idelesUnitOff_empty_pos (ρ β)
   refine ⟨fun β ↦ |cUnfold| * ‖(lineConst β).val‖ * vol β, fun β ↦ ?_, fun 𝔠 ↦ ?_⟩
   · exact mul_pos (mul_pos (abs_pos.2 h_cUnfold) (norm_pos_iff.2 (lineConst β).ne_zero)) (h_vol β)
-  obtain ⟨γ, hγ, hγ_factor⟩ : ∃ γ : ℂ, ‖γ‖ ^ 2 = (∏ w : 𝔠.ramifiedPlaces, (w.val.q : ℝ))⁻¹ ∧
-      ∀ (v : PairFock E s' t') (y : Matrix b n (LocProd 𝔠.ramifiedPlaces)), IsIntMatrix O y → ∀ g :
-        G E s,
-        LineValueFactors 𝔠 A X σ v y g (planeDatum 𝔠 A σ' v y) fun β ↦ lineConst β * γ :=
-    h_lineConst 𝔠
-  obtain ⟨c, hc_abs, hc⟩ : ∃ c : (𝔸f E)ˣ, finIdeleAbs c⁻¹ = ∏ w : 𝔠.ramifiedPlaces, (w.val.q : ℝ) ∧
-      ∀ a : 𝔸f E, lineFinFactor 𝔠 ϖ.val a = lineFinFactor 𝔠 1 (a * c) :=
-    exists_lineFinFactor_uniformizer_eq 𝔠
+  obtain ⟨γ, hγ, hγ_factor⟩ := h_lineConst 𝔠
+  obtain ⟨c, hc_abs, hc⟩ := exists_lineFinFactor_uniformizer_eq 𝔠
   let K : (𝔸 E)ˣ := shiftIdele c
   let Q : ℝ := ∏ w : 𝔠.ramifiedPlaces, (w.val.q : ℝ)
   have hQ : 0 < Q := Finset.prod_pos fun w _ ↦ by simp [FinPlace.q_bounds]
@@ -800,10 +782,7 @@ theorem exists_zetaIntegral (σ' : b ⊕ r' ≃ n') (σ : b ⊕ r ≃ n) (hn : 2
     analyticOnNhd_integral_zetaIntegrand A X (h_conv true) (h_conv false)
   refine ⟨fun x ↦ cUnfold * ∫ p, zetaIntegrand 𝔠.character A X f g u x p ∂zetaMeasure V t',
     analyticOnNhd_const.mul h_analytic, h_unfold 𝔠 hv y g hu (h_int _), fun β x hx ↦ ?_⟩
-  have h_value : ∫ p, zetaIntegrand 𝔠.character A X f g u (cond β x (1 - x)) p ∂zetaMeasure V t' =
-      (∫ p, coneKernel 𝔠 A X σ v y g β x p ∂V.quotMeasure.prod (haar.prod haar)) *
-        (lineConst β * γ * 𝔠.character.baseChange.val K * (ideleAbs K ^ x : ℝ) *
-          (𝔠.character.L 𝔠.ramifiedPlaces x * vol β)) :=
+  have h_value :=
     integral_zetaIntegrand_of_one_le A X h_factor hc hn hv u (hρ β)
       (continuousOn_univ.1 h_analytic.continuousOn) hx
   have h_abs : ideleAbs K ^ x =

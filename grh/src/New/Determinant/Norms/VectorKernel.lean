@@ -44,22 +44,6 @@ open Matrix Space ComplexConjugate ComplexOrder
 variable {E r n : Type} [Field E] [CMType E] [WeilData E] [Fintype r] [DecidableEq r] [Fintype n]
   [DecidableEq n] (O : DescentPair E r n)
 
-/-- The value at `ξ` of the linear form `O.conjKernel g h` is the conjugate of the theta kernel at
-`(g, h)` of `O.fockDatum (star ξ)`. The kernel `New.pairTheta` is formed with the characters
-`O.charW` and `O.charV` at the point `(g, 1, h)`, whose component `(1, h)` in `U(V)(𝔸)` is trivial
-at the infinite places. -/
-lemma conjKernel_apply (g : G E O.signs) (h : Gf E n) (ξ : WeylIndex n O.columnCount → ℂ) :
-    O.conjKernel g h ξ =
-      conj (pairTheta O.W (stdSpace E n) O.charW O.charV (O.fockDatum (star ξ)) (g, 1, h)) := rfl
-
-/-- The normalized descent `O.normalizedDescent Ξ` of a form `Ξ` on `V = stdSpace E n` has at `g`
-the value `∑ O.conjKernel g h (Ξ h) / #(Γ ∩ h K h⁻¹)`, where `h` runs over chosen representatives of
-the double cosets `Γ \ U(V)(𝔸_f) / K` of the rational points `Γ` and the level
-`K = O.levelGroup`. -/
-lemma normalizedDescent_apply (Ξ : O.FormV) (g : G E O.signs) :
-    O.normalizedDescent Ξ g = stdClassSum O.levelGroup fun h : Gf E n ↦ O.conjKernel g h (Ξ h) :=
-      rfl
-
 /-- The theta kernel `θ_W(g, h)` with values in the representation of weight
 `(O.columnCount, O.detExp)`, for `g` in `U(W)(𝔸)` and a finite point `h` of `U(V)`. It is the vector
 whose pairing with `ζ` is the theta kernel of the datum `O.fockDatum (star ζ)` at `(g, h)`
@@ -91,7 +75,7 @@ at `(g, h)` of `O.fockDatum (star ξ)`. -/
 lemma gramForm_vectorKernel_left (g : G E O.signs) (h : Gf E n)
     (ξ : WeylIndex n O.columnCount → ℂ) :
     gramForm (O.vectorKernel g h) ξ = O.conjKernel g h ξ := by
-  rw [← conj_gramForm, gramForm_vectorKernel, conjKernel_apply]
+  rw [← conj_gramForm, gramForm_vectorKernel]; rfl
 
 /-- Let `O` be a descent pair over a CM field `E` with Weil data, let `g` be an adelic point of the
 unitary group of `W`, whose signs are `O.signs`, and `x` a finite point of `U(V)`. For rational `γ`
@@ -140,12 +124,6 @@ lemma vectorKernel_rational_mul (γ : U (stdSpace E n).J) (g : G E O.signs) (x :
       (stdSpace E n).weightRep O.columnCount O.detExp γ (O.vectorKernel g x) := by
   simpa using O.vectorKernel_equivariant γ 1 g x
 
-/-- For `g` in `U(W)(𝔸)`, the kernel `θ_W(g, ·) = O.vectorKernel g` transforms under right
-translation by the level `O.levelGroup` of `U(V)` by the character `O.levelChar`. -/
-lemma vectorKernel_mul_level (k : O.levelGroup) (g : G E O.signs) (x : Gf E n) :
-    O.vectorKernel g (x * k.val) = O.levelChar k • O.vectorKernel g x := by
-  simpa using O.vectorKernel_equivariant 1 k g x
-
 /-- For `g` in `U(W)(𝔸)`, the function `θ_W(g, ·) = O.vectorKernel g` as an element of `O.FormV`,
 the algebraic forms on `V`: smooth functions on the finite points of `U(V)` with values in the
 representation of weight `(O.columnCount, O.detExp)` that are equivariant under the rational points
@@ -154,13 +132,10 @@ def vectorKernelForm (g : G E O.signs) : O.FormV :=
   have h_level (k : O.levelGroup) :
       rightRegular ℂ (Gf E n) (WeylIndex n O.columnCount → ℂ) k.val (O.vectorKernel g) =
         O.levelChar k • O.vectorKernel g :=
-    funext (O.vectorKernel_mul_level k g)
+    funext fun x ↦ by simpa using O.vectorKernel_equivariant 1 k g x
   ⟨⟨O.vectorKernel g, mem_smoothFunctions_of_eigen O.levelChar isOpen_levelOf h_level,
       fun (γ : U (stdSpace E n).J) (x : Gf E n) ↦ O.vectorKernel_rational_mul γ g x⟩,
     fun k : O.levelGroup ↦ Subtype.ext (h_level k)⟩
-
-lemma vectorKernelForm_apply (g : G E O.signs) (h : Gf E n) :
-    O.vectorKernelForm g h = O.vectorKernel g h := rfl
 
 /-- Let `Ξ` be an algebraic form on `V`. The normalized descent `O.normalizedDescent Ξ` has at `g`
 the value `⟨θ_W(g, ·), Ξ⟩`, the inner product of the form `θ_W(g, ·) = O.vectorKernelForm g` with
@@ -169,7 +144,9 @@ lemma normalizedDescent_eq_inner_vectorKernelForm (Ξ : O.FormV) (g : G E O.sign
     O.normalizedDescent Ξ g = inner ℂ (O.vectorKernelForm g) Ξ := by
   have h_sum : O.normalizedDescent Ξ g =
       stdClassSum O.levelGroup fun h : Gf E n ↦ gramForm (O.vectorKernelForm g h) (Ξ h) := by
-    simp only [normalizedDescent_apply, vectorKernelForm_apply, gramForm_vectorKernel_left]
+    change stdClassSum O.levelGroup (fun h : Gf E n ↦ O.conjKernel g h (Ξ h)) =
+      stdClassSum O.levelGroup (fun h : Gf E n ↦ gramForm (O.vectorKernel g h) (Ξ h))
+    simp only [gramForm_vectorKernel_left]
   exact h_sum.trans (LevelPlaces.LevelForm.innerAt_eq_stdClassSum 1 (O.vectorKernelForm g) Ξ).symm
 
 end New.DescentPair

@@ -1,5 +1,5 @@
 > **In this repository.** This `grh/` folder is a copy of `main` of
-> https://github.com/leanprover-community/riemann-hypothesis at commit `a7231db2ec` (Lean v4.37.0-rc1,
+> https://github.com/leanprover-community/riemann-hypothesis at commit `61d870d08d` (Lean v4.37.0-rc1,
 > `module` system), the readable edition of https://github.com/lsernau/grh-lean being optimized
 > upstream. Changes made here are ported upstream; you can also open PRs upstream directly.
 > See [../auto-research.md](../auto-research.md).
@@ -35,7 +35,7 @@ It keeps the published Lean source unchanged and provides a prebuilt cache for i
 
 ## Theorem Statements
 
-`src/Main.lean` proves the following theorems:
+[`src/Main.lean`](src/Main.lean) proves the following theorems:
 
 | Theorem | Statement |
 |---|---|
@@ -45,8 +45,11 @@ It keeps the published Lean source unchanged and provides a prebuilt cache for i
 | `LFunction_eq_zero_re` | every zero of L(χ, s) with 0 < Re s < 1 has Re s = 1/2 |
 | `LFunction_eq_zero_re_of_isPrimitive` | the special case of `LFunction_eq_zero_re` for primitive characters |
 
-[`Challenge.lean`](Challenge.lean) states the same five with `sorry` in place of the
-proofs, in a file that imports only Mathlib. Comparator checks that `Main.lean` proves exactly those statements, that it uses no axioms other than `propext`, `Quot.sound` and
+[`src/Statements.lean`](src/Statements.lean) provides the statements of all of these theorems, and only imports Mathlib to state them. It is imported by both [`src/Main.lean`](src/Main.lean) and [`Challenge.lean`](Challenge.lean)
+
+[`Challenge.lean`](Challenge.lean) imports *only* [`src/Statements.lean`](src/Statements.lean), and declares the same five theorems with `sorry` in place of the proofs.
+
+Comparator checks that `Main.lean` proves exactly those statements, that it uses no axioms other than `propext`, `Quot.sound` and
 `Classical.choice`, and that Lean's kernel and nanoda both accept the proof.
 
 ## Cache
@@ -70,6 +73,10 @@ About 300,000 lines of code; 433,000 non-blank lines with comments; 477,000 line
 - `src/Lib/Speed.lean` holds the main settings that apply to the whole development (instance priorities, `simp` lemmas taken out of the default set, one added `simp` lemma). With the file emptied, everything still compiled on Lean 4.33.1. `GUIDE.md` explains them.
 - `GUIDE.md`: start here. It gives the reading order, a glossary, sizes and conventions. `CONTENTS.md`: every file with its title. `INDEX.md`: the results, with sources or related work and files.
 - `REFERENCES.md` lists the citations and says which were compared with their sources.
+
+## Acknowledgements
+
+Thanks to the Lean FRO and BAIF for providing resources to run CI here; others have contributed too, if you'd like acknowledgement here let @kim-em know.
 
 ## License
 

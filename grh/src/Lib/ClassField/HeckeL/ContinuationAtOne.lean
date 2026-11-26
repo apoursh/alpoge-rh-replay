@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Analysis.Complex.HalfPlane
 public import Lib.ClassField.HeckeL.EulerProduct
 public import Lib.ClassField.HeckeL.IdelicThetaSum
 public import Lib.General.Analysis.HolomorphicIntegrals
@@ -21,9 +22,10 @@ on `[1, ∞)`. Valuations are multiplicative: `v x ≤ 1` means integral.
   `New.IsHeckeOfType.tate_integral` adds that this volume is nonzero.
 * `New.IsHeckeOfType.exists_analyticAt_one_eulerProd`: for `ψ ≠ 1` the partial `L`-function extends
   analytically to a neighbourhood of `1`.
-* `New.IsHeckeOfType.exists_hasPrimeDensity`: for `ψ ≠ 1` the partial `L`-function is continuous on
-  `[1, ∞)`, and the values of `ψ` have mean `-m` over the primes of degree one, for some natural
-  number `m`.
+* `New.IsHeckeOfType.continuousOn_eulerProd`,
+  `New.IsHeckeOfType.exists_hasPrimeDensity_neg_natCast`: for `ψ ≠ 1` the partial `L`-function is
+  continuous on `[1, ∞)`, and the values of `ψ` have mean `-m` over the primes of degree one, for
+  some natural number `m`.
 * `New.IsHeckeOfType.eulerProd_ne_zero`: for `ψ ^ 2 ≠ 1` the partial `L`-function has no zero on
   `[1, ∞)`.
 
@@ -245,7 +247,7 @@ lemma ne_one (hψ : IsHeckeOfType ψ n) [IsCMField K] (hn : n ≠ 0) : ψ ≠ 1 
   have h_val_neg : F y₀ = -1 := calc
     F y₀ = (y₀ w / ‖y₀ w‖ : ℂ) ^ n w := Fintype.prod_eq_single w fun u hu ↦ by simp [y₀, hu]
     -- The factor at `w` is `exp (π i / n w) ^ n w = exp (π i) = -1`.
-    _ = -1 := by simp [y₀, log, norm_exp, ← exp_int_mul, mul_div_cancel₀, hw]
+    _ = -1 := by simp [y₀, log, norm_exp, ← exp_intCast_mul, mul_div_cancel₀, hw]
   norm_num [h_val_one] at h_val_neg
 
 open HeightOneSpectrum UniqueFactorizationMonoid in
@@ -303,7 +305,7 @@ lemma integral_mul_finIdeleAbs_rpow_eq_eulerProd_mul (hψ : IsHeckeOfType ψ n)
   -- nonnegative, the kernel is `Ô^×`, and a uniformiser at `w` goes to the prime `w`.
   obtain ⟨d, hd_count, hd_ker, hd_unif, -⟩ := exists_idele_divisor_hom (K := K)
   have h_integral {x : (𝔸f K)ˣ} {I : Ideal (𝓞 K)} (hx : (d x).val = I) : x.val ∈ Ô K :=
-    mem_Ô.mpr fun w ↦ (hd_count x w).mpr (by simp [hx, count_coe_nonneg])
+    mem_Ô.mpr fun w ↦ (hd_count x w).mpr (by simp [hx, count_coeIdeal_nonneg])
   set W : Set (𝔸f K)ˣ := (idelesUnitOff ∅ : Subgroup (𝔸f K)ˣ) ∩ V with hW
   have hW_vol : μ.real W ≠ 0 := measureReal_idelesUnitOff_empty_inter_ne_zero μ hV hV_one
   intro s hs
@@ -338,7 +340,7 @@ lemma integral_mul_finIdeleAbs_rpow_eq_eulerProd_mul (hψ : IsHeckeOfType ψ n)
       obtain ⟨x, rfl⟩ := mul_left_surjective (locIdele w (uniformizer w)) y
       have h_coeff : χ (w.asIdeal * J) * ((w.asIdeal * J).absNorm : ℂ) ^ (-s : ℂ) =
           χ w.asIdeal * (w.asIdeal.absNorm : ℂ) ^ (-s : ℂ) * (χ J * J.absNorm ^ (-s : ℂ)) := by
-        rw [map_mul, map_mul, Nat.cast_mul, natCast_mul_natCast_cpow, mul_mul_mul_comm]
+        rw [map_mul, map_mul, Nat.cast_mul, natCast_mul_cpow, mul_mul_mul_comm]
       -- With `u = locIdele w (uniformizer w)`, the divisor of `u * x` is `w` times that of `x`, and
       -- `(t / u) * (u * x) = t * x`; so `ht` gives the part of divisor `J` on the right, and
       -- `h_unif` compares the two sides.
@@ -358,7 +360,8 @@ lemma integral_mul_finIdeleAbs_rpow_eq_eulerProd_mul (hψ : IsHeckeOfType ψ n)
       exists_divisor_eq_coeIdeal_of_supp hd_count hx_integral hx_unit
     simp [hI, coeIdeal_inj]
   have h_countable : Countable (Ideal (𝓞 K)) :=
-    .of_preimage_singleton fun N ↦ (Ideal.finite_setOfPred_absNorm_eq (S := 𝓞 K) N).countable
+    .of_preimage_singleton fun N ↦
+      (Ring.HasFiniteQuotients.finite_absNorm_eq (S := 𝓞 K) N).countable
   -- Integrate term by term; the coefficients `χ I * N I ^ (-s)` sum to the Euler product.
   have h_value : ∫ x, Z x ∂μ = eulerProd (heckeCoeff ψ S) s * μ.real W := by
     simp only [h_Z]
@@ -528,7 +531,7 @@ lemma exists_radius_tent_integral_ne_zero {χ : (mixedEmbedding.mixedSpace K)ˣ 
           positivity [ideleModule_pos (t, 1)]
       _ = (A ρ 1 t).re := by simp [A]
   have h_pos : 0 < ∫ t, (A ρ 1 t).re ∂.haar :=
-    integral_pos_of_integrable_nonneg_nonzero (x := 1) (by fun_prop) (hA_int 1).re h_nonneg
+    integral_pos_of_integrable_nonneg_ne_zero (x := 1) (by fun_prop) (hA_int 1).re h_nonneg
       (by simpa [A, hχ_one, Prod.mk_one_one, hρ_pos.le] using hρ_pos.ne')
   exact ne_zero_of_re_pos (h_pos.trans_eq (integral_re (hA_int 1)))
 
@@ -648,42 +651,18 @@ lemma integral_tsum_adelicTent_eq_mul [DiscreteTopology (principalIdeles K)]
 open scoped Classical in
 omit [PlaceEmbedding K] in
 open Units Real ZetaIntegral in
-/-- Unfolding for the tent of radius `ρ` at infinity and the level tent at the finite places. Let
-`X` be trivial on the principal ideles with `X (t, x) = X (t, 1) * ψ x`, `g` of module one, and the
-integrands at infinity and at the finite places integrable. Then `X g * X a` times the theta sum
-`∑' γ, adelicTent ρ d (γ * g * a)` times `|a| ^ s` is integrable on the idele classes, and its
-integral is the integral at infinity times the integral `I` at the finite places. -/
-private lemma integral_tsum_adelicTent_eq_integral_mul [DiscreteTopology (principalIdeles K)]
-    {X : (mixedSpace K)ˣ × (𝔸f K)ˣ →* ℂ} (hX_principal : ∀ γ : principalIdeles K, X γ = 1)
+/-- The character-weighted tent integrand factors into its infinite and finite parts. -/
+private lemma mul_adelicTent_factor {X : (mixedSpace K)ˣ × (𝔸f K)ˣ →* ℂ}
     (hX_split : ∀ (t : (mixedSpace K)ˣ) (x : (𝔸f K)ˣ), X (t, x) = X (t, 1) * ψ x)
-    {ρ s : ℝ} {d : (𝔸f K)ˣ} {I : ℂ}
-    (hA : Integrable (fun t : (mixedSpace K)ˣ ↦
-      max (ρ - dist t.val 1) 0 * X (t, 1) * (ideleModule (t, 1) ^ s : ℝ)) .haar)
-    (hB : Integrable (fun x : (𝔸f K)ˣ ↦
-      (adelicTent 1 d (1, x.val) : ℂ) * ψ x * (finIdeleAbs x ^ s : ℝ)) .haar)
-    (hB_eq : ∫ x : (𝔸f K)ˣ, (adelicTent 1 d (1, x.val) : ℂ) * ψ x * (finIdeleAbs x ^ s : ℝ)
-      ∂.haar = I)
-    {g : (mixedSpace K)ˣ × (𝔸f K)ˣ} (hg : ideleModule g = 1) :
-    Integrable (fun a : (mixedSpace K)ˣ × (𝔸f K)ˣ ↦ X g * X a *
-        (∑' γ : principalIdeles K, adelicTent ρ d ((γ.val * (g * a)).map val val) : ℝ) *
-        (ideleModule a ^ s : ℝ)) ((principalIdeles K).quotMeasure (Measure.haar.prod .haar)) ∧
-      ∫ a : (mixedSpace K)ˣ × (𝔸f K)ˣ, X g * X a *
-        (∑' γ : principalIdeles K, adelicTent ρ d ((γ.val * (g * a)).map val val) : ℝ) *
-        (ideleModule a ^ s : ℝ) ∂(principalIdeles K).quotMeasure (Measure.haar.prod .haar) =
-      (∫ t : (mixedSpace K)ˣ,
-        max (ρ - dist t.val 1) 0 * X (t, 1) * (ideleModule (t, 1) ^ s : ℝ) ∂.haar) * I := by
-  -- The integrand factors as the integrand at infinity times the integrand at the finite places.
-  have h_split (a : (mixedSpace K)ˣ × (𝔸f K)ˣ) :
-      max (ρ - dist a.fst.val 1) 0 * X (a.fst, 1) * (ideleModule (a.fst, 1) ^ s : ℝ) *
+    {ρ s : ℝ} {d : (𝔸f K)ˣ} (a : (mixedSpace K)ˣ × (𝔸f K)ˣ) :
+    max (ρ - dist a.fst.val 1) 0 * X (a.fst, 1) * (ideleModule (a.fst, 1) ^ s : ℝ) *
         ((adelicTent 1 d (1, a.snd.val) : ℂ) * ψ a.snd * (finIdeleAbs a.snd ^ s : ℝ)) =
       X a * adelicTent ρ d (a.map val val) * (ideleModule a ^ s : ℝ) := by
-    by_cases ha : d * (a.snd.val - 1) ∈ Ô K
-    · -- Split the module of `a` into its two factors; the sides then differ only in the order.
-      simp [ha, hX_split a.fst a.snd, ideleModule, mul_rpow, finIdeleAbs]
-      ring
-    · simp [ha]
-  rw [← hB_eq]
-  exact integral_tsum_adelicTent_eq_mul hX_principal hA hB h_split hg
+  by_cases ha : d * (a.snd.val - 1) ∈ Ô K
+  · -- Split the module of `a` into its two factors; the sides then differ only in the order.
+    simp [ha, hX_split a.fst a.snd, ideleModule, mul_rpow, finIdeleAbs]
+    ring
+  · simp [ha]
 
 /-- Finite integral of a difference, for a Mellin-type integrand. Let `N > 0` and suppose that
 `|θ₁ a - θ₂ a| ≤ C * N a ^ δ * (|φ₁ a| + |φ₂ a|)` for all `a`, and that `u * φ₁ * N ^ (σ + δ)` and
@@ -764,8 +743,9 @@ lemma exists_analyticAt_one_mul_eulerProd (h : IsHeckeOfType ψ n) (hψ_ne : ψ 
       ∫ a, X g * X a * Θ ρ (g * a) * (ideleModule a ^ s : ℝ) ∂μ =
         (∫ t, A ρ s t ∂.haar) * (eulerProd (heckeCoeff ψ T) s * κ) := by
     obtain ⟨hB_int, hB_eq⟩ := h_tate s hs
-    exact integral_tsum_adelicTent_eq_integral_mul hX_principal hX_split ((h_tent ρ hρ).1 s)
-      hB_int hB_eq hg
+    rw [← hB_eq]
+    exact integral_tsum_adelicTent_eq_mul hX_principal ((h_tent ρ hρ).1 s) hB_int
+      (mul_adelicTent_factor hX_split) hg
   have h_one {ρ : ℝ} (hρ : ρ ≤ r) {s : ℝ} (hs : 1 < s) :
       Integrable (fun a ↦ X a * Θ ρ a * (ideleModule a ^ s : ℝ)) μ ∧
       ∫ a, X a * Θ ρ a * (ideleModule a ^ s : ℝ) ∂μ =
@@ -882,7 +862,7 @@ lemma exists_hasPrimeDensity_neg_natCast (h : IsHeckeOfType ψ n) (hS : S.Finite
     exact h_ne_zero hs ((h_eq hs).symm.trans hs_zero)
   obtain ⟨m, f, hf, hf_ne, hF_fac⟩ : ∃ (m : ℕ) (f : ℝ → ℂ), AnalyticAt ℝ f 1 ∧ f 1 ≠ 0 ∧
       ∀ᶠ s : ℝ in nhds 1, F s = (s - 1) ^ m • f s :=
-    hF.exists_eventuallyEq_pow_smul_nonzero_iff.mpr hF_ne
+    hF.exists_eventuallyEq_pow_smul_ne_zero_iff.mpr hF_ne
   -- The mean is `-m` once `(s - 1) ^ (-m)` times the `L`-function has a nonzero limit at `1⁺`.
   refine ⟨m, ?_, hasPrimeDensity_of_tendsto h.norm_heckeCoeff_le hf_ne ?_⟩
   · rintro rfl s hs
@@ -901,16 +881,6 @@ lemma exists_hasPrimeDensity_neg_natCast (h : IsHeckeOfType ψ n) (hS : S.Finite
     have hs_ne : (s : ℂ) - 1 ≠ 0 := mod_cast sub_ne_zero.mpr (Set.mem_Ioi.mp hs).ne'
     rw [← h_eq hs, h_fac]
     simp [cpow_neg, hs_ne]
-
-/-- Let `ψ ≠ 1` be the finite part of a Hecke character of type `n` (`IsHeckeOfType ψ n`) and `S` a
-finite set of finite places. The partial `L`-function `eulerProd (heckeCoeff ψ S)` is continuous on
-`s ≥ 1`, and for some natural number `m` the values of `ψ` at the primes of degree one outside `S`
-have mean `-m` (`HasPrimeDensity`), with no zero of the `L`-function on `s ≥ 1` if `m = 0`. -/
-lemma exists_hasPrimeDensity (h : IsHeckeOfType ψ n) (hS : S.Finite) (hψ_ne : ψ ≠ 1) :
-    ContinuousOn (eulerProd (heckeCoeff ψ S)) (Set.Ici 1) ∧
-      ∃ m : ℕ, (m = 0 → ∀ s : ℝ, 1 ≤ s → eulerProd (heckeCoeff ψ S) s ≠ 0) ∧
-        HasPrimeDensity (heckeCoeff ψ S) (-m) :=
-  ⟨h.continuousOn_eulerProd hS hψ_ne, h.exists_hasPrimeDensity_neg_natCast hS hψ_ne⟩
 
 /-- Let `ψ` be the finite part of a Hecke character of type `n` (`IsHeckeOfType ψ n`) with
 `ψ ^ 2 ≠ 1`, and let `S` be a finite set of finite places. The partial `L`-function
@@ -938,7 +908,7 @@ lemma eulerProd_ne_zero (h : IsHeckeOfType ψ n) (hS : S.Finite) (hψ_sq : ψ ^ 
     have h_sum_re : (∑ i : Fin 2, ![4, 1] i * a i v).re = 4 * z.re + (z.re ^ 2 - z.im ^ 2) := by
       simp [a, sq, heckeCoeff, hv, z]
     rw [h_sum_re, show (-3 : ℂ).re = -3 by norm_num]
-    nlinarith [sq_nonneg (z.re + 1)]
+    linarith [sq_nonneg (z.re + 1)]
   -- An inequality at almost all primes passes to the means.
   have h_mean_re : (-3 : ℂ).re ≤ (∑ i : Fin 2, ![4, 1] i * ![-(m₁ : ℂ), -(m₂ : ℂ)] i).re :=
     (hasPrimeDensity_const (-3)).re_le_re (.sum ![4, 1] h_dens)

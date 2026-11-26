@@ -1,7 +1,10 @@
 module
 
+public import Mathlib.MeasureTheory.MeasurableSpace.NCard
+public import Lib.ClassField.Avatar.HeckeBaseChange
 public import Lib.Weil.DualPair.MixedModel
 public import Lib.Weil.Unramified.HeckeTransfer
+public import Lib.Adelic.Witt.IwasawaDecomposition
 
 /-!
 # Lagrangians, zero terms of the Weil representation and vanishing of dominated functionals
@@ -164,7 +167,7 @@ lemma Lagrangian.exists_completeSplitting (L : Lagrangian S) :
     exact ⟨Module.finrank E L.val, P, Subtype.ext k_range⟩
   | succ d =>
     obtain ⟨c, hc⟩ : ∃ c, D.k * c = D.i :=
-      exists_mul_eq_of_col_mem_range fun j ↦ mem_iff.2 (congrArg (col · j) D.gram_ki)
+      exists_mul_eq_of_range_le fun j ↦ mem_iff.2 (congrArg (col · j) D.gram_ki)
     have h_zero : V.J = 0 :=
       calc V.J = D.iᴴ * S.J * (D.k * c) := by rw [hc, D.gram_ii]
         _ = 0 := by rw [← Matrix.mul_assoc, D.gram_ik, Matrix.zero_mul]
@@ -205,7 +208,7 @@ lemma zeroTerm_lagrangian_eq_theta (f : 𝒮 (S.hom T)) :
   -- The frame `P.k` lies in the span of the chosen frame `Q.k`, so is orthogonal to it.
   let Q : CompleteSplitting S (Fin P.lagrangian.numPlanes) := P.lagrangian.chosenSplitting
   have hQ : Q.lagrangian = P.lagrangian := P.lagrangian.lagrangian_chosenSplitting
-  obtain ⟨c, hc⟩ : ∃ c, Q.k * c = P.k := exists_mul_eq_of_col_mem_range fun j ↦
+  obtain ⟨c, hc⟩ : ∃ c, Q.k * c = P.k := exists_mul_eq_of_range_le fun j ↦
     (congrArg Subtype.val hQ).ge ⟨Pi.single j 1, mulVec_single_one P.k j⟩
   have h_orth : Q.kᴴ * S.J * P.k = 0 := by simp [← hc, ← Matrix.mul_assoc]
   have h_congr : (Q.homSource T).zeroTerm = (P.homSource T).zeroTerm :=
@@ -216,7 +219,8 @@ lemma zeroTerm_lagrangian_eq_theta (f : 𝒮 (S.hom T)) :
 /-- For a rational isometry `γ` of `S`, the splitting of `S` with no hyperbolic planes whose
 complement is `S` itself, mapped in by `γ`. -/
 def isometrySplitting : S.Splitting S Empty := by
-  use 0, 0, γ <;> simp [↓← mem_U, ← ext_iff]
+  use 0, 0, γ <;>
+    simp [show γ.val.valᴴ * _ * _ = _ from mem_unitaryGroupOf_iff.1 γ.property, ← ext_iff]
 
 /-- For a rational isometry `γ` of `S`, the zero term on `Hom(S, T)` of the splitting without planes
 given by `γ` is the Weil operator of `(γ⁻¹, 1)`, where `S.ratEmbed` embeds the rational points. -/
@@ -422,7 +426,7 @@ lemma theta_normalisedTorus_le (hm : 2 * card p < card m) :
     rw [← ofReal_norm, norm_mixedValue_normalisedTorus, ofReal_norm, h_point, mixedValue,
       ContinuousLinearMap.comp_apply, homSlice_eq_slice, AddMonoidHom.mk'_apply]
   calc _ ≤ ∑' ξ, ‖θ ((stdSpace E Empty).hom T) ((P.homSource T).slice (pt ξ) f)‖ₑ := by
-        grw [← (hasSum_mixedValue_theta_splitWeil T P h _).tsum_eq, enorm_tsum_le_tsum_enorm]
+        grw [← (hasSum_mixedValue_theta_splitWeil T P h _).tsum_eq, eNorm_tsum_le_tsum_eNorm]
         exact (tsum_congr term_eq).le
     _ ≤ ‖θ ((stdSpace E Empty).hom T)‖ₑ * ((pt ⁻¹' Ω).encard * M * ‖f‖ₑ) := by
         grw [← hM pt, ← ENNReal.tsum_mul_left, ← ContinuousLinearMap.le_opENorm]
@@ -533,7 +537,7 @@ lemma norm_zeroTerm_vacElem_pos (g : G E s) :
   simpa [h_zero, h_vac] using hc_ne
 
 /-- The idele norm is bounded on the ideles that lie in a compact set `C` of adeles. -/
-lemma exists_ideleAbs_le_of_isCompact {F : Type} [Field F] [CMType F] [WeilData F] {C : Set (𝔸 F)}
+lemma exists_ideleAbs_le_of_isCompact {F : Type} [Field F] [CMType F] {C : Set (𝔸 F)}
     (hC : IsCompact C) : ∃ R : ℝ, ∀ d : (𝔸 F)ˣ, d.val ∈ C → ideleAbs d ≤ R := by
   -- The ideles in `C` of norm at least `1`, read as `1 × 1` matrices, form a compact set.
   have h_compact : IsCompact {A : GL (Fin 1) (𝔸 F) |
@@ -733,8 +737,7 @@ lemma New.SiegelWeil.norm_transferWeight (p k : ℕ) (U : Submodule (ResField w)
   have hq_pos : 0 < √(w.q : ℝ) := zero_lt_one.trans (by simp [lt_sqrt])
   have h_ratio : (w.q : ℝ) ^ k * √w.q ^ (2 * p) / √w.q ^ (2 * p + k) = √w.q ^ k := by
     nth_rw 1 [← Real.mul_self_sqrt w.q.cast_nonneg]
-    field_simp
-    ring
+    field
   rw [transferWeight, norm_mul, h_hecke, ← h_ratio]
   simp [heckePolyCoeff, card_ResField, abs_of_pos hq_pos,
     show ‖υ.atUniformizer w‖ = 1 from Circle.norm_coe _]
@@ -843,7 +846,7 @@ lemma New.SiegelWeil.exists_zeroTerm_transferPoint_eq (hw : w.IsSplit) (L : Lagr
   have cancel : (υ.val δ : ℂ) =
       (υ.atUniformizer w ^ Fintype.card m) ^ Module.finrank (ResField w) U := by
     -- `υ` is unramified at `w`, and the determinant of `basicCosetRep U` has order `dim U`.
-    obtain ⟨⟨-, h_order⟩, -⟩ := basicCosetRep_mem_and_residueKer_eq U
+    obtain ⟨-, h_order⟩ := basicCosetRep_mem_basicDoubleCoset U
     simp [δ, κ, transferPoint, ← coe_singleton, detOn_eq_prod, det_kronecker, h_order,
       (charUnramifiedAt_upsilon _).apply_locFullIdele, atUniformizer, finPart, _root_.zpow_mul]
   have h_chi : (υ.val δ : ℂ) * starRingEnd ℂ (chiAdelic δ) = (√(ideleAbs δ))⁻¹ := by
@@ -927,7 +930,7 @@ lemma New.SiegelWeil.eq_zero_of_le_tsum_zeroTerm {E n m : Type} {p : ℕ} [Field
     have split : ∃ᶠ w : FinPlace E in Filter.cofinite, w.IsSplit :=
       frequently_prime_q.mono fun _ ↦ isSplit_of_q_prime
     have integral (i : m × n) :
-        ∀ᶠ w : FinPlace E in Filter.cofinite, z i w ∈ w.adicCompletionIntegers E := (z i).2
+        ∀ᶠ w : FinPlace E in Filter.cofinite, z i w ∈ w.adicCompletionIntegers E := (z i).property
     exact (split.and_eventually (Filter.eventually_all.2 fun i ↦ (integral i).and
       (star_injective.tendsto_cofinite.eventually (integral i)))).exists
   have hφ : (S.hom T).projOn {w} φ = φ := by

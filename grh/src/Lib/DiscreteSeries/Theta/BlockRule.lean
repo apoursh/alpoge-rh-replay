@@ -280,27 +280,21 @@ lemma isBlockRule_iff_isMatch_of_le (hle : card n ≤ card n') :
     IsBlockRule γ γ' l l' ↔ IsMatch (.std t s γ (-γ')) l' (-l) := by
   obtain ⟨d, hd⟩ := Nat.exists_eq_add_of_le hle
   have hdiff : (card n' : ℤ) - card n = d := by omega
-  constructor
-  · intro h
-    have hentries : univ.image (shiftedEntry γ (card n) l') =
-        univ.image (shiftedEntry γ' (card n') l) ∪ doubledBlock d := by
-      simpa [hd] using h.entries_of_le hle
-    obtain ⟨hrows, hcols⟩ :=
-      exists_matched_of_entries_eq hd (shiftedEntry_injective h.hasGap_left _)
-        (shiftedEntry_injective h.hasGap_right _) (even_shiftedEntry_add_sub_one h.hasGap_right hd)
-        hentries h.sign_of_pos h.sign_of_neg
-    exact isMatch_std_iff.2 ⟨h.hasGap_left, h.hasGap_right, fun r ↦ by simpa [hdiff] using hrows r,
-      fun c ↦ Or.inl (by simpa [hdiff] using hcols c)⟩
-  · intro h
-    obtain ⟨hgap, hgap', hrows, -⟩ := isMatch_std_iff.1 h
-    obtain ⟨hentries, hpos, hneg⟩ :=
-      entries_eq_of_exists_matched hd (shiftedEntry_injective hgap' _)
-        (even_shiftedEntry_add_sub_one hgap' hd) (fun r ↦ by simpa [hdiff] using hrows r)
-        (fun c ↦ by simpa [hdiff] using h.exists_row_of_le hle c)
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · obtain ⟨hrows, hcols⟩ := exists_matched_of_entries_eq hd
+      (shiftedEntry_injective h.hasGap_left _) (shiftedEntry_injective h.hasGap_right _)
+      (even_shiftedEntry_add_sub_one h.hasGap_right hd) (by simpa [hd] using h.entries_of_le hle)
+      h.sign_of_pos h.sign_of_neg
+    exact isMatch_std_iff.2 ⟨h.hasGap_left, h.hasGap_right,
+      fun r ↦ by simpa [hdiff] using hrows r, fun c ↦ .inl (by simpa [hdiff] using hcols c)⟩
+  · obtain ⟨hgap, hgap', hrows, -⟩ := isMatch_std_iff.1 h
+    obtain ⟨hentries, hpos, hneg⟩ := entries_eq_of_exists_matched hd
+      (shiftedEntry_injective hgap' _) (even_shiftedEntry_add_sub_one hgap' hd)
+      (fun r ↦ by simpa [hdiff] using hrows r)
+      (fun c ↦ by simpa [hdiff] using h.exists_row_of_le hle c)
     refine ⟨hgap, hgap', fun _ ↦ by simpa [hd] using hentries, fun hge ↦ ?_, hpos, hneg⟩
     -- For equal ranks the block is empty.
-    have hzero : d = 0 := by omega
-    simpa [hzero, Nat.sub_eq_zero_of_le hle, doubledBlock] using hentries.symm
+    simpa [show d = 0 by omega, Nat.sub_eq_zero_of_le hle, doubledBlock] using hentries.symm
 
 /-- Parameters λ, λ' on (S, T) satisfy the block rule for γ, γ' if and only if λ', −λ match for the
 oscillator pair with rows for T and columns for S. -/
@@ -339,16 +333,6 @@ theorem IsBlockRule.neg (h : IsBlockRule γ γ' l l') :
     simp [h.sign_of_neg c r (by simpa using heq) (by simpa using hc)]
   · intro c r heq hc
     simp [h.sign_of_pos c r (by simpa using heq) (by simpa using hc)]
-
-/-- The block rule is unchanged when all signs are reversed. Here `l` and `l'` are doubled
-Harish-Chandra parameters (l = 2λ, l' = 2λ') for the signs `s` and `t`. The block rule
-`IsBlockRule γ γ'` compares the entries of λ shifted by −wt χ_T with those of λ' shifted by −wt χ_S,
-where γ = wt χ_S + n/2 and γ' = wt χ_T + n'/2. The claim: if `l`, `l'` satisfy the block rule, then
-the same integer vectors, regarded via `toHCParam` as parameters for the signs `-s` and `-t`,
-satisfy it for the same `γ`, `γ'`. -/
-theorem IsBlockRule.neg_signs (h : IsBlockRule γ γ' l l') :
-    IsBlockRule γ γ' (toHCParam (-s) l) (toHCParam (-t) l') := by
-  simpa only [toHCParam, sub_sub_cancel, neg_neg] using h.neg.symm.neg.symm
 
 /-- If γ and γ' are raised by integers u and u', then λ + u' and λ' + u still satisfy the block
 rule: the shifted entries do not change. -/

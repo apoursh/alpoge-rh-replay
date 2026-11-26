@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Algebra.Homology.DerivedCategory.Ext.EnoughProjectives
 public import Lib.Cohomology.Etale.Basic
 
 /-!
@@ -297,21 +298,16 @@ lemma four_lemma (h : Hom L L' a b c) (hb : BijectiveUpTo (fun n : ℕ ↦ b n) 
     BijectiveUpTo (fun n : ℕ ↦ a n) r := by
   -- Both halves are one of the chases above for a rotation of the sequences, in which the maps of
   -- degree n - 1 are the components in degree n (`rotateMap`; zero maps of zero groups for n = 0).
-  refine fun n ↦ ⟨fun hn ↦ ?_, fun hn y ↦ ?_⟩
-  · -- injectivity on Aⁿ, from Bⁿ⁻¹ → Cⁿ⁻¹ → Aⁿ → Bⁿ
-    refine (injective_iff_map_eq_zero (a n)).2 fun (x : L.A n) (hx : a n x = 0) ↦ ?_
-    have hfx : L.f n x = 0 := hb.injective hn (by simp [h.comm_f, hx])
-    have hb_prev : Surjective (rotateMap (L := L.rotate) (L' := L'.rotate) b n) :=
-      rotateMap_surjective _ fun m hm ↦ hb.surjective (by lia)
-    have hc_prev : Function.Injective (rotateMap c n) :=
-      rotateMap_injective c fun m hm ↦ hc.injective (by lia)
-    exact h.rotate.rotate.eq_zero_of_delta_eq_zero hb_prev hc_prev x hx hfx
-  · -- surjectivity on Aⁿ, from Cⁿ⁻¹ → Aⁿ → Bⁿ → Cⁿ: first lift the image of `y` in B'ⁿ
-    obtain ⟨x, hx⟩ : ∃ x : L.B n, b n x = L'.f n y := hb.surjective hn _
-    have hc_prev : Surjective (rotateMap c n) :=
-      rotateMap_surjective c fun m hm ↦ hc.surjective (by lia)
-    obtain ⟨z, hz, -⟩ := h.rotate.exists_preimage (n := n) hc_prev (hc.injective (by lia)) y x hx
-    exact ⟨z, hz⟩
+  refine fun n ↦ ⟨fun hn ↦ (injective_iff_map_eq_zero (a n)).2 fun x hx ↦
+    h.rotate.rotate.eq_zero_of_delta_eq_zero
+      (rotateMap_surjective _ fun _ hm ↦ hb.surjective (by lia))
+      (rotateMap_injective _ fun _ hm ↦ hc.injective (by lia))
+      x hx (hb.injective hn (by simp [h.comm_f, hx])), fun hn y ↦ ?_⟩
+  -- surjectivity on Aⁿ, from Cⁿ⁻¹ → Aⁿ → Bⁿ → Cⁿ: first lift the image of `y` in B'ⁿ
+  obtain ⟨x, hx⟩ := hb.surjective hn (L'.f n y)
+  exact (h.rotate.exists_preimage (n := n)
+    (rotateMap_surjective c fun _ hm ↦ hc.surjective (by lia))
+    (hc.injective (by lia)) y x hx).imp fun _ ↦ And.left
 
 /-- Five lemma for the morphism h = (a, b, c) from the long exact sequence L to L': if c is
 bijective in all degrees (`AllBijective`), then b is bijective in all degrees exactly when a is. -/
@@ -367,16 +363,8 @@ lemma Comparison.pull_hom_contravariant (hS : S.ShortExact) (hS' : S'.ShortExact
     (c : Comparison F F') (τ : S' ⟶ S.map (restrictAlong c.functor)) :
     (contravariant hS F).Hom (contravariant hS' F') (c.pull τ.τ₃) (c.pull τ.τ₂) (c.pull τ.τ₁) := by
   constructor
-  · -- τ commutes with the second maps of the complexes
-    intro n (x : H S.X₃ F n)
-    change c.pull (N := S.X₂) τ.τ₂ n (H.map F S.g n x) =
-      H.map F' S'.g n (c.pull (N := S.X₃) τ.τ₃ n x)
-    simp [pull_apply, H.map, mapExactFunctor_comp, mapExactFunctor_mk₀, ← τ.comm₂₃]
-  · -- τ commutes with the first maps of the complexes
-    intro n (x : H S.X₂ F n)
-    change c.pull (N := S.X₁) τ.τ₁ n (H.map F S.f n x) =
-      H.map F' S'.f n (c.pull (N := S.X₂) τ.τ₂ n x)
-    simp [pull_apply, H.map, mapExactFunctor_comp, mapExactFunctor_mk₀, ← τ.comm₁₂]
+  · exact fun n x ↦ (map_pull_eq_pull_map (c := c) (α := S.g) τ.comm₂₃.symm n x).symm
+  · exact fun n x ↦ (map_pull_eq_pull_map (c := c) (α := S.f) τ.comm₁₂.symm n x).symm
   · -- the extension class is natural
     intro n (x : H S.X₁ F n)
     change c.pull (N := S.X₃) τ.τ₃ (n + 1) (hS.extClass.precomp F (add_comm 1 n) x) =
@@ -392,18 +380,8 @@ lemma Comparison.pull_hom_covariant (hS : S.ShortExact) (hS' : S'.ShortExact) {�
     LongExactSeq.Hom (LongExactSeq.covariant hS N) (LongExactSeq.covariant hS' N')
       (pull ⟨φ, τ.τ₁⟩ α) (pull ⟨φ, τ.τ₂⟩ α) (pull ⟨φ, τ.τ₃⟩ α) := by
   constructor
-  · -- τ commutes with the first maps of the complexes
-    intro n (x : H N S.X₁ n)
-    change pull (N := N) ⟨φ, τ.τ₂⟩ α n (H.push N S.f n x) =
-      H.push N' S'.f n (pull ⟨φ, τ.τ₁⟩ α n x)
-    simp [pull_apply, H.push, mapExactFunctor_comp, mapExactFunctor_mk₀, comp_assoc (h₂₃ := rfl),
-      τ.comm₁₂]
-  · -- τ commutes with the second maps of the complexes
-    intro n (x : H N S.X₂ n)
-    change pull (N := N) ⟨φ, τ.τ₃⟩ α n (H.push N S.g n x) =
-      H.push N' S'.g n (pull ⟨φ, τ.τ₂⟩ α n x)
-    simp [pull_apply, H.push, mapExactFunctor_comp, mapExactFunctor_mk₀, comp_assoc (h₂₃ := rfl),
-      τ.comm₂₃]
+  · exact fun _ x ↦ pull_push ⟨φ, τ.τ₁⟩ τ.τ₂ S.f S'.f τ.comm₁₂.symm α x
+  · exact fun _ x ↦ pull_push ⟨φ, τ.τ₂⟩ τ.τ₃ S.g S'.g τ.comm₂₃.symm α x
   · -- the extension class is natural
     intro n (x : H N S.X₃ n)
     change pull (N := N) ⟨φ, τ.τ₁⟩ α (n + 1) (hS.extClass.postcomp N (by lia) x) =
@@ -471,7 +449,7 @@ lemma New.Variety.H.sigma_bijective {C : Type 1} [Category C] {ι : Type 1} (X :
     -- Under `e`, pull-back along `sigma.ι X i` is composition with it.
     refine (bijective_iff_of_comm_sq (fun f ↦ funext fun i ↦ ?_) (e _).bijective
       (.piMap fun _ ↦ (e _).bijective)).1 h_bij
-    show map F (freeAb.map (sigma.ι X i)) 0 (e (sigma X) f) = e (X i) (sigma.ι X i ≫ f)
+    change map F (freeAb.map (sigma.ι X i)) 0 (e (sigma X) f) = e (X i) (sigma.ι X i ≫ f)
     simp +instances [e, Adjunction.homEquiv, map, freeAb]
   | succ n ih =>
     -- Embed `F` in the injective `Injective.under F` and compare the long exact sequences of
@@ -533,23 +511,15 @@ lemma exists_acyclic_cover (M : C ⥤ Ab) :
       (h_ses : (kerComplex g).ShortExact),
       ∀ (F : AbFunctor C) (n : ℕ), Surjective ((contravariant h_ses F).δ n) := by
   -- Take one copy of h_A for each object A and each element x of M(A), mapped to M by Yoneda.
-  let c : (Σ A : C, M.obj A) → C := fun x ↦ x.1
-  let g : freeAb.obj (sigma fun x ↦ reprBy (c x)) ⟶ M :=
+  let g : freeAb.obj (sigma fun x : Σ A : C, M.obj A ↦ reprBy x.1) ⟶ M :=
     (freeAb.homEquiv ..).symm (sigma.desc fun x ↦ pointMap x.2)
-  have hg (A : C) : Surjective (g.app A) := by
-    intro x
-    -- `x` is the image of the identity of A in the copy indexed by (A, x)
-    refine ⟨FreeAddCommGroup.of ⟨⟨A, x⟩, ULift.up (𝟙 A)⟩, ?_⟩
-    calc g.app A (FreeAddCommGroup.of ⟨⟨A, x⟩, ULift.up (𝟙 A)⟩)
-      _ = (pointMap (Y := M ⋙ forget Ab) x).app A (ULift.up (𝟙 A)) :=
-        FreeAddCommGroup.lift_apply_of _ _
-      _ = x := (uliftCoyonedaEquiv (F := M ⋙ forget Ab)).apply_symm_apply x
-  refine ⟨Σ A : C, M.obj A, c, g, kerComplex_shortExact hg, fun F n x ↦ ?_⟩
-  -- on each summand ℤ[h_A] the pull-back of `x` vanishes, as this summand is projective
-  have h_pullback : (mk₀ g).comp x (zero_add _) = 0 := (H.sigma_bijective _ F (n + 1)).injective <|
-    funext fun _ ↦ (eq_zero_of_projective _).trans (eq_zero_of_projective _).symm
-  -- so, by exactness, `x` is in the image of the connecting map
-  exact contravariant_sequence_exact₃ _ F x h_pullback (add_comm 1 n)
+  exact ⟨Σ A : C, M.obj A, Sigma.fst, g, kerComplex_shortExact fun A x ↦
+    ⟨FreeAddCommGroup.of ⟨⟨A, x⟩, ULift.up (𝟙 A)⟩, (FreeAddCommGroup.lift_apply_of _ _).trans <|
+      (uliftCoyonedaEquiv (F := M ⋙ forget Ab)).apply_symm_apply x⟩,
+    -- On each projective summand ℤ[h_A] the pull-back vanishes, so exactness gives a preimage.
+    fun F n x ↦ contravariant_sequence_exact₃ _ F x ((H.sigma_bijective _ F (n + 1)).injective <|
+      funext fun _ ↦ (eq_zero_of_projective _).trans (eq_zero_of_projective _).symm)
+      (add_comm 1 n)⟩
 
 /-- Given natural transformations N→F_i for each index i, the natural transformation from N to
 the pointwise product of the functors F_i having these as components. -/
@@ -575,7 +545,7 @@ lemma H.pi_bijective (n : ℕ) :
     refine (bijective_iff_of_comm_sq (fun x ↦ funext fun i ↦ ?_)
       (mk₀_bijective N (piAbFunctor F)) (.piMap fun i ↦ mk₀_bijective N (F i))).1 h_hom
     -- pushing forward a class of degree 0 is composition with the projection
-    show pull (⟨𝟭 C, π F i⟩ : Comparison (piAbFunctor F) (F i)) (𝟙 N) 0 (mk₀ x) = mk₀ (x ≫ π F i)
+    change pull (⟨𝟭 C, π F i⟩ : Comparison (piAbFunctor F) (F i)) (𝟙 N) 0 (mk₀ x) = mk₀ (x ≫ π F i)
     simp [pull_apply, mapExactFunctor_mk₀, show (𝟭 C).whiskerLeft x = x from rfl]
   | succ n ih =>
     -- for 0 → K → ℤ[⊔ h_c] → N → 0 with onto connecting maps, degree n + 1 for N follows from

@@ -99,13 +99,13 @@ lemma mapRel_crysRelations_subset [DecidableEq n] {O' : CoeffRing ℓ} (hO : O �
       l ((A.map (inclusion hO) *ᵥ x) j) = (A *ᵥ (l ∘ x)) j := by
     have h_linear (a : ↑O) (y : ↑O') : l (inclusion hO a * y) = a * l y := l.map_smul a y
     simp only [mulVec, dotProduct, Matrix.map_apply, map_sum, h_linear, Function.comp_apply]
-  let lz : decompGroup Gal(Ω/E) (placeOver v.1) → n → ↑O :=
+  let lz : decompGroup Gal(Ω/E) (placeOver v.val) → n → ↑O :=
     (l.restrictScalars ℤ_[ℓ]).compLeft n ∘ z
   -- `ψ` is trivial on the decomposition group, so `l` is equivariant there and `l ∘ z` is a
   -- crystalline cocycle of `u`.
   have h_mem : lz ∈ crysCocyclesAt v u := by
     refine Period.crysCocycles.comp_mem hz _ fun g x ↦ funext fun j ↦ ?_
-    have hψg : ψ g = 1 := hψ v v.2 g g.2
+    have hψg : ψ g = 1 := hψ v v.property g g.property
     have h_comp : (l.restrictScalars ℤ_[ℓ]).compLeft n x = l ∘ x := rfl
     simpa [twistRep, hψg, h_comp] using h_mulVec (u g) x j
   calc
@@ -133,10 +133,10 @@ lemma IsSmallTwist.isAuxTwist {S₀ Q : Finset (FinPlace E)} {g₀ : Gal(Ω/E)} 
   classical
   let γ (w : FinPlace E) : Gal(Ω/E) := w.isPlaceOver_placeOver.tameGenerator
   refine ⟨hQ, hψ.isFromU1, fun v ↦ γ v, fun v ↦ ?_, ?_⟩
-  · have hvℓ : v.1 ∉ placesDividing E ℓ := fun hv ↦ by
-      obtain ⟨hvS, -⟩ := hQ v v.2
+  · have hvℓ : v.val ∉ placesDividing E ℓ := fun hv ↦ by
+      obtain ⟨hvS, -⟩ := hQ v v.property
       exact hvS (hS₀ hv)
-    exact ⟨hvℓ, map_one _, placeOver v.1, v.1.isPlaceOver_placeOver, rfl⟩
+    exact ⟨hvℓ, map_one _, placeOver v.val, v.val.isPlaceOver_placeOver, rfl⟩
   · calc
       ∑ v : Q, ellVal (ψ (γ v) - 1) = ∑ w ∈ Q, ellVal (ψ (γ w) - 1) :=
         Q.sum_coe_sort fun w ↦ ellVal (ψ (γ w) - 1)
@@ -205,7 +205,7 @@ lemma SelmerDatum.TwistedLengthLe.hasDivisibleSelmerLengthLe {ℓ : ℕ} [ThePri
     (hT_places : (T.places : Set (FinPlace D.E)) = placesDividing D.E ℓ ∪ placesAboveM D)
     (hT_crys : T.localRelations = crysRelations T.ρ) (hQ : IsAuxiliary (badPlaces D ℓ) Q)
     (hψ : IsFromU1 (placesDividing D.E ℓ) Q ψ) :
-    HasDivisibleSelmerLengthLe ψ R Q T.γ (O.toIntQpBar T.ζ) b := by
+    HasDivisibleSelmerLengthLe ψ R Q T.γ b := by
   refine Eventually.mono hT_length fun O' ⟨hO, ψ', hψ', h_le⟩ ↦ ?_
   let e : O →+* O' := (inclusion hO).toRingHom
   have hψ'γ : ψ' T.γ = 1 := Subtype.ext ((hψ' T.γ).trans (T.apply_γ_eq_one hQ hψ))
@@ -228,9 +228,8 @@ lemma SelmerDatum.TwistedLengthLe.hasDivisibleSelmerLengthLe {ℓ : ℕ} [ThePri
       change (T.ρ T.γ).map e = e T.ζ • 1
       rw [hργ, map_smul' e T.ζ 1 (map_mul e), Matrix.map_one e (map_zero e) (map_one e)]
     simp [twistRep, huγ, hψ'γ]
-  have h_twisted : IsTwistedLattice ψ R T.γ (O.toIntQpBar T.ζ) u ψ' (e T.ζ) :=
-    { scalar_eq := rfl
-      isLatticeIn := h_lattice
+  have h_twisted : IsTwistedLattice ψ R T.γ u ψ' (e T.ζ) :=
+    { isLatticeIn := h_lattice
       twist_eq := hψ'
       apply_eq_smul := h_scalar
       isUnit_sub_one := by simpa using T.isUnit_ζ_sub_one.map e
@@ -380,8 +379,8 @@ theorem exists_mFoldTwist_hasDivisibleSelmerLengthLe {P : Parameters} (D : Data 
       -- The ramification is auxiliary and small.
       IsAuxTwist (badPlaces D ℓ) ξ.Q ξ.invAvatar (twistError ℓ D) ∧
       -- The Selmer groups of the twisted representations are short.
-      (∀ i : I, ∃ (γ : AbsGal D) (ζ : intQpBar ℓ),
-        HasDivisibleSelmerLengthLe ξ.invAvatar (R i) ξ.Q γ ζ (twistError ℓ D)) ∧
+      (∀ i : I, ∃ γ : AbsGal D,
+        HasDivisibleSelmerLengthLe ξ.invAvatar (R i) ξ.Q γ (twistError ℓ D)) ∧
       -- The ratios of `L`-values have small valuation.
       ∀ (p : D.CriticalPair) (s : ℤˣ), p.IsRamified →
         ellVal (ιℓ (p.ratio ξ s)) ≤ twistError ℓ D := by
@@ -442,8 +441,8 @@ theorem exists_mFoldTwist_hasDivisibleSelmerLengthLe {P : Parameters} (D : Data 
   · have h_length : (T i).TwistedLengthLe τ.Q (τ.pow j).invAvatar (twistError ℓ D) := by
       refine (h_small.length_le i).mono ?_
       grw [h_error, hβ_le i]
-    exact ⟨(T i).γ, O.toIntQpBar (T i).ζ, h_length.hasDivisibleSelmerLengthLe (h_lattice i)
-      (h_places i) (h_crys i) hQ h_small.isFromU1⟩
+    exact ⟨(T i).γ, h_length.hasDivisibleSelmerLengthLe (h_lattice i) (h_places i) (h_crys i)
+      hQ h_small.isFromU1⟩
   · calc
       ellVal (ιℓ (p.ratio (τ.pow j) s)) ≤ 4 * ellVal (w₀.q - 1 : PadicAlgCl ℓ) + ε :=
         hY (⟨p, hp⟩, s) (τ'.powTwist ⟨j, hj⟩) hQ h_small.isFromU1 ε

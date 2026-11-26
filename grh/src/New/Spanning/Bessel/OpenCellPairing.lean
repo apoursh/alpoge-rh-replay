@@ -56,10 +56,6 @@ noncomputable def piKernel (X : ι → BesselSystem 𝔰 b f) (σ : FullOrCut) (
   WithLp.toLp 2 fun i ↦ ∏ v : ι, (X v).besselFn σ (γ v * z v) (i.1 v) * conj
     ((X v).besselFn σ (z v) (i.2 v))
 
-lemma continuous_piKernel (X : ι → BesselSystem 𝔰 b f) (σ : FullOrCut) (γ : ι → 𝔰.G₁) :
-    Continuous (piKernel X σ γ) := by
-  fun_prop [piKernel]
-
 /-- The parameter `b` of a Bessel system is at least `1`, being at least eight times the rank. -/
 lemma one_le_b (X : BesselSystem 𝔰 b f) : 1 ≤ b := by
   have h_rank : (𝔰.r : ℝ) = 𝔰.ϱ + (card 𝔰.κ + 1 + 𝔰.ϱ) := by simp
@@ -83,7 +79,7 @@ lemma integrableOn_smul_piKernel (X : ι → BesselSystem 𝔰 b f) (σ : FullOr
     {A : Set (ι → 𝔰.G₁)} (hA : IsCompact A) :
     IntegrableOn (fun z : ι → 𝔰.G₁ ↦ φ (t * z) • piKernel X σ γ (t * z)) A := by
   have h_cont : Continuous fun z : ι → 𝔰.G₁ ↦ piKernel X σ γ (t * z) :=
-    (continuous_piKernel X σ γ).comp (continuous_const_mul t)
+    (by fun_prop [piKernel] : Continuous (piKernel X σ γ)).comp (continuous_const_mul t)
   exact (h_cont.continuousOn.integrableOn_compact hA).bdd_smul 1
     (hφ_meas.comp (measurable_const_mul t)).aestronglyMeasurable (.of_forall fun z ↦ hφ_le (t * z))
 
@@ -199,8 +195,8 @@ lemma hasCompactSupport_and_enorm_integral_piKernel_le (X : ι → BesselSystem 
   have h_diff : ‖∫ z in A, F .full (t * z) - F .cut (t * z)‖ₑ ≤
       ∫⁻ z, ‖φ z‖ₑ * ‖piKernel X .full γ z - piKernel X .cut γ z‖ₑ := by
     rw [← lintegral_mul_left_eq_self _ t]
-    refine ((enorm_integral_le_lintegral_enorm _).trans (setLIntegral_le_lintegral A _)).trans_eq ?_
-    simp only [F, ← smul_sub, enorm_smul]
+    refine ((eNorm_integral_le_lintegral_eNorm _).trans (setLIntegral_le_lintegral A _)).trans_eq ?_
+    simp only [F, ← smul_sub, eNorm_smul]
   refine ⟨.intro (hA.image (continuous_const_mul t)) fun z hz ↦ ?_, ?_⟩
   · simpa [F] using h_supp (t⁻¹ * z) fun h_memA ↦ hz ⟨t⁻¹ * z, h_memA, mul_inv_cancel_left t z⟩
   · have h_translate : ∫ z, F .cut z = ∫ z in A, F .cut (t * z) := by
@@ -209,7 +205,7 @@ lemma hasCompactSupport_and_enorm_integral_piKernel_le (X : ι → BesselSystem 
     calc ‖∫ z, F .cut z‖ₑ
       _ = ‖(∫ z in A, F .full (t * z)) - ∫ z in A, F .full (t * z) - F .cut (t * z)‖ₑ := by
         rw [h_translate, integral_sub (h_int .full) (h_int .cut), _root_.sub_sub_cancel]
-      _ ≤ _ := enorm_sub_le.trans (add_le_add h_full h_diff)
+      _ ≤ _ := eNorm_sub_le.trans (add_le_add h_full h_diff)
 
 /-- The matrix of the operator `W (y) ⊗ W (γ⁻¹ y)^*`, as a vector with the Hilbert–Schmidt norm.
 Here `W` is the tensor product, over a finite family `X` of Bessel systems, of the Bessel functions
@@ -271,8 +267,8 @@ theorem enorm_integral_pairKernel_cut_le (X : ι → BesselSystem 𝔰 b f)
     fun y hy ↦ hφ_box y (by rwa [h_adjoint, map_ne_zero_iff T T.injective])
   simp only [h_adjoint]
   refine ⟨h_support.comp_left (map_zero T), ?_⟩
-  rw [T.integral_comp_comm, T.enorm_map]
-  simpa only [h_kernel, ← map_sub, T.enorm_map, pairingBoundSq, h_disc_inv,
-    RCLike.enorm_conj] using h_bound
+  rw [T.integral_comp_comm, T.eNorm_map]
+  simpa only [h_kernel, ← map_sub, T.eNorm_map, pairingBoundSq, h_disc_inv,
+    RCLike.eNorm_conj] using h_bound
 
 end New.BesselSystem

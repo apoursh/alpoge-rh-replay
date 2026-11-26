@@ -1,7 +1,12 @@
 module
 
+public import Mathlib.Analysis.Complex.Hadamard
+public import Mathlib.NumberTheory.LSeries.PrimesInAP
+public import Mathlib.NumberTheory.LSeries.SumCoeff
+public import Mathlib.Tactic.PNatToNat
 public import Lib.Analytic.DirichletTheta
 public import Lib.Analytic.EntireLFunction
+public import Lib.Analytic.PolyaVinogradov
 
 /-!
 # A prime `d` in a class whose quadratic twists have no zero in a box
@@ -245,7 +250,6 @@ theorem three_lines_bound_of_LFunction_eq_zero :
       measurable_gaussianTheta).2
   have h_pos {x : ℝ} (hx : x ∈ Set.Icc 2⁻¹ 2) : 0 < x := lt_of_lt_of_le (by norm_num) hx.1
   have h_diff : DifferentiableOn ℂ Ψ (closure (verticalStrip 2⁻¹ 2)) := by
-    have hL_diff : Differentiable ℂ χ.LFunction := differentiable_LFunction hχ_ne
     have hΨ : DifferentiableOn ℂ Ψ {z : ℂ | 0 < z.re} := by fun_prop
     rw [verticalStrip, closure_preimage_re, closure_Ioo (by norm_num)]
     exact hΨ.mono fun z hz ↦ h_pos hz
@@ -343,7 +347,7 @@ lemma dirichletCharacter_jacobiSym_ne_one {m : ℕ} (h_odd : Odd m) (h_not_sq : 
   have h_dvd : b * p ∣ c ^ 2 * (p * b) := by simp [mul_comm]
   refine quadTwist_ne_one ψb p hp_two h_coprime ?_
   refine (changeLevel_eq_one_iff h_dvd).1 (MulChar.ext fun u ↦ ?_)
-  let v : ℤ := u.1.cast
+  let v : ℤ := u.val.cast
   have h_symbol : J(v | c) ^ 2 * (J(v | p) * J(v | b)) = 1 := by
     have h_unit : (J(v | c ^ 2 * (p * b)) : ℂ) = 1 := by simp [← hψ, v]
     rw [mul_right' _ (by simpa) (by simp [hb, hp.ne_zero]), mul_right' _ hp.ne_zero hb,
@@ -647,25 +651,16 @@ lemma legendreSym_eq_jacobiSym_ordCompl {d : ℕ} [Fact d.Prime] (h8 : d % 8 = 7
 prime `d` that does not divide `M` is primitive. -/
 lemma isPrimitive_quadTwist {M d : ℕ} [NeZero M] [Fact d.Prime] {ψ : DirichletCharacter ℂ M}
     (hψ : ψ.IsPrimitive) (h2 : d ≠ 2) (hM : M.Coprime d) : (quadTwist ψ d).IsPrimitive := by
-  -- Dividing the twist by one factor leaves the other, so `M` divides `n d` and `d` divides `n M`,
-  -- where `n` is the conductor of the twist.
+  -- The twist is the product of `ψ` and the Legendre character `ε` mod `d`, whose conductors `M`
+  -- and `d` are coprime, so its conductor is `M * d`.
   let ε : DirichletCharacter ℂ d := (chiK d).ringHomComp (algebraMap ℤ ℂ)
   have h_twist (χ : DirichletCharacter ℂ M) :
       quadTwist χ d = χ.changeLevel ⟨d, rfl⟩ * ε.changeLevel (by simp) := rfl
   have hε_ne : ε ≠ 1 := fun h ↦ quadTwist_ne_one 1 d h2 hM (by simp [h_twist, h])
-  have hε : ε.conductor = d := ((dvd_prime Fact.out).1 ε.conductor_dvd_level).resolve_left
-    (mt eq_one_iff_conductor_eq_one.2 hε_ne)
-  have h_dvd (χ : DirichletCharacter ℂ (M * d)) :
-      (quadTwist ψ d * χ⁻¹).conductor ∣ (quadTwist ψ d).conductor * χ.conductor := by
-    grw [conductor_mul_dvd_lcm_conductor, Nat.lcm_dvd_mul, conductor_inv]
-  have hψ_cond : ψ.conductor = M := hψ
-  have hMn : M ∣ (quadTwist ψ d).conductor * d := by
-    simpa [h_twist, conductor_changeLevel, hε, hψ_cond] using h_dvd (ε.changeLevel (by simp))
-  have hdn : d ∣ (quadTwist ψ d).conductor * M := by
-    simpa [h_twist, conductor_changeLevel, mul_comm, hε, hψ_cond]
-      using h_dvd (ψ.changeLevel ⟨d, rfl⟩)
-  exact (quadTwist ψ d).conductor_dvd_level.antisymm
-    (hM.mul_dvd_of_dvd_of_dvd (hM.dvd_mul_right.mp hMn) (hM.symm.dvd_mul_right.mp hdn))
+  have hε : ε.conductor = d := isPrimitive_of_ne_one_of_prime Fact.out hε_ne
+  change (ψ.changeLevel _ * ε.changeLevel _).conductor = M * d
+  rw [conductor_mul_of_coprime, conductor_changeLevel, conductor_changeLevel, hψ, hε]
+  simpa only [conductor_changeLevel, show ψ.conductor = M from hψ, hε] using hM
 
 /-- The number `d` is a prime, and the `L`-function of the twist `ψ (·/d)` (`quadTwist ψ d`) has a
 zero in the box `re s ≥ β`, `|im s| ≤ H`. -/
@@ -828,7 +823,7 @@ lemma exists_entireL_quadTwist_ne_zero {N : ℕ} [NeZero N] {β : ℝ} (H : ℝ)
     (h_conv.abscissaOfAbsConv_le.trans_lt (mod_cast by simpa))
   -- The terms `Λ(p) / p` of the divergent series are those of this one, as `Λ(p) = log p`.
   refine not_summable_residueClass_prime_div ha (h_log.norm.of_norm_bounded fun n ↦ ?_)
-  show ‖(if n.Prime then residueClass a n else 0) / n‖ ≤ ‖term (logMul f) 1 n‖
+  change ‖(if n.Prime then residueClass a n else 0) / n‖ ≤ ‖term (logMul f) 1 n‖
   simp +contextual [f, Set.indicator, term, apply_ite, ite_and, ← natCast_log,
     vonMangoldt_apply_prime]
 

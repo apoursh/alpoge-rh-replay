@@ -280,7 +280,7 @@ lemma padicValNat_factorial_mem_Icc_of_le (D : Data P) {p : ℕ} [Fact p.Prime] 
       _ ≤ p ^ (⌈D.logB⌉₊ + 1) := by grw [exp_one_lt_three.le, ← hp3, cast_ofNat]
   refine Set.Icc_subset_Icc_left ?_ (padicValNat_factorial_mem_Icc h_digits)
   push_cast
-  linarith [ceil_lt_add_one h_logB]
+  linarith only [ceil_lt_add_one h_logB]
 
 /-- For `p ≥ 3` and `n₁ + n₂ + n₃ ≤ 2 b`, the multinomial coefficient
 `(n₁ + n₂ + n₃)! / (n₁! n₂! n₃!)` has valuation at most `3 (log b + 2)`.
@@ -299,12 +299,6 @@ lemma padicValNat_factorial_add_add_le (D : Data P) {p : ℕ} [Fact p.Prime] (hp
     (D.padicValNat_factorial_mem_Icc_of_le hp3 hn).2
   rw [cast_add, cast_add, add_div, add_div] at h_upper
   linarith [h_lower (n := n₁) (by lia), h_lower (n := n₂) (by lia), h_lower (n := n₃) (by lia)]
-
-/-- `n♯ / p - 1 ≤ v(n♯!) ≤ v(B)` for the `p`-adic valuation `v = padicValNat p`,
-`n♯ = D.lossFactorCount` and the product `B = D.lossProduct l` of `n♯` consecutive integers. -/
-lemma lossFactorCount_div_sub_one_le (D : Data P) {p : ℕ} [Fact p.Prime] (l : ℕ) :
-    (D.lossFactorCount / p - 1 : ℝ) ≤ padicValNat p (D.lossProduct l) := by
-  grw [div_sub_one_le_padicValNat_factorial, D.padicValNat_factorial_lossFactorCount_le l]
 
 /-- The term `min (κ(τ) / p ^ e) (κ(-p ^ e τ))` for `e ∈ I_p = positivePartnerExponents P.d p`, and
 `0` for the other `e`; `κ` is the weight of a place. -/
@@ -472,7 +466,8 @@ lemma error_le_padicValNat_lossProduct (D : Data P) {p : ℕ} [hp : Fact p.Prime
   calc 3 * (D.logB + 2) + D.x ^ 42 + 1 + l₀ D.towerExp * (D.a / D.x₁) + 2 * D.b / (D.k * p)
       ≤ 3 * (D.b / (D.k * p)) := by linarith [h_small, h_gap, mul_div_assoc 2 D.b (D.k * p)]
     _ ≤ D.lossFactorCount / p - 1 := by linarith [h_one, h_gap, h_length]
-    _ ≤ padicValNat p (D.lossProduct l) := D.lossFactorCount_div_sub_one_le l
+    _ ≤ padicValNat p (D.lossProduct l) := by
+        grw [div_sub_one_le_padicValNat_factorial, D.padicValNat_factorial_lossFactorCount_le l]
 
 end Data
 

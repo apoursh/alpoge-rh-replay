@@ -242,7 +242,7 @@ lemma exists_mul_isBorelMatrix_of_mem_openOrbit (ho : o.Injective) (ε : n → �
   -- Move the phases of the diagonal of `b` into `g`.
   let t : USign ε := diagTorus ε fun i : n ↦
     ⟨‖b i i‖ / b i i, by simp [Submonoid.unitSphere, hb.diag_ne_zero ho]⟩
-  have ht : IsBorelMatrix o t := ⟨blockTriangular_diagonal _, GeneralLinearGroup.det_ne_zero t.1⟩
+  have ht : IsBorelMatrix o t := ⟨blockTriangular_diagonal _, GeneralLinearGroup.det_ne_zero t.val⟩
   refine ⟨g * t⁻¹, t * b, ht.mul hb, fun i ↦ ?_, by simp [mul_assoc]⟩
   simp [t, diagTorus, hb.diag_ne_zero ho]
 
@@ -358,7 +358,8 @@ lemma abs_det_logDerivU_unitary_factor (ho : o.Injective) {ε ε' : n → ℤˣ}
       signMatrix ε * L (b * (signMatrix ε' * logDerivU c y v) * b⁻¹) :=
     calc _ = (u : Matrix n n ℂ)ᴴ * signMatrix ε * u * L ((u : Matrix n n ℂ)⁻¹ * (x * dc v) * b⁻¹) :=
         by simp [logDerivU, deriv.fderiv, u, mul_assoc]
-      _ = _ := by simp [mem_U.1 u.prop, x_eq, dc, logDerivU, inv_coe_eq_mul_conjTranspose_mul (c y),
+      _ = _ := by simp [show (u : Matrix n n ℂ)ᴴ * _ * _ = _ from mem_unitaryGroupOf_iff.1 u.prop,
+          x_eq, dc, logDerivU, inv_coe_eq_mul_conjTranspose_mul (c y),
         ← mul_assoc]
   have h_comp : skewCoords ∘ₗ logDerivU (fun z : Matrix n n ℝ ↦ Φ (x * c z)) y =
       (skewCoords ∘ₗ mulLeft ℝ (signMatrix ε) ∘ₗ L ∘ₗ mulLeftRight ℝ (b, b⁻¹) ∘ₗ
@@ -438,7 +439,8 @@ lemma lintegral_openOrbit_le (ho : o.Injective) (ε ε' : n → ℤˣ) (x : GL n
 /-- By Gram-Schmidt every invertible matrix is a unitary times a triangular matrix. -/
 lemma mem_openOrbit_one (o : n → ℤ) (y : GL n ℂ) : (y : Matrix n n ℂ) ∈ openOrbit 1 o := by
   obtain ⟨b, b_tri, b_unit⟩ := exists_orthonormal_mul o ⟨y.inv, y.inv_val⟩
-  exact ⟨⟨y * b, by simpa [mem_U] using b_unit⟩, (b : Matrix n n ℂ)⁻¹,
+  exact ⟨⟨y * b, by simpa [mem_unitaryGroupOf_iff, star_eq_conjTranspose] using b_unit⟩,
+      (b : Matrix n n ℂ)⁻¹,
     IsBorelMatrix.inv ⟨b_tri, GeneralLinearGroup.det_ne_zero b⟩, by simp⟩
 end OpenFlagOrbit
 
@@ -482,7 +484,7 @@ lemma integrable_mul_left_of_isFlagDensity (ho : o.Injective) (ε : n → ℤˣ)
   have h_norm : IsFlagDensity o fun y : Matrix n n ℂ ↦ ‖F y‖ :=
     fun y b hb ↦ by simp [hF_density y b hb]
   have int_K : Integrable fun k : USign (1 : n → ℤˣ) ↦ F k :=
-    DiscreteSeries.integrable_of_compactSpace (hF_cont.comp' continuous_subtype_val)
+    DiscreteSeries.integrable_of_compactSpace (hF_cont.comp' continuous_subtypeVal)
   refine ⟨(hF_cont.comp' (f := fun g : USign ε ↦ x * g) (by fun_prop)).aestronglyMeasurable, ?_⟩
   simpa [HasFiniteIntegral, ← ofReal_norm, lintegral_mul_left_eq_setLIntegral_openOrbit ho ε h_norm]
     using int_K.restrict.hasFiniteIntegral
@@ -496,7 +498,7 @@ lemma integral_mul_left_eq_setIntegral_openOrbit (ho : o.Injective) (ε : n → 
     ∫ g : USign ε, F (x * g) =
       ∫ k in {k : USign (1 : n → ℤˣ) | (x : Matrix n n ℂ)⁻¹ * k ∈ openOrbit ε o}, F k := by
   have int_K : Integrable fun k : USign (1 : n → ℤˣ) ↦ F k :=
-    DiscreteSeries.integrable_of_compactSpace (hF_cont.comp' continuous_subtype_val)
+    DiscreteSeries.integrable_of_compactSpace (hF_cont.comp' continuous_subtypeVal)
   have int_G := integrable_mul_left_of_isFlagDensity ho ε hF_density hF_cont x
   -- Test against real linear forms `φ`, and split `φ ∘ F` into its positive and negative parts.
   refine (SeparatingDual.eq_iff_forall_dual_eq (R := ℝ)).2 fun φ ↦ ?_
@@ -665,7 +667,9 @@ noncomputable def signBlocksHom (ε : n → ℤˣ) :
     USign (1 : PosIndex ε → ℤˣ) × USign (1 : NegIndex ε → ℤˣ) →* maxCompactU ε :=
   MonoidHom.mk'
     (fun u ↦ ⟨U.of IsHermitianInvolution.isUnit (signBlocks ε u.1 u.2)
-        (signBlocks_preserves_form (by simpa using mem_U.1 u.1.2) (by simpa using mem_U.1 u.2.2)),
+        (signBlocks_preserves_form
+          (by simpa [star_eq_conjTranspose] using mem_unitaryGroupOf_iff.1 u.1.property)
+          (by simpa [star_eq_conjTranspose] using mem_unitaryGroupOf_iff.1 u.2.property)),
       mem_maxCompactU.2 signBlocks_mem_blockDiagAlg⟩)
     fun u v ↦ Subtype.ext <| Subtype.ext <| Units.ext (by simp [signBlocks_mul])
 
@@ -695,13 +699,6 @@ the Haar measures of mass one to the Haar measure `haarK ε` of mass one. -/
 theorem measurePreserving_signBlocksHom :
     MeasurePreserving (signBlocksHom ε) (volume.prod volume) (haarK ε) :=
   MonoidHom.measurePreserving continuous_signBlocksHom signBlocksHom_surjective (by simp)
-
-/-- Fubini's theorem on `K = maxCompactU ε ≃ U(p) × U(q)`: the integral of a continuous function
-over `K` is the double integral over the unitary blocks. -/
-theorem integral_haarK_eq_integral_signBlocksHom {φ : maxCompactU ε → ℂ} (hφ : Continuous φ) :
-    ∫ k : maxCompactU ε, φ k ∂haarK ε = ∫ u : USign (1 : PosIndex ε → ℤˣ),
-      ∫ v : USign (1 : NegIndex ε → ℤˣ), φ (signBlocksHom ε (u, v)) :=
-  (measurePreserving_signBlocksHom.fubini (DiscreteSeries.integrable_of_compactSpace hφ)).right.symm
 
 omit [DecidableEq n] in
 /-- Let `p` select the indices of one sign. On these indices `-2 ρ_c`, minus the sum of the compact
@@ -781,7 +778,8 @@ theorem integral_haarK_mul_left_of_density {l : n → ℤ} (hl : l.Injective) {F
       refine hF_cont.comp_continuous (by fun_prop) fun k ↦ ⟨?_, ?_⟩
       · exact mul_mem signBlocks_mem_blockDiagAlg (mem_maxCompactU.1 k.prop)
       · simp [h_det, GeneralLinearGroup.det_ne_zero]
-    simp [integral_haarK_eq_integral_signBlocksHom h_cont, coe_signBlocksHom, signBlocks_mul, f, Up,
+    simp [(measurePreserving_signBlocksHom.fubini (DiscreteSeries.integrable_of_compactSpace h_cont)).right.symm,
+      coe_signBlocksHom, signBlocks_mul, f, Up,
       Uq]
   have h_swap (y : GL (PosIndex ε) ℂ) :
       ∫ u : Up, ∫ v : Uq, f (y * u) v = ∫ v : Uq, ∫ u : Up, f (y * u) v :=

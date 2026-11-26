@@ -92,16 +92,6 @@ instance : Module (𝓞 E) D.dualTorsion :=
 def IsRiemannTuple (D : PEL E) : Prop :=
   ∑ l : K, star (p l).1 * (p l).1 = D.paddedNorm ∧ ∑ l : K, star (p l).1 * (p l).2 = 0
 
-/-- For a Riemann tuple `p` with `p l = (a_l, b_l)`, `∑ ā_l a_l = D.paddedNorm`. -/
-lemma IsRiemannTuple.sum_star_fst_mul_fst {p : K → 𝓞 E × 𝓞 E} (hp : IsRiemannTuple p D) :
-    ∑ l : K, star (p l).1 * (p l).1 = D.paddedNorm :=
-  And.left hp
-
-/-- For a Riemann tuple `p` with `p l = (a_l, b_l)`, `∑ ā_l b_l = 0`. -/
-lemma IsRiemannTuple.sum_star_fst_mul_snd {p : K → 𝓞 E × 𝓞 E} (hp : IsRiemannTuple p D) :
-    ∑ l : K, star (p l).1 * (p l).2 = 0 :=
-  And.right hp
-
 /-- The family of coefficient pairs on two copies of the index set `K`: `(0, b_l)` on the first
 copy, where `k l = (a_l, b_l)`, and `p l` on the second. -/
 def doubledCoeffs (k : K → 𝓞 E × 𝓞 E) : K ⊕ K → 𝓞 E × 𝓞 E := Sum.elim (fun l ↦ (0, (k l).2)) p
@@ -167,7 +157,7 @@ lemma thetaShift_thetaProduct {p : K → 𝓞 E × 𝓞 E} (hp : IsRiemannTuple 
   -- `exp (π i r c) = exp (π i c) ^ r`, and `exp (2 π i m) = 1` drops out.
   have h_pow (c : ℂ) : cexp (Real.pi * I * (D.paddedNorm * c)) = cexp (Real.pi * I * c) ^
     D.paddedNorm := by
-    simp [← exp_nat_mul, mul_left_comm]
+    simp [← exp_natCast_mul, mul_left_comm]
   have h_int (c : ℂ) : cexp (2 * Real.pi * I * (c + m)) = cexp (2 * Real.pi * I * c) := by
     simp [mul_add, exp_add, mul_comm _ (m : ℂ)]
   -- By adjunction and `h_chi` the multipliers give `χ(u) ^ r`; by `hm` the phases give
@@ -189,8 +179,7 @@ lemma thetaShift_thetaProduct {p : K → 𝓞 E × 𝓞 E} (hp : IsRiemannTuple 
   have h_translate : (D.paddedNorm • x.automorphyForm).thetaShift u (x.thetaProduct p μ w) z =
       ∏ k, x.automorphyForm.thetaShift (x.intAction (p k).1 u) (x.thetaCoord (μ k))
         (x.intAction (p k).1 z + x.intAction (p k).2 w) := by
-    simp [mul_left_comm, adjoint, div_eq_inv_mul, thetaShift_apply, exp_add,
-      exp_neg, thetaProduct]
+    simp [adjoint, div_eq_inv_mul, thetaShift_apply, exp_add, exp_neg, thetaProduct]
     simp only [prod_mul_distrib, prod_inv_distrib, ← exp_sum, ← mul_sum, h_orth, h_norm, exp_zero,
       inv_one, one_mul, mul_left_comm (2⁻¹ : ℂ), add_right_comm]
   rw [h_translate, prod_congr rfl fun k _ ↦ congrFun (h_shift k) _]
@@ -223,7 +212,7 @@ lemma thetaShift_periodPoint_thetaProduct {y : D.Index → E}
       (((p k).1 • ⟨frameTorsionClass g y, hy⟩ : D.dualTorsion) : AdelicTorsion E D.Index) :=
         map_smul ..
   rw [h_act]
-  simpa [intAction, smul_comm (cmEmbedding (p k).1.val), add_comm, periodPoint, bicharacter] using
+  simpa [intAction, smul_comm (cmEmbedding (p k).1.val), add_comm, bicharacter] using
     x.thetaShift_thetaCoord h_class (μ k)
 
 /-- Riemann's theta relation in one variable. Here x is a theta torus on V for the PEL datum `D`.
@@ -565,10 +554,10 @@ private lemma isSmallForm_iff_forall_eval_map_eq_zero [Field k] {φ : v.valuatio
         ∃ i : D.dualTorsion, v (p b i) = 1 := hp b
     refine ⟨s ^ D.paddedNorm ^ j, fun g ↦ ?_, ⟨_, isHomogeneous_X_pow i _⟩, by simp [hi_unit]⟩
     simpa [ev, eval_eq, aeval_def, eval₂_eq, hs_eq, div_eq_inv_mul] using
-      eval₂_mul_of_isHomogeneous g.property (algebraMap ..) s⁻¹ _
+      g.property.eval₂_const_mul (algebraMap ..) _ s⁻¹
   have h_ball : ev.range = (h_good.pow j).normBall (x.thetaCoord c ^ D.paddedNorm ^ j) :=
     x.range_aeval_thetaCoord_eq_normBall h_good c j
-  show (D.paddedNorm ^ j • x.automorphyForm).thetaNorm v (ev f) < x.automorphyForm.thetaNorm v
+  change (D.paddedNorm ^ j • x.automorphyForm).thetaNorm v (ev f) < x.automorphyForm.thetaNorm v
     (x.thetaCoord c) ^ D.paddedNorm ^ j ↔ _
   simpa [thetaNorm_pow, ← h_max, map_eval] using
     (h_good.pow j).thetaNorm_lt_iff_coords (pow (x.thetaCoord_mem_thetaSpace c) _)
@@ -654,7 +643,7 @@ lemma isCutOutAt_reduction [Field k] {φ : v.valuationSubring →+* k} (hφ : Su
     (D.paddedNorm ^ j)) :
       f.val.map φ ∈ J ↔ x.IsSmallForm c j f := by
     simp +contextual [J, x.isSmallForm_iff_forall_eval_map_eq_zero_of_ne_zero hφ h_good hq_coords,
-      eval₂_mul_of_isHomogeneous f.property, div_eq_inv_mul]
+      f.property.eval₂_const_mul, div_eq_inv_mul]
   have h_lift (d : ℕ) : Surjective fun f : homogeneousSubmodule D.dualTorsion v.valuationSubring d ↦
       (⟨f.val.map φ, f.property.map φ⟩ : homogeneousSubmodule D.dualTorsion k d) :=
     surjective_map_homogeneous hφ d
@@ -679,7 +668,6 @@ lemma isCutOutAt_reduction [Field k] {φ : v.valuationSubring →+* k} (hφ : Su
             (x.thetaCoord c ^ D.paddedNorm ^ j) := by
       rw [thetaNorm_pow]
       exact Ideal.Quotient.eq_zero_iff_mem.trans (h_ideal j f)
-
     -- The rank is the dimension of the theta space of degree `r ^ j` ...
     have h_ball : ((aeval x.thetaCoord).toLinearMap.domRestrict
           (homogeneousSubmodule D.dualTorsion v.valuationSubring (D.paddedNorm ^ j))).range =
@@ -712,7 +700,7 @@ lemma isCutOutAt_reduction [Field k] {φ : v.valuationSubring →+* k} (hφ : Su
     -- chart `chart b`.
     have h_unit (b : D.levelTorsion) : φ (p b (chart b)) ≠ 0 :=
       ((hN_coords b (chart b)).left.mp (h_chart b)).ne_zero
-    simp [hN_coords _ _, h_unit, eval₂_mul_of_isHomogeneous f.property, comp_def, mul_comm (φ _)]
+    simp [hN_coords _ _, h_unit, f.property.eval₂_const_mul, comp_def, mul_comm (φ _)]
 
 /-- The family of coefficient pairs in `𝓞 E` consisting of `(1, 0)` twice (on the first copy of
 `Bool`), `(c, 1)` and `(1, −c̄)` (at `true` and `false` of the second copy), and `(a l, 0)` for

@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.LinearAlgebra.Matrix.AbsoluteValue
 public import New.Spanning.RemainingTerms.Box
 public import New.Spanning.RemainingTerms.SiegelLemma
 public import New.Spanning.Unfolding.BesselLevelStructure
@@ -23,7 +24,7 @@ algebraic integers.
   the unipotent character, the vectors common to the two flags of a term, and its cell rank.
 * `New.Filling.IsNear`: `γ` is near if some boxed point `y` (`New.Filling.boxedPoints`) has `γ⁻¹ y`
   boxed.
-* `New.Filling.norm_sq_middle_part_eq`, `New.Filling.map_termDisc_eq_norm`: a norm identity, which
+* `New.Filling.map_termDisc_eq_norm`: a norm identity, which
   makes `S.termDisc γ` real and nonnegative at every infinite place. So `S.termDisc γ` is totally
   positive or zero (`New.Filling.termDisc_pos_or_eq_zero`).
 * `New.Filling.IsNear.norm_frameProducts_le`, `New.Filling.IsNear.norm_map_leadingMinor_sq_le`: for
@@ -137,7 +138,7 @@ def IsNear (γ : S.G E) : Prop :=
 /-- The finite character `New.Filling.unipotentChar` takes the same value at u and at γ⁻¹uγ for
 every rational u in 𝖴 ∩ γ𝖴γ⁻¹. -/
 def CharsAgree (γ : S.G E) : Prop :=
-  ∀ᵉ (u ∈ besselU) (u' ∈ besselU), u * γ = γ * u' →
+  ∀ u ∈ besselU, ∀ u' ∈ besselU, u * γ = γ * u' →
     S.unipotentChar (S.ratToFin u) = S.unipotentChar (S.ratToFin u')
 
 end Filling
@@ -335,8 +336,7 @@ lemma gramDiscReal_realFrameGram_ratToInf {γ : S.G E} (v : InfinitePlace E) :
   have h_disc : frameDisc 1 (realFrameGram (S.ratToInf γ v)) =
       ((∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2 : ℝ) * Φ v (S.termDisc γ) := by
     simp [frameDisc, h_det, h_minor, frameScaleSq, prod_univ_castSucc]
-    field_simp [Nat.Prime.ne_zero]
-    ring
+    field [Nat.Prime.ne_zero]
   rw [RealPlace.gramDiscReal, h_disc, re_ofReal_mul, ← ofReal_re ‖Φ v _‖, ← map_termDisc_eq_norm]
 
 /-! ### Passing to the infinite and the finite places; the Bessel group; sizes of constants -/
@@ -393,7 +393,7 @@ lemma termsOver.isIntMatrix_translateByClassReps :
     γ ∈ S.termsOver c r c' → IsIntMatrix (Ô E) (S.translateByClassReps c c' γ).val.val := by
   rintro ⟨g, -, hg⟩
   rw [← hg]
-  exact g.2.isIntMatrix
+  exact g.property.isIntMatrix
 
 /-- For a class c, the matrix classCoord c, which takes rational coordinates to coordinates in the
 basis of the lattice h_cΛ₀, carries the form in rational coordinates to the form in lattice
@@ -403,7 +403,7 @@ lemma classCoord_conj_splitGram (c : S.Classes) :
       (S.ratMiddle (𝔸f E)).splitGram := by
   have h_basis : (classBasis c).valᴴ * (S.ratMiddle (𝔸f E)).splitGram * (classBasis c).val =
       (S.latticeMiddle (𝔸f E)).splitGram :=
-    gram_mul_of_gram_eq (toBesselH 𝔰 (S.N : 𝔸f E) c.out).prop
+    gram_mul_of_gram_eq (mem_unitaryGroupOf_iff.1 (toBesselH 𝔰 (S.N : 𝔸f E) c.out).prop)
       (gram_besselLatticeBasis _ _ S.piN_mul_star)
   exact gram_inv_of_gram_eq h_basis
 
@@ -441,7 +441,7 @@ lemma IsNear.mul_of_mem_besselU0 {u' : (S.ratMiddle E).G} (h_near : S.IsNear γ)
   obtain ⟨y, hy, hy'⟩ := h_near
   refine ⟨S.ratToInf u * y,
     (mul_mem_boxedPoints_iff fun v ↦ ratToInf_mem_besselU0 hu v).2 hy, ?_⟩
-  show (S.ratToInf (u * γ * u'))⁻¹ * (S.ratToInf u * y) ∈ S.boxedPoints
+  change (S.ratToInf (u * γ * u'))⁻¹ * (S.ratToInf u * y) ∈ S.boxedPoints
   simpa [mul_assoc, mul_mem_boxedPoints_iff, ratToInf_mem_besselU0, hu'] using hy'
 
 /-- An isometry that fixes every vector of the frame (e₁, …, e_ϱ, z) lies in `besselS`. -/
@@ -449,10 +449,10 @@ lemma mem_besselS_of_frameImage_eq_one (h_fix : frameImage s.val.val = frameImag
     s ∈ besselS :=
   mem_besselS_iff_frameImage.2 fun i a _ ↦ congrFun₂ h_fix i a
 
-/-- For admissible data with size parameter `b`, the powers `b ^ e` with `e ≤ 10 ^ 5 n ^ 9 f` are at
+/-- For filling data with size parameter `b`, the powers `b ^ e` with `e ≤ 10 ^ 5 n ^ 9 f` are at
 most `τ = S.tailScale = b ^ (k f / 4)`. Here `n = ϱ + 1` is the number of frame vectors, `k` is the
 rank of `X₀` and `f` is the number of infinite places. -/
-lemma pow_le_tailScale [S.IsAdmissible] {e : ℕ} (he : e ≤ 10 ^ 5 * 𝔰.n ^ 9 * numInfPlaces E) :
+lemma pow_le_tailScale {e : ℕ} (he : e ≤ 10 ^ 5 * 𝔰.n ^ 9 * numInfPlaces E) :
     S.b ^ e ≤ S.tailScale := by
   -- compare the exponents
   have h_exponent : (e : ℝ) ≤ 𝔰.k * numInfPlaces E / 4 := by
@@ -462,9 +462,9 @@ lemma pow_le_tailScale [S.IsAdmissible] {e : ℕ} (he : e ≤ 10 ^ 5 * 𝔰.n ^ 
     grind
   simpa [tailScale] using rpow_le_rpow_of_exponent_le S.one_le_b h_exponent
 
-/-- For admissible data, the fourth power of `tailScale` `τ = b ^ (k f / 4)` is `b ^ (k f)`, where
-`k = 𝔰.k` and `f = numInfPlaces E` is the number of infinite places of `E`. -/
-lemma tailScale_pow_four [S.IsAdmissible] :
+/-- The fourth power of `tailScale` `τ = b ^ (k f / 4)` is `b ^ (k f)`, where `k = 𝔰.k` and
+`f = numInfPlaces E` is the number of infinite places of `E`. -/
+lemma tailScale_pow_four :
     S.tailScale ^ 4 = S.b ^ (𝔰.k * numInfPlaces E) := by
   rw [tailScale, ← rpow_mul_natCast (by linarith [S.thousand_le_b]), ← rpow_natCast]
   push_cast
@@ -483,10 +483,10 @@ lemma two_le_b : 2 ≤ S.b := by linarith [S.thousand_le_b]
 
 lemma b_pos : 0 < S.b := by linarith [S.thousand_le_b]
 
-lemma two_le_tailScale [S.IsAdmissible] : 2 ≤ S.tailScale :=
+lemma two_le_tailScale : 2 ≤ S.tailScale :=
   two_le_b.trans (by simpa using pow_le_tailScale (S := S) (e := 1) NeZero.one_le)
 
-lemma one_le_tailScale [S.IsAdmissible] : 1 ≤ S.tailScale := one_le_two.trans two_le_tailScale
+lemma one_le_tailScale : 1 ≤ S.tailScale := one_le_two.trans two_le_tailScale
 
 lemma identitySecondMoment_nonneg : 0 ≤ S.identitySecondMoment := by simp [identitySecondMoment]
 
@@ -546,15 +546,15 @@ lemma IsNear.norm_map_leadingMinor_sq_le [S.IsAdmissible] (l : Fin (𝔰.ϱ + 1 
   -- by `l ≤ ϱ + 1 ≤ b` the left side is at most a power of `b`; compare the exponents
   have hl : (l : ℝ) ≤ S.b := by grw [l.is_le, S.succ_le_b]
   have h_exponent : (l.val + 134 * 𝔰.n * l.val) * 2 ≤ 270 * 𝔰.n ^ 2 := by
-    nlinarith [S.ten_pow_five_le_varrho, l.is_le]
+    nlinarith only [S.ten_pow_five_le_varrho, l.is_le]
   grw [h_det, hl, ← pow_add, ← pow_mul]
   exact pow_le_pow_right₀ S.one_le_b h_exponent
 
-/-- Under `S.IsAdmissible`, if `γ` is a term over `(c, r, c')` and `u` is a term over `(c, r', d)`
+/-- If `γ` is a term over `(c, r, c')` and `u` is a term over `(c, r', d)`
 with the same frame image `frameImage γ = frameImage u`, then `r⁻¹ * r'` lies in
 `S.reducedImage besselS`, the reduced image of the Bessel subgroup. So `r` and `r'` lie in one left
 coset of it. -/
-lemma termsOver.inv_mul_mem_reducedImage [S.IsAdmissible] (hγ : γ ∈ S.termsOver c r c')
+lemma termsOver.inv_mul_mem_reducedImage (hγ : γ ∈ S.termsOver c r c')
     {r' : S.ResidueGL} {d : S.Classes} (hu : u ∈ S.termsOver c r' d)
     (h_same_frame : frameImage γ.val.val = frameImage u.val.val) :
     r⁻¹ * r' ∈ S.reducedImage besselS := by
@@ -579,14 +579,14 @@ lemma termsOver.eq_and_mem_classUnipotent₀ [S.IsAdmissible] (hγ : γ ∈ S.te
     eq_and_mem_classUnipotent_of_besselS (mem_besselS_of_frameImage_eq_one h_fix) h_over
   -- fixing every frame vector is the extra condition of `classUnipotent₀`
   have h_frame : frameMatrix (γ⁻¹ * u) = 1 := by
-    show (frameImage (γ⁻¹ * u).val.val).submatrix 𝔰.besselFrame id = 1
+    change (frameImage (γ⁻¹ * u).val.val).submatrix 𝔰.besselFrame id = 1
     rw [h_fix]
     simp [submatrix_submatrix, submatrix_one, besselFrame_injective]
   exact ⟨h_class, h_mem, mem_besselU0_iff.2 ⟨h_mem.1, h_frame⟩⟩
 
 /-- If `γ` is a term over `(c, r, c')`, so that `h_c⁻¹ γ h_c'` is integral, then the products of
 the frame with its image under `γ` are algebraic integers. -/
-lemma isIntegral_frameProducts [S.IsAdmissible] (hγ : γ ∈ S.termsOver c r c')
+lemma isIntegral_frameProducts (hγ : γ ∈ S.termsOver c r c')
     (i j : Fin (𝔰.ϱ + 1)) : IsIntegral ℤ (S.frameProducts γ i j) := by
   -- the adelic entry is that of a product of two integral matrices
   have h_int : (S.latticeMiddle (𝔸f E)).frameGram (S.translateByClassReps c c' γ) i j ∈ Ô E :=

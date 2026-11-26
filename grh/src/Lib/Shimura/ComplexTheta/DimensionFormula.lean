@@ -1,5 +1,11 @@
 module
 
+public import Mathlib.Algebra.Azumaya.Basic
+public import Mathlib.Algebra.Central.End
+public import Mathlib.Algebra.Module.ZLattice.Summable
+public import Mathlib.LinearAlgebra.Matrix.FiniteDimensional
+public import Mathlib.RingTheory.Etale.Weakly
+public import Mathlib.RingTheory.Finiteness.ModuleFinitePresentation
 public import Lib.General.Analysis.HolomorphicIntegrals
 public import Lib.Shimura.ComplexTheta.AppellHumbertData
 
@@ -341,13 +347,8 @@ private lemma pairingMean_neg {n : ℕ} (s t : Fin n → B.thetaSpace χ) (b : V
             (-((B x x + B x b + (B b x + B b b)) / 2) + (B b b + B x b))) =
         (-(I / 2 * conj (B (I • b) b)) + I / 2 * I * conj (B b b)) / 2 +
           (-(B x x / 2) + (-(conj (B x x) / 2) + -conj (B x b))) := by
-    apply Complex.ext
-    · -- real parts: `Re (B x b) = Re (B b x)`
-      simp [hB.re_symm]
-      ring
-    · -- imaginary parts: `Re (B (I • b) b) = Re (B b (I • b)) = -Im (B b b)`
-      simp [hB.re_symm, neg_div]
-      ring
+    -- Use symmetry of the real part, including at `I • b`, in both components.
+    apply Complex.ext <;> simp [hB.re_symm, neg_div] <;> ring
   have h_integrand (x : V) :
       pairingIntegrand t s (-b) (x + b) = conj (pairingIntegrand s t b x) := by
     simp [pairingIntegrand, linearPartForm, mul_sum, thetaShift_apply_apply, ← exp_conj,
@@ -738,8 +739,9 @@ lemma ThetaTori.mem_thetaSpace_iff_normalizedShift :
       Differentiable ℂ f ∧ ∀ l ∈ L, normalizedShift B b l f = f := by
   refine Iff.and Iff.rfl ?_
   -- Both sides say `f (z + l) = exp (π i E(b l, l)) * exp (B l z + B l l / 2) * f z`.
-  simp [mul_right_comm, canonicalMultiplier, exp_add, normalizedShift, funext_iff,
-    thetaShift_apply, exp_neg, fieldEq]
+  simp [canonicalMultiplier, exp_add, normalizedShift, funext_iff, thetaShift_apply, exp_neg,
+    fieldEq]
+  exact forall₂_congr fun l _ ↦ forall_congr' fun z ↦ by rw [mul_right_comm (cexp _) (cexp (B l z))]
 
 /-- Let E be the Riemann form of `B`. If b + b* = 1 for E, that is E(bu, w) + E(u, bw) = E(u, w)
 (hypothesis `adj`), the real part of `B` is symmetric and E(b L, L) is integral, then `B` and the

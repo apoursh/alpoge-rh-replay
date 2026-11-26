@@ -80,15 +80,6 @@ abbrev datumY (ϑ : D.TameChar) (j : ℕ) : 𝒮 ((D.spaceY j).hom (D.spaceY (j 
   (hom (D.spaceY j) (D.spaceY (j + 1))).integrated
     (Fock.polyVector _ (D.harmonicY j)) (pointDatumY ϑ j).val
 
-/-- For j < m the doubled parameters `New.Data.paramY` of Y_j and Y_(j+1), with their signs,
-correspond (`New.ParamsCorrespond`) for the weights `New.Data.gridWeight` of the characters of lift
-j + 1. -/
-lemma paramsCorrespond_paramY {j : ℕ} (hj : j < D.m) :
-    ParamsCorrespond (D.gridWeight true j (D.Y j)) (D.gridWeight true j (D.Y (j + 1)))
-      (D.paramY j) (D.paramY (j + 1)) (D.signsY j) (D.signsY (j + 1)) :=
-  -- The node `(0, j)` of the grid is the space `Y_j`, and lift `j + 1` is a step of the grid.
-  D.paramsCorrespond_grid_succ_right false 0 0 j D.m.zero_le hj (.inl rfl)
-
 /-- For j < m the datum `New.Data.datumY` ϑ j of lift j + 1 is an arrow (`New.IsArrow`: a kernel
 whose lifts take forms of the source type to forms of the target type) both ways: (a) from forms on
 Y_j to forms on Y_(j+1), and (b) for the swapped Weil representation, from forms of the conjugate
@@ -102,14 +93,7 @@ lemma isArrow_datumY (ϑ : D.TameChar) {j : ℕ} (hj : j < D.m) :
       (star (typeKernel (D.paramY j) (D.signsY j))) (datumY ϑ j) :=
   -- The parameters of `Y_j` and `Y_(j+1)` correspond, so the joint harmonic is an edge; an edge
   -- tensored with a finite datum is an arrow both ways.
-  (paramsCorrespond_paramY hj).isEdge_jointHarmonic.isArrow _ _ (pointDatumY ϑ j).prop
-
-/-- For j < m the datum `New.Data.datumY` ϑ j of lift j + 1 is an arrow from forms on Y_j to forms
-on Y_(j+1). -/
-lemma isArrow_thetaKernelY_datumY (ϑ : D.TameChar) {j : ℕ} (hj : j < D.m) :
-    IsArrow (thetaKernelY ϑ j) (typeKernel (D.paramY j) (D.signsY j))
-      (typeKernel (D.paramY (j + 1)) (D.signsY (j + 1))) (datumY ϑ j) :=
-  (isArrow_datumY ϑ hj).left
+  (D.paramsCorrespond_grid_succ_right false 0 0 j D.m.zero_le hj (.inl rfl)).isEdge_jointHarmonic.isArrow _ _ (pointDatumY ϑ j).prop
 
 /-- For j < m the datum `New.Data.datumY` ϑ j of lift j + 1 is an arrow for the swapped Weil
 representation, from forms of the conjugate type on Y_(j+1) to forms of the conjugate type on
@@ -305,7 +289,7 @@ lemma formRep_lowerChainUpTo_eq_lowerChainUpTo_smul (ϑ : D.TameChar) {j : ℕ} 
           (liftY ϑ j (lowerChainUpTo ϑ j y))
       _ = c_last • liftY ϑ j ((D.spaceY j).formRep (typeKernel (D.paramY j) (D.signsY j))
             (liftResidue g').val (lowerChainUpTo ϑ j y)) :=
-        formRep_liftY ϑ j (isArrow_thetaKernelY_datumY ϑ hj) hk (reduceFamily_liftResidue g') h_incl
+        formRep_liftY ϑ j (isArrow_datumY ϑ hj).left hk (reduceFamily_liftResidue g') h_incl
           (lowerChainUpTo ϑ j y)
       _ = c_last • liftY ϑ j (lowerChainUpTo ϑ j (c_init • D.principalRep (D.spaceY 0) s y)) := by
         rw [ih (Nat.le_of_succ_le hj) _ g' (reduceFamily_liftResidue g') hA_tri h_first]
@@ -399,7 +383,7 @@ lemma lowerChain_mem_levelSpace (ϑ : D.TameChar) (y : D.principalForms (D.space
     simp only [lastLevelChar, MonoidHom.finsetProd_apply]
     rfl
   refine (algFormRep_lowerChain ϑ 1 y ⟨k.val, hk⟩ g rfl h_tri h_first).trans ?_
-  rw [← h_scalar, map_one, Module.End.one_apply]
+  rw [← h_scalar, map_one, one_apply_eq_self]
   rfl
 
 /-- The map ι_μ with its target restricted to the space of algebraic forms on Y_m with level J_m
